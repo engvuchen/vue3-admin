@@ -1,10 +1,9 @@
 {
   "name": "vue3-element-admin",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "author": {
-    "name": "huzhushan",
-    "email": "huzhushan@126.com",
-    "url": "https://github.com/huzhushan"
+    "name": "engvuchen",
+    "url": "https://github.com/engvuchen"
   },
   "scripts": {
     "start": "npm run dev:mock",
@@ -41,7 +40,6 @@
     "lint-staged": "^9.5.0",
     "prettier": "^1.19.1",
 
-
     "@vue/compiler-sfc": "^3.1.2",
     "autoprefixer": "^10.2.5",
     "babel-eslint": "^10.1.0",
@@ -63,13 +61,5 @@
       "pre-commit": "lint-staged"
     }
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/huzhushan/vue3-element-admin.git"
-  },
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/huzhushan/vue3-element-admin/issues"
-  },
-  "homepage": "https://github.com/huzhushan/vue3-element-admin"
+  "license": "MIT"
 }
