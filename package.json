@@ -53,6 +53,7 @@
   "lint-staged": {
     "src/**/*.{js,vue}": [
       "npm run lint",
+      "prettier --write",
       "git add"
     ]
   },
