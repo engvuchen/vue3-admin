@@ -1,6 +1,5 @@
-
-import { defineStore } from 'pinia'
-import { GetUserinfo } from '@/api/login'
+import { defineStore } from 'pinia';
+import { apiGetUserInfo } from '@/api/user';
 
 export const useAccount = defineStore('account', {
   state: () => ({
@@ -10,15 +9,19 @@ export const useAccount = defineStore('account', {
   actions: {
     // 清除用户信息
     clearUserinfo() {
-      this.userinfo = null
+      this.userinfo = null;
     },
-    // 获取用户信息
+    /**
+     * 获取用户信息
+     * @returns { id, username }
+     */
     async getUserinfo() {
-      const { code, data } = await GetUserinfo()
-      if (+code === 200) {
-        this.userinfo = data
-        return Promise.resolve(data)
+      const { code, data } = await apiGetUserInfo();
+      if (code === 0) {
+        this.userinfo = data;
+        return Promise.resolve(data);
       }
+      return Promise.resolve();
     },
   },
-})
+});

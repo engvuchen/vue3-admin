@@ -1,5 +1,3 @@
-
-
 <template>
   <el-dropdown trigger="hover">
     <div class="userinfo">
@@ -16,7 +14,7 @@
       <el-dropdown-menu>
         <el-dropdown-item>{{ $t('topbar.center') }}</el-dropdown-item>
         <el-dropdown-item>{{ $t('topbar.password') }}</el-dropdown-item>
-        <lock-modal />
+        <!-- <lock-modal /> -->
         <el-dropdown-item @click="logout">
           {{ $t('topbar.logout') }}
         </el-dropdown-item>
@@ -25,34 +23,34 @@
   </el-dropdown>
 </template>
 <script>
-import { defineComponent } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserinfo } from '@/components/Avatar/hooks/useUserinfo'
-import LockModal from './LockModal.vue'
-import { useApp } from '@/pinia/modules/app'
+import { defineComponent } from 'vue';
+import { useRouter } from 'vue-router';
+import { useUserinfo } from '@/components/Avatar/hooks/useUserinfo';
+import LockModal from './LockModal.vue';
+import { useApp } from '@/pinia/modules/app';
 
 export default defineComponent({
   components: {
     LockModal,
   },
   setup() {
-    const router = useRouter()
+    const router = useRouter();
 
-    const { userinfo } = useUserinfo()
+    const { userinfo } = useUserinfo();
 
     // 退出
     const logout = () => {
       // 清除token
-      useApp().clearToken()
-      router.push('/login')
-    }
+      useApp().clearToken();
+      router.push('/login');
+    };
 
     return {
       userinfo,
       logout,
-    }
+    };
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>

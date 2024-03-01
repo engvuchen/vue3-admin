@@ -1,12 +1,11 @@
-
 <template>
   <div class="login">
     <el-form class="form" :model="model" :rules="rules" ref="loginForm">
       <h1 class="title">Vue3 Element Admin</h1>
-      <el-form-item prop="userName">
+      <el-form-item prop="username">
         <el-input
           class="text"
-          v-model="model.userName"
+          v-model="model.username"
           prefix-icon="User"
           clearable
           :placeholder="$t('login.username')"
@@ -23,13 +22,7 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button
-          :loading="loading"
-          type="primary"
-          class="btn"
-          size="large"
-          @click="submit"
-        >
+        <el-button :loading="loading" type="primary" class="btn" size="large" @click="submit">
           {{ btnText }}
         </el-button>
       </el-form-item>
@@ -41,34 +34,27 @@
 </template>
 
 <script>
-import {
-  defineComponent,
-  getCurrentInstance,
-  reactive,
-  toRefs,
-  ref,
-  computed,
-  watch,
-} from 'vue'
-import { Login } from '@/api/login'
-import { useRouter, useRoute } from 'vue-router'
-import ChangeLang from '@/layout/components/Topbar/ChangeLang.vue'
-import useLang from '@/i18n/useLang'
-import { useApp } from '@/pinia/modules/app'
+import { defineComponent, getCurrentInstance, reactive, toRefs, ref, computed, watch } from 'vue';
+import { apiLogin } from '@/api/user';
+import { useRouter, useRoute } from 'vue-router';
+import ChangeLang from '@/layout/components/Topbar/ChangeLang.vue';
+import useLang from '@/i18n/useLang';
+import { useApp } from '@/pinia/modules/app';
 
 export default defineComponent({
   components: { ChangeLang },
   name: 'login',
   setup() {
-    const { proxy: ctx } = getCurrentInstance() // 可以把ctx当成vue2中的this
-    const router = useRouter()
-    const route = useRoute()
-    const { lang } = useLang()
+    const { proxy: ctx } = getCurrentInstance(); // 可以把ctx当成vue2中的this
+    const router = useRouter();
+    const route = useRoute();
+
+    const { lang } = useLang();
     watch(lang, () => {
-      state.rules = getRules()
-    })
+      state.rules = getRules();
+    });
     const getRules = () => ({
-      userName: [
+      username: [
         {
           required: true,
           message: ctx.$t('login.rules-username'),
@@ -82,63 +68,62 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          min: 6,
+          min: 3,
           max: 12,
           message: ctx.$t('login.rules-regpassword'),
           trigger: 'blur',
         },
       ],
-    })
+    });
     const state = reactive({
       model: {
-        userName: 'admin',
-        password: '123456',
+        username: 'admin',
+        password: '123',
       },
       rules: getRules(),
       loading: false,
-      btnText: computed(() =>
-        state.loading ? ctx.$t('login.logining') : ctx.$t('login.login')
-      ),
+      btnText: computed(() => (state.loading ? ctx.$t('login.logining') : ctx.$t('login.login'))),
       loginForm: ref(null),
       submit: () => {
-        if (state.loading) {
-          return
-        }
-        state.loginForm.validate(async valid => {
-          if (valid) {
-            state.loading = true
-            const { code, data, message } = await Login(state.model)
-            if (+code === 200) {
-              ctx.$message.success({
-                message: ctx.$t('login.loginsuccess'),
-                duration: 1000,
-              })
+        if (state.loading) return;
 
-              const targetPath = decodeURIComponent(route.query.redirect)
-              if (targetPath.startsWith('http')) {
-                // 如果是一个url地址
-                window.location.href = targetPath
-              } else if (targetPath.startsWith('/')) {
-                // 如果是内部路由地址
-                router.push(targetPath)
-              } else {
-                router.push('/')
-              }
-              useApp().initToken(data)
-            } else {
-              ctx.$message.error(message)
-            }
-            state.loading = false
+        state.loginForm.validate(async (valid) => {
+          if (!valid) return;
+
+          state.loading = true;
+          const { code, data } = await apiLogin(state.model);
+          if (code !== 0) return;
+
+          ctx.$message.success({
+            message: ctx.$t('login.loginsuccess'),
+            duration: 1000,
+          });
+
+          useApp().initToken(data);
+          state.loading = false;
+
+          if (!route.query.redirect) {
+            return router.push('/');
           }
-        })
+
+          // 处理 redirect
+          const targetPath = decodeURIComponent(route.query.redirect);
+          if (targetPath.startsWith('http')) {
+            // 如果是一个url地址
+            window.location.href = targetPath;
+          } else if (targetPath.startsWith('/')) {
+            // 如果是内部路由地址
+            router.push(targetPath);
+          }
+        });
       },
-    })
+    });
 
     return {
       ...toRefs(state),
-    }
+    };
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>

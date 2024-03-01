@@ -1,5 +1,3 @@
-
-
 <template>
   <el-scrollbar class="scroll">
     <el-menu
@@ -18,12 +16,12 @@
   </el-scrollbar>
 </template>
 <script>
-import { computed, defineComponent } from 'vue'
-import Submenu from './Submenu.vue'
-import { useRoute } from 'vue-router'
-import config from './config/menu.module.scss'
-import { storeToRefs } from 'pinia'
-import { useMenus } from '@/pinia/modules/menu'
+import { computed, defineComponent } from 'vue';
+import Submenu from './Submenu.vue';
+import { useRoute } from 'vue-router';
+import config from './config/menu.module.scss';
+import { storeToRefs } from 'pinia';
+import { useMenus } from '@/pinia/modules/menu'; // todo4
 
 export default defineComponent({
   components: {
@@ -40,16 +38,19 @@ export default defineComponent({
     },
   },
   setup() {
-    const route = useRoute()
-    const { menus } = storeToRefs(useMenus())
+    const route = useRoute();
+    console.log('🔎 ~ setup ~ menus:', useMenus().menus);
 
+    const { menus } = storeToRefs(useMenus());
+
+    // 路由变动，高亮相应的侧栏
     return {
       menus,
       activePath: computed(() => route.path),
       variables: computed(() => config),
-    }
+    };
   },
-})
+});
 </script>
 <style lang="scss">
 // menu hover

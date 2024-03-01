@@ -4,8 +4,6 @@
 .editorconfig
 pnpm-lock.yaml
 .npmrc
-package.json
-package-lock.json
 
 # Ignored suffix
 *.log
@@ -17,9 +15,8 @@ package-lock.json
 
 ## Local
 .husky
-index.html
 
 ## Built-files
 .cache
-dist/
-node_modules/
+dist
+node_modules

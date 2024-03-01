@@ -1,5 +1,3 @@
-
-
 <template>
   <div class="wrapper" :class="{ fluid: isFluid }">
     <sidebar v-if="isMenusShow && !isHorizontalMenu" />
@@ -8,10 +6,7 @@
         <topbar />
         <menus mode="horizontal" v-if="isMenusShow && isHorizontalMenu" />
         <tagsbar />
-        <breadcrumbs
-          v-if="isBreadcrumbsShow"
-          @on-breadcrumbs-change="handleBreadcrumbsChange"
-        />
+        <breadcrumbs v-if="isBreadcrumbsShow" @on-breadcrumbs-change="handleBreadcrumbsChange" />
       </div>
       <div class="main" :class="{ pt0: isBreadcrumbsShow && paddingFlag }">
         <Content />
@@ -20,16 +15,16 @@
   </div>
 </template>
 <script>
-import { defineComponent, ref, computed } from 'vue'
-import Sidebar from './components/Sidebar/index.vue'
-import Topbar from './components/Topbar/index.vue'
-import Menus from './components/Sidebar/Menus.vue'
-import Tagsbar from './components/Tagsbar/index.vue'
-import Breadcrumbs from './components/Topbar/Breadcrumbs.vue'
-import Content from './components/Content/index.vue'
-import { useResizeHandler } from './hooks/useResizeHandler'
-import { storeToRefs } from 'pinia'
-import { useLayoutsettings } from '@/pinia/modules/layoutSettings'
+import { defineComponent, ref, computed } from 'vue';
+import Sidebar from './components/Sidebar/index.vue';
+import Topbar from './components/Topbar/index.vue';
+import Menus from './components/Sidebar/Menus.vue';
+import Tagsbar from './components/Tagsbar/index.vue';
+import Breadcrumbs from './components/Topbar/Breadcrumbs.vue';
+import Content from './components/Content/index.vue';
+import { useResizeHandler } from './hooks/useResizeHandler';
+// import { storeToRefs } from 'pinia';
+import { useLayoutsettings } from '@/pinia/modules/layoutSettings';
 
 export default defineComponent({
   name: 'layout',
@@ -42,19 +37,17 @@ export default defineComponent({
     Content,
   },
   setup() {
-    useResizeHandler()
-    const defaultSettings = useLayoutsettings()
-    const isFluid = defaultSettings.layout.isFluid
-    const isTopbarFixed = defaultSettings.topbar.isFixed
-    const isMenusShow = defaultSettings.menus.isShow
-    const isHorizontalMenu = defaultSettings.menus.mode === 'horizontal'
-    const isBreadcrumbsShow = computed(
-      () => isHorizontalMenu && defaultSettings.breadcrumbs.isShow
-    )
-    const paddingFlag = ref(true)
-    const handleBreadcrumbsChange = boo => {
-      paddingFlag.value = boo
-    }
+    useResizeHandler();
+    const defaultSettings = useLayoutsettings();
+    const isFluid = defaultSettings.layout.isFluid;
+    const isTopbarFixed = defaultSettings.topbar.isFixed;
+    const isMenusShow = defaultSettings.menus.isShow;
+    const isHorizontalMenu = defaultSettings.menus.mode === 'horizontal';
+    const isBreadcrumbsShow = computed(() => isHorizontalMenu && defaultSettings.breadcrumbs.isShow);
+    const paddingFlag = ref(true);
+    const handleBreadcrumbsChange = (boo) => {
+      paddingFlag.value = boo;
+    };
 
     return {
       isFluid,
@@ -64,9 +57,9 @@ export default defineComponent({
       isBreadcrumbsShow,
       paddingFlag,
       handleBreadcrumbsChange,
-    }
+    };
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>

@@ -1,94 +1,83 @@
+import { useAccount } from '@/pinia/modules/account';
+import { TOKEN, useApp } from '@/pinia/modules/app';
+import { useMenus } from '@/pinia/modules/menu';
+import router from '@/router';
+import { ElLoading } from 'element-plus';
+import { nextTick } from 'vue';
 
+let loadingInstance = null;
+const whiteList = ['login']; // 白名单，里面是路由对象的name
 
-import { ElLoading } from 'element-plus'
-import router from '@/router'
-// import store from '@/store'
-import { TOKEN } from '@/store/modules/app' // TOKEN变量名
-import { nextTick } from 'vue'
-import { useApp } from './pinia/modules/app'
-import { useAccount } from './pinia/modules/account'
-import { useMenus } from './pinia/modules/menu'
+const getPageTitle = (title = '') => {
+  const { title: appTitle } = useApp();
+  if (title) return `${title} - ${appTitle}`;
+  return appTitle;
+};
 
-const getPageTitle = title => {
-  const { title: appTitle } = useApp()
-  if (title) {
-    return `${title} - ${appTitle}`
-  }
-  return appTitle
-}
+// 全局路由控制行为
 
-// 白名单，里面是路由对象的name
-const WhiteList = ['login', 'lock']
-
-let loadingInstance = null
-
-// vue-router4的路由守卫不再是通过next放行，而是通过return返回true或false或者一个路由地址
-router.beforeEach(async to => {
+/**
+ * vue-router4 的路由守卫不再是通过 next 放行，而是通过 return 返回 true 或 false 或者一个路由地址
+ * 导航前，获取用户信息，可以获取，继续导航，否则让用户重新登陆。
+ */
+router.beforeEach(async (to, from) => {
   loadingInstance = ElLoading.service({
     lock: true,
     // text: '正在加载数据，请稍候~',
     background: 'rgba(0, 0, 0, 0.7)',
-  })
+  });
 
-  if (WhiteList.includes(to.name)) {
-    return true
-  }
+  if (whiteList.includes(to.name)) return true;
+
+  // 没有 token，跳转 login 页，让用户重新登陆
   if (!window.localStorage[TOKEN]) {
     return {
       name: 'login',
       query: {
-        redirect: to.fullPath, // redirect是指登录之后可以跳回到redirect指定的页面
+        redirect: to.fullPath, // redirect 是指登录之后可以跳回到 redirect 指定的页面
       },
       replace: true,
-    }
-  } else {
-    const { userinfo, getUserinfo } = useAccount()
-    // 获取用户角色信息，根据角色判断权限
-    if (!userinfo) {
-      try {
-        // 获取用户信息
-        await getUserinfo()
-      } catch (err) {
-        loadingInstance.close()
-        return false
-      }
+    };
+  }
 
-      return to.fullPath
+  // 获取用户角色信息，根据角色判断权限。 - todo 是获取当前用户的所有资源路径，不是用户是否有身份
+  const { userinfo, getUserinfo } = useAccount();
+
+  if (!userinfo) {
+    let res = await getUserinfo(); // 获取用户信息
+    if (!res) {
+      loadingInstance.close();
+      return false;
     }
 
-    // 生成菜单（如果你的项目有动态菜单，在此处会添加动态路由）
-    const { menus, generateMenus } = useMenus()
-    if (menus.length <= 0) {
-      try {
-        await generateMenus()
-        return to.fullPath // 添加动态路由后，必须加这一句触发重定向，否则会404
-      } catch (err) {
-        loadingInstance.close()
-        return false
-      }
-    }
+    return to.fullPath;
+  }
 
-    // 判断是否处于锁屏状态
-    if (to.name !== 'lock') {
-      const { authorization } = useApp()
-      if (!!authorization && !!authorization.screenCode) {
-        return {
-          name: 'lock',
-          query: {
-            redirect: to.path,
-          },
-          replace: true,
-        }
-      }
+  // login 成功 -> menus 没有生成过，动态生成路由
+
+  // 生成菜单（如果你的项目有动态菜单，在此处会添加动态路由）
+  const { menus, generateMenus } = useMenus(); // todo
+  if (!menus.length) {
+    try {
+      await generateMenus();
+      return to.fullPath; // 添加动态路由后，必须加这一句触发重定向，否则会404
+    } catch (err) {
+      console.log('err', err);
+      loadingInstance.close();
+      return false;
     }
   }
-})
 
-router.afterEach(to => {
-  loadingInstance.close()
+  console.log('menus', menus);
+
+  return true;
+});
+
+router.afterEach((to) => {
+  loadingInstance.close();
   if (router.currentRoute.value.name === to.name) {
     nextTick(() => {
-      document.title = getPageTitle(!!to.meta && to.meta.truetitle)
-    })
+      document.title = getPageTitle(to.meta && to.meta.truetitle);
+    });
   }
-})
+});

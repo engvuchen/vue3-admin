@@ -1,17 +1,15 @@
-
-
-import { useAccount } from '@/pinia/modules/account'
+import { useAccount } from '@/pinia/modules/account';
 
 const checkUserinfo = (code, fullPath) => {
-  const { userinfo } = useAccount()
+  const { userinfo } = useAccount();
   if (userinfo) {
-    return `/error/${code === '404' ? fullPath : code}`
+    return `/error/${code === '404' ? fullPath : code}`;
   }
-  return true
-}
+  return true;
+};
 
-const Layout = () => import('@/layout/index.vue')
-const Error = () => import('@/views/error/index.vue')
+const Layout = () => import('@/layout/index.vue');
+const Error = () => import('@/views/error/index.vue');
 
 export default [
   {
@@ -47,28 +45,28 @@ export default [
       },
     ],
   },
-  {
-    path: '/403',
-    name: 'forbidden',
-    component: Error,
-    props: {
-      error: '403',
-    },
-    beforeEnter() {
-      return checkUserinfo('403')
-    },
-  },
-  {
-    path: '/500',
-    name: 'server-error',
-    component: Error,
-    props: {
-      error: '500',
-    },
-    beforeEnter() {
-      return checkUserinfo('500')
-    },
-  },
+  // {
+  //   path: '/403',
+  //   name: 'forbidden',
+  //   component: Error,
+  //   props: {
+  //     error: '403',
+  //   },
+  //   beforeEnter() {
+  //     return checkUserinfo('403')
+  //   },
+  // },
+  // {
+  //   path: '/500',
+  //   name: 'server-error',
+  //   component: Error,
+  //   props: {
+  //     error: '500',
+  //   },
+  //   beforeEnter() {
+  //     return checkUserinfo('500')
+  //   },
+  // },
   {
     path: '/:pathMatch(.*)',
     name: 'not-found',
@@ -77,7 +75,7 @@ export default [
       error: '404',
     },
     beforeEnter(to) {
-      return checkUserinfo('404', to.fullPath.replace('/', ''))
+      return checkUserinfo('404', to.fullPath.replace('/', ''));
     },
   },
-]
+];

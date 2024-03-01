@@ -1,19 +1,17 @@
+import { createRouter, createWebHashHistory } from 'vue-router';
 
+import redirect from './modules/redirect';
+import error from './modules/error';
+import login from './modules/login';
+import home from './modules/home';
 
-import { createRouter, createWebHashHistory } from 'vue-router'
+import user from './modules/user';
+import test from './modules/test';
 
-import redirect from './modules/redirect'
-import error from './modules/error'
-import login from './modules/login'
-import lock from './modules/lock'
-import home from './modules/home'
-import test from './modules/test'
-
-/* 菜单栏的路由 */
+/* 菜单栏路由 */
 // 固定菜单
-export const fixedRoutes = [...home]
-// 动态菜单
-export const asyncRoutes = [...test]
+export const fixedRoutes = [...home, ...login, ...user];
+export const asyncRoutes = [...test]; // 动态菜单
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -23,18 +21,17 @@ const router = createRouter({
       redirect: '/home',
     },
     ...redirect, // 统一的重定向配置
-    ...login,
-    ...lock,
     ...fixedRoutes,
     ...error,
+    ...asyncRoutes,
   ],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
-      return savedPosition
+      return savedPosition;
     } else {
-      return { left: 0, top: 0 }
+      return { left: 0, top: 0 };
     }
   },
-})
+});
 
-export default router
+export default router;

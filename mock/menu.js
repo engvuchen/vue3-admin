@@ -1,5 +1,3 @@
-
-
 export default [
   {
     url: '/api/menus',
@@ -50,7 +48,7 @@ export default [
           name: 'test-error-log',
           title: '测试错误日志',
         },
-      ]
+      ];
 
       return {
         code: 200,
@@ -59,10 +57,10 @@ export default [
           {
             name: 'test',
             title: '测试页面',
-            children: childs,
+            children: childs, // 返回的所有页面
           },
         ],
-      }
+      };
     },
   },
-]
+];

@@ -1,10 +1,5 @@
-
-
 <template>
-  <div
-    class="left"
-    :class="{ collapse: collapse, mobile: device === 'mobile' }"
-  >
+  <div class="left" :class="{ collapse: collapse, mobile: device === 'mobile' }">
     <logo />
     <menus :collapse="collapse" />
   </div>
@@ -12,11 +7,11 @@
 </template>
 
 <script>
-import { useApp } from '@/pinia/modules/app'
-import { storeToRefs } from 'pinia'
-import { computed, defineComponent } from 'vue'
-import Logo from './Logo.vue'
-import Menus from './Menus.vue'
+import { useApp } from '@/pinia/modules/app';
+import { storeToRefs } from 'pinia';
+import { computed, defineComponent } from 'vue';
+import Logo from './Logo.vue';
+import Menus from './Menus.vue';
 
 export default defineComponent({
   components: {
@@ -24,22 +19,22 @@ export default defineComponent({
     Menus,
   },
   setup() {
-    const appStore = useApp()
-    const { sidebar, device } = storeToRefs(appStore)
-    const { setCollapse } = appStore
-    const collapse = computed(() => sidebar.value.collapse)
+    const appStore = useApp();
+    const { sidebar, device } = storeToRefs(appStore);
+    const { setCollapse } = appStore;
+    const collapse = computed(() => sidebar.value.collapse);
 
     const closeSidebar = () => {
-      setCollapse(1)
-    }
+      setCollapse(1);
+    };
 
     return {
       collapse,
       device,
       closeSidebar,
-    }
+    };
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>

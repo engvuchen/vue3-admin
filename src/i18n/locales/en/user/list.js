@@ -4,7 +4,7 @@ export default {
   add: 'Add one',
   refresh: 'Refresh',
   index: 'Index',
-  name: 'Nickname',
+  name: 'Username',
   email: 'Email',
   desc: 'Description',
   publish: 'Published',
@@ -29,4 +29,6 @@ export default {
   time: 'Time',
   timerange: 'Time range',
   num: 'Number',
+  role_id: 'Role',
+  id: 'Id',
 };

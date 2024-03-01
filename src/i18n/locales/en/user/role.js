@@ -29,4 +29,6 @@ export default {
   time: 'Time',
   timerange: 'Time range',
   num: 'Number',
+  role_id: 'Role',
+  id: 'ID',
 };

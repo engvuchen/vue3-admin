@@ -19,17 +19,13 @@
         {{ $t('test/list.refresh') }}
       </el-button>
     </template>
-    <template #status="{row}">
+    <template #status="{ row }">
       <el-tag :type="row.status === 1 ? 'success' : 'error'">
         {{ row.status === 1 ? $t('public.enabled') : $t('public.disabled') }}
       </el-tag>
     </template>
     <template #operate="scope">
-      <el-button
-        size="small"
-        type="primary"
-        @click="$router.push(`/test/edit/${scope.row.id}`)"
-      >
+      <el-button size="small" type="primary" @click="$router.push(`/test/edit/${scope.row.id}`)">
         {{ $t('public.edit') }}
       </el-button>
       <el-button size="small" type="danger">
@@ -40,8 +36,8 @@
 </template>
 
 <script>
-import { defineComponent, reactive, ref, toRefs } from 'vue'
-import { getUsers } from '@/api/test'
+import { defineComponent, reactive, ref, toRefs } from 'vue';
+// import { apiGetUserList } from '@/api/test'
 export default defineComponent({
   name: 'testList',
   setup() {
@@ -183,7 +179,7 @@ export default defineComponent({
                 value: 'grape',
               },
             ],
-            transform: val => val.join(','),
+            transform: (val) => val.join(','),
           },
           {
             label: 'test/list.date',
@@ -229,31 +225,30 @@ export default defineComponent({
       // },
       selectedItems: [],
       batchDelete() {
-        console.log(state.selectedItems)
+        console.log(state.selectedItems);
       },
       // 选择
       handleSelectionChange(arr) {
-        state.selectedItems = arr
+        state.selectedItems = arr;
       },
       // 请求函数
       async getList(params) {
-        console.log(params)
-        // params是从组件接收的，包含分页和搜索字段。
-        const { data } = await getUsers(params)
-
-        // 必须要返回一个对象，包含data数组和total总数
-        return {
-          data: data.list,
-          total: +data.total,
-        }
+        // console.log(params)
+        // // params是从组件接收的，包含分页和搜索字段。
+        // const { data } = await apiGetUserList(params)
+        // // 必须要返回一个对象，包含data数组和total总数
+        // return {
+        //   data: data.list,
+        //   total: +data.total,
+        // }
       },
-    })
-    const table = ref(null)
+    });
+    const table = ref(null);
     const refresh = () => {
-      table.value.refresh()
-    }
+      table.value.refresh();
+    };
 
-    return { ...toRefs(state), refresh, table }
+    return { ...toRefs(state), refresh, table };
   },
-})
+});
 </script>
