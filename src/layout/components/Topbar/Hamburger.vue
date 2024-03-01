@@ -1,34 +1,27 @@
-
-
 <template>
-  <el-icon
-    :size="20"
-    class="fold-btn"
-    :class="{ collapse: collapse }"
-    @click="handleToggleMenu"
-  >
+  <el-icon :size="20" class="fold-btn" :class="{ collapse: collapse }" @click="handleToggleMenu">
     <Fold />
   </el-icon>
 </template>
 <script>
-import { useApp } from '@/pinia/modules/app'
-import { storeToRefs } from 'pinia'
-import { computed, defineComponent } from 'vue'
+import { useApp } from '@/pinia/modules/app';
+import { storeToRefs } from 'pinia';
+import { computed, defineComponent } from 'vue';
 
 export default defineComponent({
   setup() {
-    const appStore = useApp()
-    const { sidebar } = storeToRefs(appStore)
-    const { setCollapse } = appStore
+    const appStore = useApp();
+    const { sidebar } = storeToRefs(appStore);
+    const { setCollapse } = appStore;
     const handleToggleMenu = () => {
-      setCollapse(+!sidebar.value.collapse)
-    }
+      setCollapse(Number(!sidebar.value.collapse));
+    };
     return {
       collapse: computed(() => sidebar.value.collapse),
       handleToggleMenu,
-    }
+    };
   },
-})
+});
 </script>
 <style lang="scss" scoped>
 .fold-btn {
