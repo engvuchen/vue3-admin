@@ -18,7 +18,7 @@ export default [
         component: Home,
         meta: {
           title: 'menu.homepage',
-          affix: true, // todo
+          affix: true,
         },
       },
     ],

@@ -10,7 +10,7 @@ export const apiGetUserList = (data) => {
   return request({
     url: '/user/list',
     method: 'get',
-    data,
+    params: data,
   });
 };
 
@@ -24,7 +24,7 @@ export const apiGetUserInfo = (data) => {
   return request({
     url: '/user/info',
     method: 'get',
-    data,
+    params: data,
   });
 };
 

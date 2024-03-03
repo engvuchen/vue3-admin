@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import { defineComponent, computed, getCurrentInstance } from 'vue';
+import { ref, defineComponent, computed, getCurrentInstance } from 'vue';
 import { useTags, isAffix } from './hooks/useTags';
 import { useContextMenu } from './hooks/useContextMenu';
 import { useLayoutsettings } from '@/pinia/modules/layoutSettings';
@@ -53,7 +53,8 @@ export default defineComponent({
     const defaultSettings = useLayoutsettings();
     const isTagsbarShow = computed(() => defaultSettings.tagsbar.isShow);
 
-    const tags = useTags();
+    const scrollContainer = ref(null);
+    const tags = useTags(scrollContainer);
     const contextMenu = useContextMenu(tags.tagList);
 
     const onScroll = (e) => {

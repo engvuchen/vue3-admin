@@ -54,8 +54,6 @@ router.beforeEach(async (to, from) => {
   }
 
   // login 成功 -> menus 没有生成过，动态生成路由
-
-  // 生成菜单（如果你的项目有动态菜单，在此处会添加动态路由）
   const { menus, generateMenus } = useMenus(); // todo
   if (!menus.length) {
     try {
@@ -67,8 +65,6 @@ router.beforeEach(async (to, from) => {
       return false;
     }
   }
-
-  console.log('menus', menus);
 
   return true;
 });

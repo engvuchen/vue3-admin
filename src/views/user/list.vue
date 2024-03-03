@@ -97,14 +97,13 @@ export default defineComponent({
       handleSelectionChange(arr) {
         state.selectedItems = arr;
       },
-      // 请求函数
+      // 请求函数。须返回一个对象 { data<Array>, total<Number> }
       async getList(params) {
         console.log('getList', params);
 
-        // params是从组件接收的，包含分页和搜索字段。
+        // params 是从组件接收的，包含分页和搜索字段。
         const { data } = await apiGetUserList(params);
 
-        // 必须返回一个对象，包含data数组和total总数
         return {
           data: data.list,
           total: Number(data.total),

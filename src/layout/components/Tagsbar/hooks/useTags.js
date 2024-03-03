@@ -9,7 +9,7 @@ export const isAffix = (tag) => {
   return !!tag.meta && !!tag.meta.affix;
 };
 
-export const useTags = () => {
+export const useTags = (scrollContainer) => {
   const tagStore = useTagsbar();
   const { tagList } = storeToRefs(tagStore);
   const { addTag, delTag, saveActivePosition, updateTagList } = tagStore;
@@ -23,7 +23,7 @@ export const useTags = () => {
     tagsItem.value[i] = el;
   };
 
-  const scrollbar = useScrollbar(tagsItem);
+  const scrollbar = useScrollbar(tagsItem, scrollContainer);
 
   watch(
     () => tagList.value.length,
@@ -32,17 +32,11 @@ export const useTags = () => {
     },
   );
 
-  const filterAffixTags = (routes) => {
-    return routes.filter((route) => isAffix(route));
-  };
-
   const initTags = () => {
-    const affixTags = filterAffixTags(routes.value);
-
+    // 添加固定标签
+    const affixTags = routes.value.filter((route) => isAffix(route));
     for (const tag of affixTags) {
-      if (tag.name) {
-        addTag(tag);
-      }
+      if (tag.name) addTag(tag);
     }
     // 不在路由中的所有标签，需要删除
     const noUseTags = tagList.value.filter((tag) => routes.value.every((route) => route.name !== tag.name));
@@ -67,7 +61,7 @@ export const useTags = () => {
   const moveToCurrentTag = () => {
     nextTick(() => {
       for (const tag of tagsItem.value) {
-        if (!!tag && tag.to.path === route.value.path) {
+        if (tag?.to?.path === route.value.path) {
           scrollbar.moveToTarget(tag);
 
           if (tag.to.fullPath !== route.value.fullPath) {

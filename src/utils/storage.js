@@ -8,11 +8,10 @@ export const getItem = (name) => {
 };
 
 export const setItem = (name, value) => {
-  let data = '';
+  let data = value;
   if (typeof value === 'object') {
     data = JSON.stringify(value);
   }
-
   window.localStorage.setItem(name, data);
 };
 

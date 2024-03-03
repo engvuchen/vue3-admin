@@ -1,7 +1,6 @@
 <template>
   <div class="page-box">
     <!-- 搜索选项 -->
-
     <el-form
       v-if="!!search"
       class="search"
@@ -189,10 +188,10 @@
       class="pagination"
       :style="paginationConfig.style"
       @size-change="handleSizeChange"
-      v-model:currentPage="pageNum"
+      v-model:currentPage="page"
       @current-change="handleCurrentChange"
       :page-sizes="paginationConfig.pageSizes"
-      v-model:pageSize="pageSize"
+      v-model:limit="limit"
       :layout="paginationConfig.layout"
       :total="total"
     ></el-pagination>
@@ -299,24 +298,25 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
-    // 优化搜索字段，
-    // 1、如果搜索配置有transform处理函数，执行transform
-    // 2、删除日期范围默认的name字段
+    /**
+     * 优化搜索字段，
+     * 1、如果搜索配置有transform处理函数，执行transform
+     * 2、删除日期范围默认的name字段
+     */
     const optimizeFields = (search) => {
       const searchModel = JSON.parse(JSON.stringify(state.searchModel));
-      if (search && search.fields) {
-        search.fields.forEach((item) => {
-          if (!searchModel.hasOwnProperty(item.name)) {
-            return;
-          }
-          if (item.transform) {
-            searchModel[item.name] = item.transform(searchModel[item.name]);
-          }
-          if ((item.type === 'daterange' || item.type === 'datetimerange') && !!item.trueNames) {
-            delete searchModel[item.name];
-          }
-        });
-      }
+      let fields = search?.fields || [];
+      fields.forEach((item) => {
+        if (!searchModel.hasOwnProperty(item.name)) {
+          return;
+        }
+        if (item.transform) {
+          searchModel[item.name] = item.transform(searchModel[item.name]);
+        }
+        if ((item.type === 'daterange' || item.type === 'datetimerange') && !!item.trueNames) {
+          delete searchModel[item.name];
+        }
+      });
       return searchModel;
     };
 
@@ -325,8 +325,8 @@ export default defineComponent({
       state.loading = true;
       const searchModel = optimizeFields(props.search);
       const { data, total } = await props.request({
-        current: state.pageNum,
-        size: state.pageSize,
+        page: state.page,
+        limit: state.limit,
         ...searchModel,
       });
       state.loading = false;
@@ -338,15 +338,15 @@ export default defineComponent({
       searchModel: getSearchModel(props.search),
       loading: false,
       tableData: [],
-      total: 0,
-      pageNum: 1,
-      pageSize: (!!props.pagination && props.pagination.pageSize) || 10,
+      total: 20,
+      page: 0,
+      limit: (!!props.pagination && props.pagination.limit) || 10,
       paginationConfig: {
         show: false,
       },
       // 搜索
       handleSearch() {
-        state.pageNum = 1;
+        state.page = 0;
         getTableData();
       },
       // 重置函数
@@ -354,7 +354,7 @@ export default defineComponent({
         if (JSON.stringify(state.searchModel) === '{}') {
           return;
         }
-        state.pageNum = 1;
+        state.page = 0;
         state.searchModel = getSearchModel(props.search);
         getTableData();
       },
@@ -369,7 +369,7 @@ export default defineComponent({
       },
       // 改变每页size数量
       handleSizeChange() {
-        state.pageNum = 1;
+        state.page = 0;
         getTableData();
       },
       // 全选

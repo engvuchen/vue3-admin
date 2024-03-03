@@ -1,4 +1,3 @@
-
 <template>
   <el-config-provider :locale="locales[lang]">
     <router-view />
@@ -6,27 +5,28 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
-import { ElConfigProvider } from 'element-plus'
-import localeZH from 'element-plus/lib/locale/lang/zh-cn'
-import localeEN from 'element-plus/lib/locale/lang/en'
-import useLang from '@/i18n/useLang'
+import { defineComponent } from 'vue';
+import { ElConfigProvider } from 'element-plus';
+// https://www.bilibili.com/read/cv25825714/
+import localeZH from 'element-plus/dist/locale/zh-cn.mjs';
+import localeEN from 'element-plus/dist/locale/en.mjs';
+import useLang from '@/i18n/useLang';
 
 export default defineComponent({
   components: {
     [ElConfigProvider.name]: ElConfigProvider,
   },
   setup() {
-    const { lang } = useLang()
+    const { lang } = useLang();
     return {
       lang,
       locales: {
         'zh-cn': localeZH,
         en: localeEN,
       },
-    }
+    };
   },
-})
+});
 </script>
 
 <style lang="scss">
