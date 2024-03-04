@@ -31,4 +31,5 @@ export default {
   num: 'Number',
   role_id: 'Role',
   id: 'Id',
+  avatar: 'Avatar',
 };

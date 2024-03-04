@@ -1,6 +1,6 @@
 <template>
   <div class="login">
-    <el-form class="form" :model="model" :rules="rules" ref="loginForm">
+    <el-form class="form" :model="model" :rules="rules" ref="form">
       <h1 class="title">Vue3 Element Admin</h1>
       <el-form-item prop="username">
         <el-input
@@ -21,9 +21,26 @@
           :placeholder="$t('login.password')"
         />
       </el-form-item>
-      <el-form-item>
-        <el-button :loading="loading" type="primary" class="btn" size="large" @click="submit">
-          {{ btnText }}
+      <el-form-item class="btn-group">
+        <el-button
+          :loading="btnState.login.loading"
+          :disabled="btnState.login.disabled"
+          type="default"
+          class="btn"
+          size="large"
+          @click="submit('login')"
+        >
+          {{ btnState.login.txt() }}
+        </el-button>
+        <el-button
+          :loading="btnState.register.loading"
+          :disabled="btnState.register.disabled"
+          type="primary"
+          class="btn"
+          size="large"
+          @click="submit('register')"
+        >
+          {{ btnState.register.txt() }}
         </el-button>
       </el-form-item>
     </el-form>
@@ -34,8 +51,8 @@
 </template>
 
 <script>
-import { defineComponent, getCurrentInstance, reactive, toRefs, ref, computed, watch } from 'vue';
-import { apiLogin } from '@/api/user';
+import { defineComponent, getCurrentInstance, reactive, toRefs, ref, watch } from 'vue';
+import { apiUserRegister, apiUserLogin } from '@/api/user';
 import { useRouter, useRoute } from 'vue-router';
 import ChangeLang from '@/layout/components/Topbar/ChangeLang.vue';
 import useLang from '@/i18n/useLang';
@@ -67,40 +84,71 @@ export default defineComponent({
           message: ctx.$t('login.rules-password'),
           trigger: 'blur',
         },
-        {
-          min: 3,
-          max: 12,
-          message: ctx.$t('login.rules-regpassword'),
-          trigger: 'blur',
-        },
+        // {
+        //   min: 3,
+        //   max: 12,
+        //   message: ctx.$t('login.rules-regpassword'),
+        //   trigger: 'blur',
+        // },
       ],
     });
+
+    const btnState = ref({
+      register: {
+        disabled: false,
+        loading: false,
+        cgi: apiUserRegister,
+        txt: () => {
+          return btnState.value.register.loading ? ctx.$t('login.registering') : ctx.$t('login.register'); // 和登录共用一个等待中
+        },
+      },
+      login: {
+        disabled: false,
+        loading: false,
+        cgi: apiUserLogin,
+        txt: () => {
+          return btnState.value.login.loading ? ctx.$t('login.logining') : ctx.$t('login.login');
+        },
+      },
+    });
+    const switchBtnState = (type, flag = true) => {
+      let { [type]: currBtn, ...anotherBtn } = btnState.value;
+      currBtn.disabled = flag;
+      anotherBtn.disabled = flag;
+      currBtn.loading = flag;
+    };
+
     const state = reactive({
       model: {
         username: 'admin',
         password: '123',
       },
       rules: getRules(),
-      loading: false,
-      btnText: computed(() => (state.loading ? ctx.$t('login.logining') : ctx.$t('login.login'))),
-      loginForm: ref(null),
-      submit: () => {
-        if (state.loading) return;
+      form: ref(null),
+      // submit 不需要定义响应式
+      submit: (type) => {
+        let { [type]: currBtn } = btnState.value;
+        switchBtnState(type, true);
 
-        state.loginForm.validate(async (valid) => {
+        let { cgi, txt } = currBtn;
+
+        state.form.validate(async (valid) => {
           if (!valid) return;
 
-          state.loading = true;
-          const { code, data } = await apiLogin(state.model);
-          if (code !== 0) return;
+          currBtn.loading = true;
+          const { code, data } = await cgi(state.model);
+
+          if (code !== 0) {
+            switchBtnState(type, false);
+            return;
+          }
 
           ctx.$message.success({
-            message: ctx.$t('login.loginsuccess'),
+            message: txt,
             duration: 1000,
           });
 
           useApp().initToken(data);
-          state.loading = false;
 
           if (!route.query.redirect) {
             return router.push('/');
@@ -120,7 +168,8 @@ export default defineComponent({
     });
 
     return {
-      ...toRefs(state),
+      ...toRefs(state), // 这个少不了。内层如果还包含了响应式定义，用这个才正常
+      btnState,
     };
   },
 });
@@ -140,6 +189,7 @@ export default defineComponent({
     padding: 0 24px;
     box-sizing: border-box;
     margin: 160px auto 0;
+
     :deep {
       .el-input__wrapper {
         box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
@@ -171,8 +221,16 @@ export default defineComponent({
         }
       }
     }
+
+    .btn-group {
+      :deep {
+        .el-form-item__content {
+          justify-content: space-between;
+        }
+      }
+    }
     .btn {
-      width: 100%;
+      width: 48%;
     }
   }
 }

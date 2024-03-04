@@ -26,26 +26,38 @@ service.interceptors.request.use(
 // 拦截响应
 service.interceptors.response.use(
   (response) => {
-    return response.data;
-  },
-  async (error) => {
-    let response = error?.response;
+    let isSilent = response.config.silent;
 
-    let code = response?.body?.code;
-    if (!response.config.silent) {
-      ElMessage.error(errmap[code]);
-    }
+    console.log('🔎 ~ success response:', response);
+    // 业务错误
+    let code = response?.data?.code;
+    if (!isSilent && code !== 0) ElMessage.error(errmap[code]);
 
+    // token 缺失、过期、不能找到用户，返回登陆页
     if (code === errmap.TOKEN_ERR) {
       const redirect = encodeURIComponent(window.location.href);
       router.push(`/login?redirect=${redirect}`);
       useApp().clearToken();
     }
 
+    return response.data;
+  },
+  async (error) => {
+    let response = error?.response;
+    console.log('🔎 ~ err response:', response);
+
+    let isSilent = response.config.silent;
+    // let isNetWorkErr = !code && response.status;
+    // 网络错误 500 400
+    if (!isSilent) ElMessage.error(`${response.config.url}: ${response.status}`);
+
     // console.dir(error) // 可在此进行错误上报
     // ElMessage.closeAll();
 
-    return Promise.reject(error);
+    return Promise.resolve({
+      code: -1,
+      error,
+    });
   },
 );
 

@@ -62,7 +62,7 @@ export const apiUserRegister = (data) => {
  * @access public
  * 用户登录校验成功，返回 token（token存储了用户信息）
  */
-export const apiLogin = (data) => {
+export const apiUserLogin = (data) => {
   return request({
     url: '/user/login',
     method: 'post',

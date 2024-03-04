@@ -7,8 +7,6 @@ import viteSvgIcons from 'vite-plugin-svg-icons';
 
 // https://vitejs.dev/config/
 export default (env) => {
-  // console.log(111, env);
-
   return defineConfig({
     // base: '/vue3-element-admin-site/',
     plugins: [
@@ -49,7 +47,8 @@ export default (env) => {
     },
     server: {
       port: 3001,
-      open: true,
+      // open: true,
+      open: 'http://admin123.com', // boolean || string, true => 默认 localhost
       // proxy: {
       //   '/api': {
       //     target: 'http://dev.api.xxx.com', // 后端接口的域名

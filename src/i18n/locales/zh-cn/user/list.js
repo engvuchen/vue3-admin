@@ -31,4 +31,5 @@ export default {
   name: '用户名',
   role_id: '角色',
   id: 'ID',
+  avatar: '头像',
 };

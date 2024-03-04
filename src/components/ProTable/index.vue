@@ -155,15 +155,15 @@
       </div>
     </div>
     <!-- table表格栏 -->
-    <div class="table">
+    <div class="table-con">
       <el-table
+        stripe
         v-loading="loading"
         :data="tableData"
         :row-key="rowKey"
-        tooltip-effect="dark"
-        stripe
         :border="border"
         @selection-change="handleSelectionChange"
+        style="width: 100%"
       >
         <el-table-column
           v-for="item in columns"
@@ -176,6 +176,7 @@
           <template #header="scope" v-if="!!item.labelSlot">
             <slot :name="item.labelSlot" v-bind="scope"></slot>
           </template>
+          <!-- 操作列插槽 -->
           <template #default="scope" v-if="!!item.tdSlot">
             <slot :name="item.tdSlot" v-bind="scope"></slot>
           </template>
@@ -467,9 +468,12 @@ export default defineComponent({
       font-size: 16px;
     }
   }
-  .table {
+  .table-con {
     padding: 20px;
     background: #fff;
+  }
+  .table {
+    width: 100%;
   }
   .pagination {
     padding: 0 20px 20px;

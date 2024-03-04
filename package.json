@@ -6,11 +6,8 @@
     "url": "https://github.com/engvuchen"
   },
   "scripts": {
-    "start": "npm run dev",
-    "dev": "vite",
-    "dev:mock": "vite --mode mock",
+    "start": "vite",
     "build": "vite build",
-    "build:mock": "vite build --mode mock",
     "serve": "vite preview",
     "lint": "eslint --fix --ext .js,.vue src",
     "prepare": "husky"

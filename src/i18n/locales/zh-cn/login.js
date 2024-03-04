@@ -7,4 +7,6 @@ export default {
   'rules-username': '请输入用户名',
   'rules-password': '请输入密码',
   'rules-regpassword': '长度在 6 到 12 个字符',
-}
+  registering: '注册中...',
+  register: '注册',
+};

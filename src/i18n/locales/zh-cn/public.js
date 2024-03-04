@@ -19,4 +19,6 @@ export default {
   enddate: '结束日期',
   starttime: '开始时间',
   endtime: '结束时间',
-}
+  deleteTip: '删除此项，确认？',
+  confirm: '确认',
+};

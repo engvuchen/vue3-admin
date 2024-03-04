@@ -19,4 +19,6 @@ export default {
   enddate: 'To',
   starttime: 'From',
   endtime: 'To',
-}
+  deleteTip: 'Are you sure to delete this?',
+  confirm: 'Confirm',
+};
