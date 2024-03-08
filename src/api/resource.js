@@ -40,10 +40,11 @@ export const apiGetSelfResource = (data) => {
  * @req { id, name, access, cgi } 新增 - { name, access, cgi } 编辑 - { id, access, cgi }
  * @desc 新增、修改 资源
  */
-export const apiResourceModify = () => {
+export const apiResourceModify = (data) => {
   return request({
     url: '/resource/modify',
-    method: 'get',
+    method: 'post',
+    data,
   });
 };
 
@@ -52,9 +53,10 @@ export const apiResourceModify = () => {
  * @req { id }
  * @desc 删除 资源
  */
-export const apiResourceDel = () => {
+export const apiResourceDel = (data) => {
   return request({
     url: '/resource/del',
     method: 'post',
+    data,
   });
 };

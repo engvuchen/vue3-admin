@@ -49,7 +49,7 @@ export default [
         name: 'userResource',
         component: Resource,
         meta: {
-          title: '权限管理',
+          title: '资源管理',
         },
       },
     ],

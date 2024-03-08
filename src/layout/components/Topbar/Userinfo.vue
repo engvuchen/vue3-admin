@@ -12,9 +12,8 @@
     </div>
     <template #dropdown>
       <el-dropdown-menu>
-        <el-dropdown-item>{{ $t('topbar.center') }}</el-dropdown-item>
-        <el-dropdown-item>{{ $t('topbar.password') }}</el-dropdown-item>
-        <!-- <lock-modal /> -->
+        <el-dropdown-item @click="jumpToSelfCenter">{{ $t('topbar.center') }}</el-dropdown-item>
+        <!-- <el-dropdown-item>{{ $t('topbar.password') }}</el-dropdown-item> -->
         <el-dropdown-item @click="logout">
           {{ $t('topbar.logout') }}
         </el-dropdown-item>
@@ -26,16 +25,12 @@
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserinfo } from '@/components/Avatar/hooks/useUserinfo';
-import LockModal from './LockModal.vue';
 import { useApp } from '@/pinia/modules/app';
 
 export default defineComponent({
-  components: {
-    LockModal,
-  },
+  components: {},
   setup() {
     const router = useRouter();
-
     const { userinfo } = useUserinfo();
 
     // 退出
@@ -44,10 +39,14 @@ export default defineComponent({
       useApp().clearToken();
       router.push('/login');
     };
+    const jumpToSelfCenter = () => {
+      router.push('.');
+    };
 
     return {
       userinfo,
       logout,
+      jumpToSelfCenter,
     };
   },
 });

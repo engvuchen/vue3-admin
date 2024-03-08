@@ -6,7 +6,7 @@
       class="search"
       :model="searchModel"
       :inline="true"
-      label-position="right"
+      label-position="left"
       :label-width="search.labelWidth"
       ref="searchForm"
     >
@@ -144,7 +144,6 @@
         </el-button>
       </el-form-item>
     </el-form>
-
     <!-- title 和 工具栏 -->
     <div class="head" v-if="!hideTitleBar">
       <slot name="title">
@@ -169,14 +168,15 @@
           v-for="item in columns"
           :key="item.label"
           :filter-method="item.filters && filterHandler"
-          :show-overflow-tooltip="!item.wrap"
+          :show-overflow-tooltip="!!item.wrap"
           v-bind="item"
           :label="item.label ? $t(item.label) : ''"
         >
+          <!-- el-table 表头插槽；接受业务定制 -->
           <template #header="scope" v-if="!!item.labelSlot">
             <slot :name="item.labelSlot" v-bind="scope"></slot>
           </template>
-          <!-- 操作列插槽 -->
+          <!-- el-table 操作列插槽；接受业务定制 -->
           <template #default="scope" v-if="!!item.tdSlot">
             <slot :name="item.tdSlot" v-bind="scope"></slot>
           </template>
@@ -449,6 +449,7 @@ export default defineComponent({
     }
     .search-btn {
       margin-left: auto;
+      margin-right: 0;
     }
     :deep(.el-input-number .el-input__inner) {
       text-align: left;

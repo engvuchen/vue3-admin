@@ -1,122 +1,314 @@
 <template>
-  <pro-table
-    ref="table"
-    :title="$t('user/list.title')"
-    :request="getList"
-    :columns="columns"
-    :search="searchConfig"
-    @selectionChange="handleSelectionChange"
-  >
-    <!-- 工具栏 -->
-    <template #toolbar>
-      <el-button type="primary" icon="Delete" @click="batchDelete">
-        {{ $t('user/list.batchDelete') }}
-      </el-button>
-      <el-button type="primary" icon="Plus" @click="$router.push('/user/add')">
-        {{ $t('user/list.add') }}
-      </el-button>
-      <el-button type="primary" icon="Refresh" @click="refresh">
-        {{ $t('user/list.refresh') }}
-      </el-button>
-    </template>
-    <template #status="{ row }">
-      <el-tag :type="row.status === 1 ? 'success' : 'error'">
-        {{ row.status === 1 ? $t('public.enabled') : $t('public.disabled') }}
-      </el-tag>
-    </template>
-    <template #operate="scope">
-      <el-button size="small" type="primary" @click="$router.push(`/user/edit/${scope.row.id}`)">
-        {{ $t('public.edit') }}
-      </el-button>
-      <el-button size="small" type="danger">
-        {{ $t('public.delete') }}
-      </el-button>
-    </template>
-  </pro-table>
+  <div class="resource">
+    <!-- 表格 -->
+    <pro-table
+      ref="table"
+      :title="$t('user/resource.title')"
+      :request="getList"
+      :columns="columns"
+      :search="searchConfig"
+    >
+      <!-- 工具栏 -->
+      <template #toolbar>
+        <el-button plain type="default" icon="Plus" @click="onShowAddForm">
+          {{ $t('user/resource.add') }}
+        </el-button>
+        <el-button plain type="default" icon="Refresh" @click="refresh">
+          {{ $t('user/resource.refresh') }}
+        </el-button>
+      </template>
+      <template #access="{ row }">
+        <!-- <el-avatar size="small" fit="cover" :src="row.avatar" /> -->
+        <el-tag
+          v-for="(item, index) in row?.access || []"
+          :key="index"
+          type="info"
+          size="small"
+          effect="plain"
+          style="margin-right: 10px"
+          >{{ item }}</el-tag
+        >
+      </template>
+      <template #cgi="{ row }">
+        <!-- <el-avatar size="small" fit="cover" :src="row.avatar" /> -->
+        <el-tag
+          v-for="(item, index) in row?.cgi || []"
+          :key="index"
+          type="info"
+          size="small"
+          effect="plain"
+          style="margin-right: 10px"
+          >{{ item }}</el-tag
+        >
+      </template>
+      <!-- 单元格操作列 -->
+      <template #operate="scope">
+        <!-- 编辑 -->
+        <!-- {{ $t('public.edit') }} -->
+        <el-button plain circle :icon="Edit" type="default" @click="onShowUpdForm(scope.row)"></el-button>
+        <!-- 删除 -->
+        <el-popconfirm
+          width="240"
+          icon-color="#626AEF"
+          :confirm-button-text="$t('public.confirm')"
+          :cancel-button-text="$t('public.cancel')"
+          :title="$t('public.deleteTip')"
+          @confirm="onRemove(scope.row)"
+        >
+          <template #reference>
+            <!-- {{ $t('public.delete') }} -->
+            <el-button plain circle :icon="Delete" type="danger"> </el-button>
+          </template>
+        </el-popconfirm>
+      </template>
+    </pro-table>
+    <!-- 新建&编辑 -->
+    <el-dialog v-model="dialogVisible" @close="onCancel" class="dialog">
+      <template #header>{{ formTitle }}</template>
+      <pro-form ref="proform" :config="formConfig" @cancel="onCancel" @submit="onSubmit"></pro-form>
+    </el-dialog>
+  </div>
 </template>
 
-<script>
-import { defineComponent, reactive, ref, toRefs } from 'vue';
-import { apiGetUserList } from '@/api/user';
-export default defineComponent({
-  name: 'userList',
-  setup() {
-    const state = reactive({
-      // 搜索配置
-      searchConfig: {
-        labelWidth: '90px', // 必须带上单位
-        inputWidth: '400px', // 必须带上单位
-        fields: [
-          {
-            type: 'text',
-            label: 'user/list.id',
-            name: 'id',
-          },
-          {
-            type: 'text',
-            label: 'user/list.name',
-            name: 'username',
-          },
-        ],
-      },
-      // 表格列配置，大部分属性跟el-table-column配置一样
-      columns: [
-        { type: 'selection', width: 56 },
-        { label: 'user/list.index', type: 'index', width: 80 },
+<script setup>
+import { ref, reactive, toRefs, getCurrentInstance, toRaw, nextTick } from 'vue';
+import { Delete, Edit } from '@element-plus/icons-vue';
+import { apiGetResourceList, apiResourceModify, apiResourceDel } from '@/api/resource';
+import tips from '@/utils/tips';
+import { validMultiLineTxt } from '@/utils/validate';
+const { proxy } = getCurrentInstance();
+
+// 表格
+const { searchConfig, columns } = toRefs(
+  reactive({
+    request: apiGetResourceList,
+    searchConfig: {
+      labelWidth: '80px',
+      inputWidth: '200px',
+      fields: [
         {
-          label: 'user/list.name',
-          prop: 'username',
-          sortable: true,
-          width: 180,
+          type: 'text',
+          label: 'user/resource.name',
+          name: 'name',
         },
         {
-          label: 'user/list.role_id',
-          prop: 'role_id',
-          sortable: true,
-          width: 180,
+          type: 'text',
+          label: 'user/resource.access',
+          name: 'access',
         },
         {
-          label: 'public.operate',
-          width: 180,
-          align: 'center',
-          tdSlot: 'operate', // 自定义单元格内容的插槽名称
+          type: 'text',
+          label: 'user/resource.cgi',
+          name: 'cgi',
         },
       ],
-      // 分页配置
-      paginationConfig: {
-        layout: 'total, prev, pager, next, sizes', // 分页组件显示哪些功能
-        pageSize: 10, // 每页条数
-        pageSizes: [5, 10, 20, 50],
-        style: { 'justify-content': 'flex-end' },
+    },
+    columns: [
+      { label: 'user/resource.index', type: 'index', width: 80 },
+      {
+        label: 'user/resource.name',
+        prop: 'name',
+        'min-width': 100,
+        // sortable: true,
       },
-      selectedItems: [],
-      batchDelete() {
-        console.log('user.batchDelete', state.selectedItems);
+      {
+        label: 'user/resource.access',
+        prop: 'access',
+        // sortable: true,
+        tdSlot: 'access', // 先定义所有 slot 出口，proForm 根据配置渲染 slot 入口
+        wrap: false,
       },
-      // 选择
-      handleSelectionChange(arr) {
-        state.selectedItems = arr;
+      {
+        label: 'user/resource.cgi',
+        prop: 'cgi',
+        // sortable: true,
+        tdSlot: 'cgi',
+        wrap: false,
       },
-      // 请求函数
-      async getList(params) {
-        console.log('getList', params);
+      {
+        tdSlot: 'operate',
+        label: 'public.operate',
+        'min-width': 100,
+        align: 'center',
+      },
+    ],
+    paginationConfig: {
+      layout: 'total, prev, pager, next, sizes',
+      pageSize: 10,
+      pageSizes: [5, 10, 20, 50],
+      style: { 'justify-content': 'flex-end' },
+    },
+  }),
+);
+const table = ref(null);
+const refresh = () => {
+  table.value.refresh();
+};
+const getList = async (params) => {
+  const { data } = await apiGetResourceList(params);
+  return {
+    data: data?.list || [],
+    total: Number(data?.total) || 0,
+  };
+};
+const onRemove = async (row) => {
+  await apiResourceDel({ id: row._id });
+  tips.success('成功');
+  table.value.refresh();
+};
 
-        // params是从组件接收的，包含分页和搜索字段。
-        const { data } = await apiGetUserList(params);
+// 表单
+const dialogVisible = ref(false);
+const formTitle = ref('添加');
+const proform = ref(null);
 
-        // 必须返回一个对象，包含data数组和total总数
-        return {
-          data: data.list,
-          total: Number(data.total),
-        };
+let accessReg = /^(\/[a-zA-Z-]+)+$/; // /user/list-ab
+let cgiReg = /^(\/[a-zA-Z_]+)+$/; // /user/get_list
+const formConfig = reactive({
+  labelWidth: '90px',
+  inputWidth: '200px',
+  fields: [
+    // id
+    {
+      // label: proxy.$t('user/resource.id'),
+      name: 'id',
+      attributes: {
+        hide: true,
       },
-    });
-    const table = ref(null);
-    const refresh = () => {
-      table.value.refresh();
-    };
+      value: '',
+    },
+    // name
+    {
+      component: 'text',
+      label: proxy.$t('user/resource.name'),
+      name: 'name',
+      // attributes: {},
+      validity: [
+        {
+          required: true,
+          message: 'Name Required',
+          trigger: 'blur',
+        },
+      ],
+    },
+    // access
+    {
+      component: 'textarea',
+      name: 'access',
+      label: proxy.$t('user/resource.access'), // user/resource.batchDelete
+      attributes: {
+        multiple: true,
+        style: {
+          width: '280px', // 改的是 el-textarea el-input--suffix
+        },
+      },
+      validity: [
+        {
+          required: true,
+          message: 'Access Required',
+          trigger: 'blur',
+        },
+        {
+          validator: (rule, value, callback) => {
+            if (!validMultiLineTxt(accessReg, value)) {
+              return callback('Word error');
+            }
+            callback();
+          },
+          trigger: 'blur',
+        },
+      ],
+    },
+    // cgi
+    {
+      component: 'textarea',
+      name: 'cgi',
+      label: proxy.$t('user/resource.cgi'),
+      attributes: {
+        multiple: true,
+        style: {
+          width: '280px',
+        },
+      },
+      validity: [
+        { required: true, message: 'Cgi Required', trigger: 'blur' },
+        {
+          validator: (rule, value, callback) => {
+            if (!validMultiLineTxt(cgiReg, value)) {
+              return callback('Word error');
+            }
 
-    return { ...toRefs(state), refresh, table };
-  },
+            callback();
+          },
+          trigger: 'blur',
+        },
+      ],
+    },
+  ],
 });
+
+const onShowAddForm = () => {
+  dialogVisible.value = true;
+  formTitle.value = '添加';
+
+  nextTick(() => {
+    proform?.value?.resetFields();
+  });
+};
+const onShowUpdForm = (row) => {
+  dialogVisible.value = true;
+  formTitle.value = '编辑';
+
+  let data = toRaw(row);
+
+  // 恢复表单数据
+  data.id = data._id;
+  if (Array.isArray(data.access)) {
+    data.access = data?.access?.join('\n') || '';
+  }
+  if (Array.isArray(data.cgi)) {
+    data.cgi = data?.cgi?.join('\n') || '';
+  }
+  nextTick(() => {
+    Object.assign(proform.value.formModal, data);
+  });
+};
+
+const onSubmit = async (data) => {
+  console.log('🔎 ~ onSubmit ~ data:', data);
+
+  ['access', 'cgi'].forEach((name) => {
+    data[name] = Array.from(
+      new Set(
+        data[name]
+          .replace(/[,;\n]+/g, ',')
+          .split(',')
+          .filter((str) => str),
+      ),
+    );
+  });
+
+  let res = await apiResourceModify(data);
+  if (res.code !== 0) return;
+
+  refresh();
+  tips.success('成功');
+  dialogVisible.value = false;
+};
+const onCancel = () => {
+  dialogVisible.value = false;
+};
 </script>
+
+<style lang="scss" scoped>
+.resource {
+  :deep(.dialog) {
+    width: fit-content;
+
+    .el-textarea__inner {
+      min-width: 280px;
+      min-height: 150px !important; // textarea 的调整除了样式，还有配置 style 属性。没有 style，样式的宽度可以溢出
+    }
+  }
+}
+</style>

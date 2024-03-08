@@ -13,12 +13,8 @@ import i18n from '@/i18n';
 // 全局注册element-plus/icons-vue
 import * as ICONS from '@element-plus/icons-vue';
 Object.entries(ICONS).forEach(([key, component]) => {
-  // app.component(key === 'PieChart' ? 'PieChartIcon' : key, component)
   app.component(key, component);
 });
-
-// 全局注册 element-message
-app.config.globalProperties.$message = ElementPlus.ElMessage;
 
 // 引入路由
 import router from './router';

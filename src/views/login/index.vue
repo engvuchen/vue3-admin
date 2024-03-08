@@ -130,7 +130,7 @@ export default defineComponent({
         let { [type]: currBtn } = btnState.value;
         switchBtnState(type, true);
 
-        let { cgi, txt } = currBtn;
+        let { cgi } = currBtn;
 
         state.form.validate(async (valid) => {
           if (!valid) return;
@@ -144,7 +144,7 @@ export default defineComponent({
           }
 
           ctx.$message.success({
-            message: txt,
+            message: '成功',
             duration: 1000,
           });
 

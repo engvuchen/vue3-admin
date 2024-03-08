@@ -30,15 +30,12 @@
     </template>
     <!-- 单元格操作列 -->
     <template #operate="scope">
-      <!-- 还没有这一页 -->
-      <el-button size="small" type="primary" @click="$router.push(`/user/edit/${scope.row.id}`)">
+      <!-- 编辑 -->
+      <!-- <el-button size="small" type="primary" @click="$router.push(`/user/edit/${scope.row.id}`)">
         {{ $t('public.edit') }}
-      </el-button>
-
-      <!-- <el-button size="small" type="danger" @click="onRemove">
-        {{ $t('public.delete') }}
       </el-button> -->
 
+      <!-- 删除 -->
       <el-popconfirm
         width="240"
         icon-color="#626AEF"

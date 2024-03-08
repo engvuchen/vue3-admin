@@ -8,7 +8,7 @@ import request from '@/utils/request';
 export const apiGetRoleList = (data) => {
   return request({
     url: '/role/list',
-    method: 'post',
+    method: 'get',
     data,
   });
 };
