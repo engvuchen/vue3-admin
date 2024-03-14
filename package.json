@@ -46,19 +46,12 @@
   "lint-staged": {
     "src/**/*.{js,vue}": [
       "npm run lint",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ],
     "*.{js,vue,json,css,html,json}": [
       "eslint --fix",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "license": "MIT"
 }
