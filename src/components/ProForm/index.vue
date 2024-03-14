@@ -12,6 +12,7 @@
       <!-- custom -->
       <slot v-if="item.component === 'custom'" :name="item.slot" />
       <!-- select -->
+      <!-- remote-show-suffix -->
       <el-select
         clearable
         value-key="value"
@@ -21,10 +22,12 @@
         :multiple="!!item?.attributes?.multiple"
         :placeholder="item.label"
         :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        :remote="item?.attributes?.remote"
+        :remote-method="(query) => wrapperSelectRemoteMethod(item, query)"
+        :loading="item?.attributes?.loading"
       >
-        <!-- 远程不可能写死，但写死的配置又需要翻译。选项的翻译，业务处理 -->
         <el-option
-          v-for="option of item.items"
+          v-for="option in item?.items"
           :key="option.value"
           :label="option.label"
           :value="option.value"
@@ -161,11 +164,11 @@
   </el-form>
 </template>
 <script setup>
-import { defineProps, defineEmits, ref, reactive, toRaw } from 'vue';
+import { defineProps, defineEmits, ref, toRaw } from 'vue';
 
 const props = defineProps({
   /**
-   * todo 用到哪个，抽象到哪个
+   * todo 用到哪个，才抽象到哪个
  * {
       labelWidth: '90px',
       inputWidth: '200px',
@@ -193,43 +196,36 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'cancel']);
 
 const form = ref(null);
-// 处理 field.validity
-const initFormRules = (fields) => {
+const walkConfig = (config) => {
+  let modal = {};
   let rules = {};
 
-  fields.forEach((curr) => {
-    let { name = '', validity = [] } = curr;
-    if (!name) return;
-    Object.assign((rules[name] = []), [], validity); //
-  });
-
-  return rules;
-};
-// 返回表单数据。对 checkbox、datarange 有特殊处理。剔除 fields 中 hide=true 的项。formModal 只是空对象，但有响应。。。
-const initFormModel = (config) => {
-  const formModal = {};
-
-  // hide 的表单项，添加到 formModal
+  // hide 的表单项，添加到 modal。视图不渲染
   config.fields = config.fields.filter((curr) => {
-    if (curr.attributes.hide) {
-      formModal[curr.name] = '';
+    if (curr?.attributes?.hide) {
+      modal[curr.name] = '';
       return false;
     }
     return true;
   });
-  // 定制部分表单项的值，添加到 formModal
-  config.fields?.forEach((item, index) => {
+  let { fields } = config;
+
+  fields.forEach((item, index) => {
+    // 填充空 value, attributes, validity，防止初始化报错
+    fields[index] = { attributes: {}, validity: {}, ...item };
+
+    // 处理特殊组件的 value
     switch (item.component) {
       case 'checkbox':
       case 'checkbox-button':
-        formModal[item.name] = [];
+        modal[item.name] = [];
         break;
       default:
         break;
     }
-
     if (item.value !== undefined) {
-      formModal[item.name] = item.value;
+      modal[item.name] = item.value;
+
       // 日期范围和时间范围真实变量默认值
       if (
         (item.component === 'daterange' || item.component === 'datetimerange') &&
@@ -237,25 +233,22 @@ const initFormModel = (config) => {
         Array.isArray(item.value)
       ) {
         item.value.forEach((val, index) => {
-          formModal[item.trueNames[index]] = val;
+          modal[item.trueNames[index]] = val;
         });
       }
     }
+
+    // 生成 rules
+    let { name = '', validity = [] } = item;
+    if (!name) return;
+    Object.assign((rules[name] = []), [], validity);
   });
 
-  return formModal;
+  return { modal, rules };
 };
-// 填充空 value, attributes, validity，防止初始化报错
-const paddDefaultValue = (config) => {
-  let { fields } = config;
-  fields.forEach((item, index) => {
-    fields[index] = { attributes: {}, validity: {}, ...item };
-  });
-};
-
-paddDefaultValue(props.config);
-const formModal = reactive(initFormModel(props.config));
-const formRules = reactive(initFormRules(props.config.fields));
+const { modal, rules } = walkConfig(toRaw(props.config));
+const formModal = ref(modal);
+const formRules = ref(rules);
 
 const onCancel = () => {
   resetFields();
@@ -266,7 +259,7 @@ const onSubmit = () => {
   form.value.validate((valid) => {
     if (!valid) return;
 
-    emit('submit', toRaw(formModal));
+    emit('submit', toRaw(formModal.value));
   });
 };
 const resetFields = () => {
@@ -274,6 +267,19 @@ const resetFields = () => {
   form.value.clearValidate();
 };
 
+const wrapperSelectRemoteMethod = async (item, query) => {
+  let hasLoading = item.attributes.loading !== undefined;
+  if (hasLoading) item.attributes.loading = true;
+
+  let fn = item?.events?.['remote-method'];
+
+  try {
+    let items = await fn(query);
+    item.items = items;
+  } catch (error) {}
+
+  if (hasLoading) item.attributes.loading = false;
+};
 // 日期范围
 const handleDateChange = (date, item, format) => {
   formModal[item.name] = date ? formatDate(date, format) : '';

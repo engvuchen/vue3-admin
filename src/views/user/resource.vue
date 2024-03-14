@@ -57,7 +57,7 @@
         >
           <template #reference>
             <!-- {{ $t('public.delete') }} -->
-            <el-button plain circle :icon="Delete" type="danger"> </el-button>
+            <el-button plain circle :icon="Delete" type="danger"></el-button>
           </template>
         </el-popconfirm>
       </template>
@@ -128,7 +128,7 @@ const { searchConfig, columns } = toRefs(
       {
         tdSlot: 'operate',
         label: 'public.operate',
-        'min-width': 100,
+        width: 200,
         align: 'center',
       },
     ],
@@ -164,7 +164,7 @@ const proform = ref(null);
 
 let accessReg = /^(\/[a-zA-Z-]+)+$/; // /user/list-ab
 let cgiReg = /^(\/[a-zA-Z_]+)+$/; // /user/get_list
-const formConfig = reactive({
+const formConfig = ref({
   labelWidth: '90px',
   inputWidth: '200px',
   fields: [
@@ -273,7 +273,6 @@ const onShowUpdForm = (row) => {
     Object.assign(proform.value.formModal, data);
   });
 };
-
 const onSubmit = async (data) => {
   console.log('🔎 ~ onSubmit ~ data:', data);
 
@@ -288,7 +287,15 @@ const onSubmit = async (data) => {
     );
   });
 
-  let res = await apiResourceModify(data);
+  let postData = {};
+  let needs = ['id', 'name', 'access', 'cgi'];
+  needs.forEach((key) => {
+    if (data[key]) {
+      postData[key] = data[key];
+    }
+  });
+
+  let res = await apiResourceModify(postData);
   if (res.code !== 0) return;
 
   refresh();

@@ -1,14 +1,5 @@
 import request from '@/utils/request';
 
-// 获取菜单
-export const GetMenus = (params) => {
-  return request({
-    url: '/api/menus',
-    method: 'get',
-    params,
-  });
-};
-
 /**
  * @route GET /api/resource/list
  * @req { name, cgi, access, page, limit } 实际 name 可以用，其他字段不知道是否可以
@@ -18,7 +9,7 @@ export const apiGetResourceList = (data) => {
   return request({
     url: '/resource/list',
     method: 'get',
-    data,
+    params: data,
   });
 };
 
@@ -31,7 +22,7 @@ export const apiGetSelfResource = (data) => {
   return request({
     url: '/resource/self',
     method: 'get',
-    data,
+    params: data,
   });
 };
 

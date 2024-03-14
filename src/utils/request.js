@@ -4,11 +4,44 @@ import router from '@/router';
 import { useApp } from '@/pinia/modules/app';
 import errmap from '@/common/errcode';
 
+/**
+ * todo 变成 service.get、post、put 的形式
+ *
+ * get 参数固定为 data=JSON.stringify(params)
+ *
+ */
+
 const service = axios.create({
   baseURL: '/api',
   timeout: 10000,
   withCredentials: true,
 });
+
+function walkData(data) {
+  let isArray = Array.isArray(data);
+
+  // 先删掉数组中不需要的项
+  if (isArray) {
+    let delIndex = data.findIndex((curr) => curr === undefined || curr === null);
+    while (delIndex !== -1) {
+      data.splice(delIndex, 1);
+      delIndex = data.findIndex((curr) => curr === undefined || curr === null);
+    }
+  }
+
+  Object.keys(data).forEach((key, index) => {
+    let val = data[key];
+    if (val === undefined || val === null) {
+      delete data[key];
+    }
+
+    if (val !== null && typeof val === 'object') {
+      walkData(val);
+    }
+  });
+
+  return data;
+}
 
 // 拦截请求。默认添加 Authorization 请求头
 service.interceptors.request.use(
@@ -16,6 +49,10 @@ service.interceptors.request.use(
     const { authorization } = useApp();
     if (authorization) {
       config.headers.Authorization = authorization;
+    }
+
+    if (config.data) {
+      walkData(config.data);
     }
     return config;
   },
@@ -26,9 +63,7 @@ service.interceptors.request.use(
 // 拦截响应
 service.interceptors.response.use(
   (response) => {
-    let isSilent = response.config.silent;
-
-    console.log('🔎 ~ success response:', response);
+    let isSilent = response?.config?.silent;
     // 业务错误
     let code = response?.data?.code;
     if (!isSilent && code !== 0) ElMessage.error(errmap[code]);
@@ -44,10 +79,7 @@ service.interceptors.response.use(
   },
   async (error) => {
     let response = error?.response;
-    console.log('🔎 ~ err response:', response);
-
-    let isSilent = response.config.silent;
-    // let isNetWorkErr = !code && response.status;
+    let isSilent = response?.config?.silent;
     // 网络错误 500 400
     if (!isSilent) ElMessage.error(`${response.config.url}: ${response.status}`);
 

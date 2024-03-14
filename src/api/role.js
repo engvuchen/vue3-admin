@@ -9,7 +9,7 @@ export const apiGetRoleList = (data) => {
   return request({
     url: '/role/list',
     method: 'get',
-    data,
+    params: data,
   });
 };
 
@@ -18,10 +18,11 @@ export const apiGetRoleList = (data) => {
  * @req { id, name }
  * @desc 新增、修改 权限
  */
-export const apiRoleModify = () => {
+export const apiRoleModify = (data) => {
   return request({
     url: '/role/modify',
     method: 'post',
+    data,
   });
 };
 
@@ -30,9 +31,10 @@ export const apiRoleModify = () => {
  * @req { id }
  * @desc 删除 用户权限
  */
-export const apiRoleDel = () => {
+export const apiRoleDel = (data) => {
   return request({
     url: '/role/del',
     method: 'post',
+    data,
   });
 };
