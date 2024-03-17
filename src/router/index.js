@@ -10,8 +10,8 @@ import test from './modules/test';
 
 /* 菜单栏路由 */
 // 固定菜单
-export const fixedRoutes = [...home, ...login, ...user];
-export const asyncRoutes = [...test]; // 动态菜单
+export const fixedRoutes = [...home, ...login];
+export const asyncRoutes = [...user, ...test]; // 动态菜单
 
 const router = createRouter({
   history: createWebHashHistory(),

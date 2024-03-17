@@ -14,16 +14,15 @@ const getPageTitle = (title = '') => {
   return appTitle;
 };
 
-// 全局路由控制行为
-
 /**
+ * 全局路由守卫
  * vue-router4 的路由守卫不再是通过 next 放行，而是通过 return 返回 true 或 false 或者一个路由地址
  * 导航前，获取用户信息，可以获取，继续导航，否则让用户重新登陆。
  */
 router.beforeEach(async (to, from) => {
   loadingInstance = ElLoading.service({
     lock: true,
-    // text: '正在加载数据，请稍候~',
+    text: '加载数据中，请稍候~',
     background: 'rgba(0, 0, 0, 0.7)',
   });
 
@@ -34,7 +33,7 @@ router.beforeEach(async (to, from) => {
     return {
       name: 'login',
       query: {
-        redirect: to.fullPath, // redirect 是指登录之后可以跳回到 redirect 指定的页面
+        redirect: to.fullPath, // 登录之后，可以跳回到 redirect 指定的页面
       },
       replace: true,
     };
@@ -42,7 +41,6 @@ router.beforeEach(async (to, from) => {
 
   // 获取用户角色信息，根据角色判断权限。 - todo 是获取当前用户的所有资源路径，不是用户是否有身份
   const { userinfo, getUserinfo } = useAccount();
-
   if (!userinfo) {
     let res = await getUserinfo(); // 获取用户信息
     if (!res) {

@@ -11,13 +11,14 @@ export const useMenus = defineStore('menu', () => {
    * todo 支持判断相对路由。父路由是 /user, 子路由是 list，子路由完整路径是 /user/list
    * 递归遍历项目载入的所有路由，匹配远程的 path 列表，匹配上的才被收集
    * @param {Array} targetRoutes [ { path, name, children } ]
-   * @param {Array} ajaxRoutes [ 'path1', 'path2' ]
+   * @param {Array} ajaxRoutes [ 'path1', 'path2' ] 接口配置的路径
    * @param {Array} filterRoutes
    * @returns [routeObj, ...]
    */
   const getFilterRoutes = (targetRoutes = [], ajaxRoutes = [], filterRoutes = []) => {
     targetRoutes.forEach((curr) => {
-      if (ajaxRoutes.includes(curr.path)) {
+      // 用 startsWith 匹配。精准匹配，要求父目录都要配，当子路由嵌套过多，往往很麻烦
+      if (ajaxRoutes.find((item) => item.startsWith(curr.path))) {
         let { children = [], ...rest } = curr;
         filterRoutes.push(rest);
 
@@ -100,17 +101,20 @@ export const useMenus = defineStore('menu', () => {
     asyncRoutes.forEach((item) => {
       router.removeRoute(item.name);
     });
-
     // 过滤出需要添加的动态路由
-    const filterRoutes = getFilterRoutes(
-      asyncRoutes,
-      data.list.reduce((list, curr) => {
-        list.push(curr.access);
-        return list;
-      }, []),
-    ); // todo
+
+    let remoteResource = Array.from(
+      new Set(
+        data.list[0].resource.reduce((list, curr) => {
+          list.push(...curr.access);
+          return list;
+        }, []),
+      ),
+    );
+    const filterRoutes = getFilterRoutes(asyncRoutes, remoteResource);
 
     filterRoutes.forEach((route) => router.addRoute(route));
+    console.log('🔎 ~ generateMenus ~ filterRoutes:', filterRoutes);
 
     // 生成菜单
     const menus = getFilterMenus([...fixedRoutes, ...filterRoutes]);
