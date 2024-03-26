@@ -9,8 +9,7 @@ import user from './modules/user';
 import test from './modules/test';
 
 /* 菜单栏路由 */
-// 固定菜单
-export const fixedRoutes = [...home, ...login];
+export const fixedRoutes = [...home, ...login]; // 固定菜单
 export const asyncRoutes = [...user, ...test]; // 动态菜单
 
 const router = createRouter({

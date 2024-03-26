@@ -9,6 +9,11 @@ import { apiGetSelfResource } from '@/api/resource';
 export const useMenus = defineStore('menu', () => {
   /**
    * todo 支持判断相对路由。父路由是 /user, 子路由是 list，子路由完整路径是 /user/list
+   *
+   * `path = ''` 的处理：
+   * 1. 在子路由。配置 `/user`，父路由 `/user`，子路由 `path=''`。`/user` 父路由匹配成功，子路由空串也能匹配成功。
+   * 2. 在父路由。也能匹配成功，但这个路由没有什么作用。
+   *
    * 递归遍历项目载入的所有路由，匹配远程的 path 列表，匹配上的才被收集
    * @param {Array} targetRoutes [ { path, name, children } ]
    * @param {Array} ajaxRoutes [ 'path1', 'path2' ] 接口配置的路径
@@ -29,23 +34,6 @@ export const useMenus = defineStore('menu', () => {
     });
 
     return filterRoutes;
-
-    // ajaxRoutes.forEach((item) => {
-    //   const target = targetRoutes.find((target) => target.name === item.name);
-
-    //   if (target) {
-    //     const { children: targetChildren, ...rest } = target;
-    //     const route = {
-    //       ...rest,
-    //     };
-
-    //     if (item.children) {
-    //       route.children = getFilterRoutes(targetChildren, item.children);
-    //     }
-
-    //     filterRoutes.push(route);
-    //   }
-    // });
   };
   const generateUrl = (path = '', parentPath = '') => {
     if (path.startsWith('/')) return path;

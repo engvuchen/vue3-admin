@@ -142,6 +142,16 @@
         :style="{ width: config.inputWidth, ...item?.attributes?.style }"
       >
       </el-input>
+
+      <template v-else-if="item.component === 'upload'">
+        <el-upload :http-request="uploadImg" :before-upload="beforeUpload(rawFile, item?.limit)">
+          <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+          <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+        </el-upload>
+        <div style="color: #eee">
+          {{ item.help }}
+        </div>
+      </template>
       <!-- input -->
       <el-input
         v-else
@@ -165,6 +175,9 @@
 </template>
 <script setup>
 import { defineProps, defineEmits, ref, toRaw } from 'vue';
+import axios from 'axios';
+import { HexMD5, b64hamcsha1 } from '@/utils/hash';
+import tips from '@/utils/tips';
 
 const props = defineProps({
   /**
@@ -324,6 +337,78 @@ const formatDate = (date, format) => {
     }
   }
   return format;
+};
+
+let imageUrl = ref('');
+/**
+ * limit => { accept: ['jpg'], size: '' }
+ * @param {l} rawFile
+ */
+const beforeUpload = (rawFile, limit = { size: 2, accept: ['jpg', 'png'] }) => {
+  let notAccept = limit.accept.find((format) => format !== `image/${rawFile.type}`);
+  if (notAccept) {
+    tips.error(`Only allow Avatar picture must be JPG format!`);
+    return false;
+  }
+  if (rawFile.size / 1024 / 1024 > limit.size) {
+    tips.error(`Avatar picture size can not exceed ${limit.size}!`);
+    return false;
+  }
+
+  return true;
+};
+const uploadImg = async (options) => {
+  const file = options.file;
+
+  const uploadData = new FormData();
+  uploadData.append('file', file);
+
+  // https://help.upyun.com/knowledge-base/form_api/
+  const params = {
+    bucket: 'engvu-blog-upload',
+    username: 'test',
+    password: '279c979f4149486d97ae29f9b6f98a17',
+    path: '/img',
+    testCdnUrl: 'engvu-blog-upload.test.upcdn.net',
+    uploadImgList: [],
+  };
+  /* 计算policy */
+  const policyObj = {
+    bucket: params.bucket,
+    'save-key': `${params.path}/{filename}{.suffix}`,
+    expiration: new Date().getTime() + 600 /* 过期时间，在当前时间+10分钟 */,
+  };
+  const policy = btoa(JSON.stringify(policyObj));
+  uploadData.append('policy', policy);
+
+  /* 计算 Authorization */
+  const passwordMd5 = HexMD5.MD5(params.password).toString(HexMD5.enc.Hex);
+
+  /* [Method-请求方法, URI-请求路径, policy] */
+  // const arr = ['POST', `/${this.bucket}`, policy];
+  const authorization = `UPYUN ${params.username}:${b64hamcsha1(passwordMd5, ['POST', `/${params.bucket}`, policy].join('&'))}`;
+  uploadData.append('authorization', authorization);
+
+  let res = await axios({ method: 'POST', url: `https://v0.api.upyun.com/${params.bucket}`, data: uploadData }).catch(
+    (e) => {
+      tips.error('上传失败');
+      console.error(e);
+    },
+  );
+
+  if (res?.data?.url) {
+    console.log('🔎 ~ uploadImg ~ res.data.url:', res.data.url);
+    imageUrl = params.testCdnUrl + res.data.url;
+    return params.testCdnUrl + res.data.url;
+  }
+  return '';
+  // .then((res) => {
+  //   this.uploadImgList.push(this.testCdnUrl + res.data.url);
+  // })
+  // .catch((e) => {
+  //   console.error('上传失败', e);
+  //   alert('上传失败');
+  // });
 };
 
 defineExpose({
