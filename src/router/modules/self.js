@@ -4,7 +4,7 @@ const Self = () => import('@/views/self/index.vue');
 
 export default [
   {
-    path: '/home',
+    path: '/self',
     component: Layout,
     meta: {
       title: 'self.title',

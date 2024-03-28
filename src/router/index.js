@@ -4,12 +4,13 @@ import redirect from './modules/redirect';
 import error from './modules/error';
 import login from './modules/login';
 import home from './modules/home';
+import self from './modules/self';
 
 import user from './modules/user';
 import test from './modules/test';
 
 /* 菜单栏路由 */
-export const fixedRoutes = [...home, ...login]; // 固定菜单
+export const fixedRoutes = [...home, ...login, ...self]; // 固定菜单
 export const asyncRoutes = [...user, ...test]; // 动态菜单
 
 const router = createRouter({

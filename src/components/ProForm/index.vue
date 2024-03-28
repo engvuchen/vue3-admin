@@ -142,15 +142,21 @@
         :style="{ width: config.inputWidth, ...item?.attributes?.style }"
       >
       </el-input>
-
+      <!-- upload -->
       <template v-else-if="item.component === 'upload'">
-        <el-upload :http-request="uploadImg" :before-upload="beforeUpload(rawFile, item?.limit)">
-          <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-          <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+        <el-upload
+          action="#"
+          :show-file-list="false"
+          :before-upload="getBeforeUpload(item)"
+          :http-request="getUploadImg(item)"
+          :on-error="onUploadError"
+          class="uploader"
+        >
+          <img v-if="item.value" :src="item.value" class="preview" />
+          <el-icon v-else class="uploader-icon"><Plus /></el-icon>
+          <!-- <el-icon class="uploader-icon"><Plus /></el-icon> -->
         </el-upload>
-        <div style="color: #eee">
-          {{ item.help }}
-        </div>
+        <div v-html="item.attributes.help" class="help mr-top-20"></div>
       </template>
       <!-- input -->
       <el-input
@@ -173,6 +179,7 @@
     </div>
   </el-form>
 </template>
+
 <script setup>
 import { defineProps, defineEmits, ref, toRaw } from 'vue';
 import axios from 'axios';
@@ -192,7 +199,7 @@ const props = defineProps({
           name: 'name',
           style,
           attributes: { filterable, multiple },
-          validity: { required }
+          validity: [ required ]
         },
       ],
     },
@@ -339,76 +346,88 @@ const formatDate = (date, format) => {
   return format;
 };
 
-let imageUrl = ref('');
-/**
- * limit => { accept: ['jpg'], size: '' }
- * @param {l} rawFile
- */
-const beforeUpload = (rawFile, limit = { size: 2, accept: ['jpg', 'png'] }) => {
-  let notAccept = limit.accept.find((format) => format !== `image/${rawFile.type}`);
-  if (notAccept) {
-    tips.error(`Only allow Avatar picture must be JPG format!`);
-    return false;
-  }
-  if (rawFile.size / 1024 / 1024 > limit.size) {
-    tips.error(`Avatar picture size can not exceed ${limit.size}!`);
-    return false;
-  }
+// let imageUrl = ref('');
 
-  return true;
+// todo
+const getBeforeUpload = (config) => {
+  let attrs = toRaw(config)?.attributes || {};
+  return (rawFile) => {
+    if (!rawFile) return;
+
+    let { accept = [], size = 0 } = attrs || {};
+
+    let [, type] = rawFile.type.split('/');
+    if (accept.length && !accept.find((format) => format === type)) {
+      tips.error(`Format must be ${accept.join(', ')}`);
+      return false;
+    }
+
+    if (size && rawFile.size / 1024 / 1024 > size) {
+      tips.error(`Size can not exceed ${size}MB!`);
+      return false;
+    }
+
+    return true;
+  };
 };
-const uploadImg = async (options) => {
-  const file = options.file;
+const getUploadImg = (config) => {
+  return async (options) => {
+    console.log('🔎 ~ getUploadImg ~ options:', options);
 
-  const uploadData = new FormData();
-  uploadData.append('file', file);
+    const file = options.file;
 
-  // https://help.upyun.com/knowledge-base/form_api/
-  const params = {
-    bucket: 'engvu-blog-upload',
-    username: 'test',
-    password: '279c979f4149486d97ae29f9b6f98a17',
-    path: '/img',
-    testCdnUrl: 'engvu-blog-upload.test.upcdn.net',
-    uploadImgList: [],
+    const uploadData = new FormData();
+
+    uploadData.append('file', file);
+
+    // https://help.upyun.com/knowledge-base/form_api/
+    const params = {
+      bucket: 'engvu-blog-upload',
+      username: 'test1',
+      password: 'If7wTOZPcD1aXSjWMrsb6aRYwSb7BqBJ',
+      path: '/img',
+      host: 'http://upload2.engvu.tech',
+
+      // bucket: 'xiaoli-test',
+      // username: 'test',
+      // password: '0LjHlUNs8n0RWbEPi3c0BB3dOJBkfhwd',
+      // path: '/img',
+      // testCdnUrl: 'http://xiaoli-test.test.upcdn.net',
+      // imgLocalUrl: '',
+    };
+    /* 计算policy */
+    const policyObj = {
+      bucket: params.bucket,
+      'save-key': `${params.path}/{filename}{.suffix}`,
+      expiration: new Date().getTime() + 600 /* 过期时间，在当前时间+10分钟 */,
+    };
+    const policy = btoa(JSON.stringify(policyObj));
+
+    /* 计算 Authorization */
+    const passwordMd5 = HexMD5.MD5(params.password).toString(HexMD5.enc.Hex);
+    const authorization = `UPYUN ${params.username}:${b64hamcsha1(passwordMd5, ['POST', `/${params.bucket}`, policy].join('&'))}`; /* [Method-请求方法, URI-请求路径, policy] */
+
+    uploadData.append('policy', policy);
+    uploadData.append('authorization', authorization);
+
+    // http://upload2.engvu.tech/img/126x84.png
+    let res = await axios({ method: 'POST', url: `https://v0.api.upyun.com/${params.bucket}`, data: uploadData }).catch(
+      (e) => {
+        tips.error('Upload Error');
+        console.error(e);
+      },
+    );
+
+    if (res?.data?.url) {
+      console.log(555, params.host + res.data.url);
+
+      config.value = params.host + res.data.url;
+    }
+    // return '';
   };
-  /* 计算policy */
-  const policyObj = {
-    bucket: params.bucket,
-    'save-key': `${params.path}/{filename}{.suffix}`,
-    expiration: new Date().getTime() + 600 /* 过期时间，在当前时间+10分钟 */,
-  };
-  const policy = btoa(JSON.stringify(policyObj));
-  uploadData.append('policy', policy);
-
-  /* 计算 Authorization */
-  const passwordMd5 = HexMD5.MD5(params.password).toString(HexMD5.enc.Hex);
-
-  /* [Method-请求方法, URI-请求路径, policy] */
-  // const arr = ['POST', `/${this.bucket}`, policy];
-  const authorization = `UPYUN ${params.username}:${b64hamcsha1(passwordMd5, ['POST', `/${params.bucket}`, policy].join('&'))}`;
-  uploadData.append('authorization', authorization);
-
-  let res = await axios({ method: 'POST', url: `https://v0.api.upyun.com/${params.bucket}`, data: uploadData }).catch(
-    (e) => {
-      tips.error('上传失败');
-      console.error(e);
-    },
-  );
-
-  if (res?.data?.url) {
-    console.log('🔎 ~ uploadImg ~ res.data.url:', res.data.url);
-    imageUrl = params.testCdnUrl + res.data.url;
-    return params.testCdnUrl + res.data.url;
-  }
-  return '';
-  // .then((res) => {
-  //   this.uploadImgList.push(this.testCdnUrl + res.data.url);
-  // })
-  // .catch((e) => {
-  //   console.error('上传失败', e);
-  //   alert('上传失败');
-  // });
+};
+const onUploadError = async (error) => {
+  console.log('🔎 ~ onUploadError ~ error:', error);
 };
 
 defineExpose({
@@ -420,22 +439,25 @@ defineExpose({
 <style lang="scss" scoped>
 .form {
   width: 100%;
-  max-width: 700px;
+  min-width: 600px;
   box-sizing: border-box;
+  padding: 10px;
 
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 
   flex-wrap: wrap;
-  padding: 10px 10px 0;
   background: #fff;
   margin-bottom: 40px;
+
+  .mr-top-20 {
+    margin-top: -20px;
+  }
 
   .el-form-item {
     margin-bottom: 30px;
   }
-
   .btn-group {
     margin-left: auto;
     margin-right: auto;
@@ -445,6 +467,39 @@ defineExpose({
   }
   :deep(.el-range-editor.el-input__wrapper) {
     box-sizing: border-box;
+  }
+
+  .help {
+    color: #a9abb2;
+    // flex: 1;
+    flex-basis: 100%;
+  }
+
+  .uploader {
+    .preview {
+      width: 198px;
+    }
+
+    :deep(.el-upload) {
+      border: 1px dashed var(--el-border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: var(--el-transition-duration-fast);
+
+      &:hover {
+        border-color: var(--el-color-primary);
+      }
+    }
+  }
+
+  .el-icon.uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 198px;
+    height: 198px;
+    text-align: center;
   }
 }
 </style>

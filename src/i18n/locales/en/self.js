@@ -1,5 +1,5 @@
 export default {
-  title: 'List',
+  title: 'SelfCenter',
   batchDelete: 'Batch delete',
   add: 'Add one',
   refresh: 'Refresh',

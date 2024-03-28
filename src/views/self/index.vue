@@ -10,8 +10,13 @@ import { ref, getCurrentInstance } from 'vue';
 import { apiUserUpd } from '@/api/user';
 // import { apiGetResourceList } from '@/api/resource';
 // import { apiGetRoleResourceList, apiRoleResourceModify } from '@/api/role_resource';
+import { useAccount } from '@/pinia/modules/account';
 import tips from '@/utils/tips';
 const { proxy } = getCurrentInstance();
+
+const { userinfo } = useAccount(); // {id, username}
+
+// onBeforeMount(async () => {});
 
 // 表格
 const table = ref(null);
@@ -29,35 +34,42 @@ const formConfig = ref({
       component: 'text',
       label: proxy.$t('self.username'),
       name: 'username',
+      value: userinfo.username,
       // attributes: {},
-      validity: [
-        {
-          required: true,
-          message: 'Name Required',
-          trigger: 'blur',
-        },
-      ],
+      // validity: [
+      //   // {
+      //   //   required: true,
+      //   //   message: 'Name Required',
+      //   //   trigger: 'blur',
+      //   // },
+      // ],
     },
     // password
     {
       component: 'text',
-      label: proxy.$t('self.password'),
+      label: proxy.$t('self.newPassword'),
       name: 'password',
       // attributes: {},
-      validity: [
-        {
-          required: true,
-          message: 'Password Required',
-          trigger: 'blur',
-        },
-      ],
+      // validity: [
+      //   {
+      //     required: true,
+      //     message: 'Password Required',
+      //     trigger: 'blur',
+      //   },
+      // ],
     },
     // avatar
     {
       component: 'upload',
       label: proxy.$t('self.avatar'),
       name: 'avatar',
-      // attributes: {},
+      value: userinfo.avatar,
+      attributes: {
+        help: 'JPG、PNG，小于1MB',
+        accept: ['jpg', 'png'],
+        size: 1,
+      },
+      // 一般 validity 是 required 这些，但 upload 的 validity 包括 accept, limit，语意应该合在一起，但需要分开
       validity: [],
     },
   ],
@@ -81,6 +93,8 @@ const onCancel = () => {};
 
 <style lang="scss" scoped>
 .self {
+  width: 100%;
+
   //   :deep(.dialog) {
   //     width: fit-content;
 

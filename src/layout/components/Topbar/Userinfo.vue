@@ -40,7 +40,7 @@ export default defineComponent({
       router.push('/login');
     };
     const jumpToSelfCenter = () => {
-      router.push('.');
+      router.push('/self');
     };
 
     return {
