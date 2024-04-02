@@ -145,18 +145,17 @@
       <!-- upload -->
       <template v-else-if="item.component === 'upload'">
         <el-upload
-          action="#"
-          :show-file-list="false"
+          :action="item?.attributes?.action || '#'"
+          :show-file-list="Boolean(item?.attributes?.showFileList)"
           :before-upload="getBeforeUpload(item)"
-          :http-request="getUploadImg(item)"
+          :http-request="getUploadImg(formModal, item.name)"
           :on-error="onUploadError"
           class="uploader"
         >
-          <img v-if="item.value" :src="item.value" class="preview" />
+          <img v-if="formModal[item.name]" :src="formModal[item.name]" class="preview" />
           <el-icon v-else class="uploader-icon"><Plus /></el-icon>
-          <!-- <el-icon class="uploader-icon"><Plus /></el-icon> -->
         </el-upload>
-        <div v-html="item.attributes.help" class="help mr-top-20"></div>
+        <div v-html="item.attributes.help" class="help mr-top--10"></div>
       </template>
       <!-- input -->
       <el-input
@@ -214,8 +213,7 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(['submit', 'cancel']);
-
-const form = ref(null);
+/** 生成 modal，rules */
 const walkConfig = (config) => {
   let modal = {};
   let rules = {};
@@ -223,13 +221,12 @@ const walkConfig = (config) => {
   // hide 的表单项，添加到 modal。视图不渲染
   config.fields = config.fields.filter((curr) => {
     if (curr?.attributes?.hide) {
-      modal[curr.name] = '';
+      modal[curr.name] = curr.value || '';
       return false;
     }
     return true;
   });
   let { fields } = config;
-
   fields.forEach((item, index) => {
     // 填充空 value, attributes, validity，防止初始化报错
     fields[index] = { attributes: {}, validity: {}, ...item };
@@ -266,13 +263,13 @@ const walkConfig = (config) => {
 
   return { modal, rules };
 };
-const { modal, rules } = walkConfig(toRaw(props.config));
+const form = ref(null);
+const { modal, rules } = walkConfig(toRaw(props.config)); // config 的变化，不再影响 modal
 const formModal = ref(modal);
 const formRules = ref(rules);
 
 const onCancel = () => {
   resetFields();
-
   emit('cancel');
 };
 const onSubmit = () => {
@@ -346,22 +343,18 @@ const formatDate = (date, format) => {
   return format;
 };
 
-// let imageUrl = ref('');
-
-// todo
+/** 校验图片尺寸、大小 */
 const getBeforeUpload = (config) => {
   let attrs = toRaw(config)?.attributes || {};
   return (rawFile) => {
     if (!rawFile) return;
 
-    let { accept = [], size = 0 } = attrs || {};
-
     let [, type] = rawFile.type.split('/');
+    let { accept = [], size = 0 } = attrs || {};
     if (accept.length && !accept.find((format) => format === type)) {
       tips.error(`Format must be ${accept.join(', ')}`);
       return false;
     }
-
     if (size && rawFile.size / 1024 / 1024 > size) {
       tips.error(`Size can not exceed ${size}MB!`);
       return false;
@@ -370,10 +363,8 @@ const getBeforeUpload = (config) => {
     return true;
   };
 };
-const getUploadImg = (config) => {
+const getUploadImg = (modal, name) => {
   return async (options) => {
-    console.log('🔎 ~ getUploadImg ~ options:', options);
-
     const file = options.file;
 
     const uploadData = new FormData();
@@ -419,11 +410,10 @@ const getUploadImg = (config) => {
     );
 
     if (res?.data?.url) {
-      console.log(555, params.host + res.data.url);
+      console.log(555, params.host + res.data.url); // todo
 
-      config.value = params.host + res.data.url;
+      modal[name] = params.host + res.data.url;
     }
-    // return '';
   };
 };
 const onUploadError = async (error) => {
@@ -451,8 +441,8 @@ defineExpose({
   background: #fff;
   margin-bottom: 40px;
 
-  .mr-top-20 {
-    margin-top: -20px;
+  .mr-top--10 {
+    margin-top: -10px;
   }
 
   .el-form-item {

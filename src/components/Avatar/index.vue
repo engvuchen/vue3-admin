@@ -11,17 +11,10 @@
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue'
-import { useUserinfo } from './hooks/useUserinfo'
+<script setup>
+import { useUserinfo } from './hooks/useUserinfo';
 
-export default defineComponent({
-  setup() {
-    const { userinfo } = useUserinfo()
-
-    return { userinfo }
-  },
-})
+const { userinfo } = useUserinfo();
 </script>
 <style lang="scss" scoped>
 .userinfo {

@@ -28,7 +28,7 @@ router.beforeEach(async (to, from) => {
 
   if (whiteList.includes(to.name)) return true;
 
-  // 没有 token，跳转 login 页，让用户重新登陆
+  // # 没有 token，跳转 login 页，让用户重新登陆
   if (!window.localStorage[TOKEN]) {
     return {
       name: 'login',
@@ -39,20 +39,22 @@ router.beforeEach(async (to, from) => {
     };
   }
 
-  // 获取用户角色信息，根据角色判断权限。 - todo 是获取当前用户的所有资源路径，不是用户是否有身份
-  const { userinfo, getUserinfo } = useAccount();
+  // # 尝试获取用户信息。若 token 校验返回到登陆页
+  // const {  getUserInfo } = useAccount();
+  const userinfo = await useAccount().getUserInfo();
   if (!userinfo) {
-    let res = await getUserinfo(); // 获取用户信息
-    if (!res) {
-      loadingInstance.close();
-      return false;
-    }
-
-    return to.fullPath;
+    loadingInstance.close();
+    return {
+      name: 'login',
+      query: {
+        redirect: to.fullPath,
+      },
+      replace: true,
+    }; // token 验证失败，返回到登陆页
   }
 
-  // login 成功 -> menus 没有生成过，动态生成路由
-  const { menus, generateMenus } = useMenus(); // todo
+  // login 成功 -> 若 menus 没有生成过，动态生成路由
+  const { menus, generateMenus } = useMenus();
   if (!menus.length) {
     try {
       await generateMenus();

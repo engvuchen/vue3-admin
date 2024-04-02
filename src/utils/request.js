@@ -6,17 +6,10 @@ import errmap from '@/common/errcode';
 
 /**
  * todo 变成 service.get、post、put 的形式
- *
  * get 参数固定为 data=JSON.stringify(params)
- *
  */
 
-const service = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
-  withCredentials: true,
-});
-
+// 去掉基本数据、对象、数组中，undefined、null 的值
 function walkData(data) {
   let isArray = Array.isArray(data);
 
@@ -43,6 +36,11 @@ function walkData(data) {
   return data;
 }
 
+const service = axios.create({
+  baseURL: '/api',
+  timeout: 10000,
+  withCredentials: true, // 跨域请求发送 cookie
+});
 // 拦截请求。默认添加 Authorization 请求头
 service.interceptors.request.use(
   (config) => {
@@ -65,8 +63,10 @@ service.interceptors.response.use(
   (response) => {
     let isSilent = response?.config?.silent;
     // 业务错误
+
+    console.log(555, response?.data);
     let code = response?.data?.code;
-    if (!isSilent && code !== 0) ElMessage.error(errmap[code]);
+    if (!isSilent && code !== 0) ElMessage.error(errmap[code] || response?.data?.msg || '未知错误');
 
     // token 缺失、过期、不能找到用户，返回登陆页
     if (code === errmap.TOKEN_ERR) {

@@ -11,11 +11,10 @@ export const useAccount = defineStore('account', {
     clearUserinfo() {
       this.userinfo = null;
     },
-    /**
-     * 获取用户信息
-     * @returns { id, username }
-     */
-    async getUserinfo() {
+    // 获取用户信息。不存在/update=true，重新获取，已存在直接返回
+    async getUserInfo(update = false) {
+      if (this.userinfo && !update) return this.userinfo;
+
       const { code, data } = await apiGetUserInfo();
       if (code === 0) {
         this.userinfo = data;
