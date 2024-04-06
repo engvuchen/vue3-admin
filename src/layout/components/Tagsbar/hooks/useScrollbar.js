@@ -10,7 +10,11 @@ export const useScrollbar = (tagsItem, scrollContainer) => {
   };
 
   const handleScroll = (e) => {
-    const $wrap = scrollContainer.value.wrap$;
+    // const $wrap = scrollContainer.value.wrap$;
+    const $wrap = scrollContainer.value.wrapRef;
+    console.log('🔎 ~ handleScroll ~ wrap:', $wrap);
+    if (!$wrap) return;
+
     if ($wrap.offsetWidth + scrollLeft.value > $wrap?.children?.[0]?.scrollWidth) {
       doScroll($wrap.children[0].scrollWidth - $wrap.offsetWidth);
       return;
@@ -23,7 +27,10 @@ export const useScrollbar = (tagsItem, scrollContainer) => {
   };
 
   const moveToTarget = (currentTag) => {
-    const $wrap = scrollContainer.value.wrap$;
+    const $wrap = scrollContainer.value.wrapRef;
+    console.log('🔎 ~ moveToTarget ~ $wrap:', $wrap);
+
+    if (!$wrap) return;
 
     const tagList = tagsItem.value;
 

@@ -54,11 +54,12 @@ export default defineComponent({
     const isTagsbarShow = computed(() => defaultSettings.tagsbar.isShow);
 
     const scrollContainer = ref(null);
+
     const tags = useTags(scrollContainer);
     const contextMenu = useContextMenu(tags.tagList);
 
     const onScroll = (e) => {
-      tags.handleScroll(e);
+      tags.handleScroll(e); // 这里有问题
       contextMenu.closeMenu.value();
     };
 

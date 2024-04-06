@@ -17,7 +17,7 @@ export default [
         component: Self,
         meta: {
           title: 'self.title',
-          affix: true,
+          hide: true,
         },
       },
     ],

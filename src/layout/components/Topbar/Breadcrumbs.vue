@@ -1,5 +1,3 @@
-
-
 <template>
   <el-breadcrumb
     separator-class="el-icon-arrow-right"
@@ -20,68 +18,49 @@
     </el-breadcrumb-item>
   </el-breadcrumb>
 </template>
-<script>
-import { useApp } from '@/pinia/modules/app'
-import { useLayoutsettings } from '@/pinia/modules/layoutSettings'
-import { storeToRefs } from 'pinia'
-import {
-  defineComponent,
-  computed,
-  ref,
-  onBeforeMount,
-  watch,
-  getCurrentInstance,
-} from 'vue'
-import { useRouter } from 'vue-router'
+<script setup>
+import { useApp } from '@/pinia/modules/app';
+import { useLayoutsettings } from '@/pinia/modules/layoutSettings';
+import { storeToRefs } from 'pinia';
+import { computed, ref, onBeforeMount, watch, getCurrentInstance, defineEmits } from 'vue';
+import { useRouter } from 'vue-router';
 
-export default defineComponent({
-  setup(props, { emit }) {
-    const { proxy } = getCurrentInstance()
-    const { device } = storeToRefs(useApp())
-    const router = useRouter()
-    const route = router.currentRoute // 这里不使用useRoute获取当前路由，否则下面watch监听路由的时候会有警告
-    const breadcrumbs = ref([])
-    const defaultSettings = useLayoutsettings()
-    const isHorizontalMenu = computed(
-      () => defaultSettings.menus.mode === 'horizontal'
-    )
+const { proxy } = getCurrentInstance();
+const { device } = storeToRefs(useApp());
+const router = useRouter();
+const route = router.currentRoute; // 这里不使用useRoute获取当前路由，否则下面watch监听路由的时候会有警告
+const breadcrumbs = ref([]);
+const defaultSettings = useLayoutsettings();
+const isHorizontalMenu = computed(() => defaultSettings.menus.mode === 'horizontal');
 
-    const getBreadcrumbs = route => {
-      const home = [{ path: '/', meta: { title: proxy.$t('menu.homepage') } }]
-      if (route.name === 'home') {
-        return home
-      } else {
-        const matched = route.matched.filter(
-          item => !!item.meta && !!item.meta.title
-        )
+const emit = defineEmits(['on-breadcrumbs-change']);
 
-        return [...home, ...matched]
-      }
-    }
+const getBreadcrumbs = (route) => {
+  const home = [{ path: '/', meta: { title: 'route.homepage' } }];
+  if (route.name === 'home') {
+    return home;
+  } else {
+    const matched = route.matched.filter((item) => !!item.meta && !!item.meta.title);
 
-    onBeforeMount(() => {
-      breadcrumbs.value = getBreadcrumbs(route.value)
-    })
+    return [...home, ...matched];
+  }
+};
 
-    watch(
-      route,
-      newRoute => {
-        route.value.meta.truetitle = proxy.$t(route.value.meta.title)
-        breadcrumbs.value = getBreadcrumbs(newRoute)
-        emit('on-breadcrumbs-change', breadcrumbs.value.length > 1)
-      },
-      {
-        immediate: true,
-      }
-    )
+onBeforeMount(() => {
+  breadcrumbs.value = getBreadcrumbs(route.value);
+});
 
-    return {
-      device,
-      breadcrumbs,
-      isHorizontalMenu,
-    }
+watch(
+  route,
+  (newRoute) => {
+    route.value.meta.truetitle = proxy.$t(route.value.meta.title);
+    breadcrumbs.value = getBreadcrumbs(newRoute);
+    emit('on-breadcrumbs-change', breadcrumbs.value.length > 1);
   },
-})
+  {
+    immediate: true,
+  },
+);
 </script>
 
 <style lang="scss" scoped>

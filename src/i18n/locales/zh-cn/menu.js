@@ -1,6 +1,4 @@
 export default {
-  homepage: '首页',
-  dashboard: '工作台',
   test: '测试页面',
   testList: '列表',
   testAdd: '添加',
@@ -13,4 +11,4 @@ export default {
   nestPage1: 'Page1',
   nestPage2: 'Page2',
   'test-error-log': '测试错误日志',
-}
+};

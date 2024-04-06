@@ -3,25 +3,18 @@
     <Fold />
   </el-icon>
 </template>
-<script>
+<script setup>
 import { useApp } from '@/pinia/modules/app';
 import { storeToRefs } from 'pinia';
-import { computed, defineComponent } from 'vue';
+import { computed } from 'vue';
 
-export default defineComponent({
-  setup() {
-    const appStore = useApp();
-    const { sidebar } = storeToRefs(appStore);
-    const { setCollapse } = appStore;
-    const handleToggleMenu = () => {
-      setCollapse(Number(!sidebar.value.collapse));
-    };
-    return {
-      collapse: computed(() => sidebar.value.collapse),
-      handleToggleMenu,
-    };
-  },
-});
+const appStore = useApp();
+const { sidebar } = storeToRefs(appStore);
+const { setCollapse } = appStore;
+const collapse = computed(() => sidebar.value.collapse);
+const handleToggleMenu = () => {
+  setCollapse(!sidebar.value.collapse);
+};
 </script>
 <style lang="scss" scoped>
 .fold-btn {

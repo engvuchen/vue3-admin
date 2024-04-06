@@ -1,6 +1,4 @@
 export default {
-  homepage: 'Homepage',
-  dashboard: 'Dashboard',
   test: 'Test page',
   testList: 'List',
   testAdd: 'Add',
@@ -13,4 +11,4 @@ export default {
   nestPage1: 'Page1',
   nestPage2: 'Page2',
   'test-error-log': 'Error log',
-}
+};

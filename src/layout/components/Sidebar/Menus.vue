@@ -39,8 +39,6 @@ export default defineComponent({
   },
   setup() {
     const route = useRoute();
-    console.log('🔎 ~ setup ~ menus:', useMenus().menus);
-
     const { menus } = storeToRefs(useMenus());
 
     // 路由变动，高亮相应的侧栏

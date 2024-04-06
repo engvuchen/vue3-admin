@@ -10,9 +10,9 @@ export const useMenus = defineStore('menu', () => {
   /**
    * todo 支持判断相对路由。父路由是 /user, 子路由是 list，子路由完整路径是 /user/list
    *
-   * `path = ''` 的处理：
-   * 1. 在子路由。配置 `/user`，父路由 `/user`，子路由 `path=''`。`/user` 父路由匹配成功，子路由空串也能匹配成功。
-   * 2. 在父路由。也能匹配成功，但这个路由没有什么作用。
+   * path = '' 的处理：
+   * 1. 值在子路由。配置 `/user`，父路由 `/user`，子路由 `path=''`。`/user` 父路由匹配成功，子路由空串也能匹配成功。
+   * 2. 值在父路由。也能匹配成功，但这个路由没有什么作用。
    *
    * 递归遍历项目载入的所有路由，匹配远程的 path 列表，匹配上的才被收集
    * @param {Array} targetRoutes [ { path, name, children } ]
@@ -40,6 +40,7 @@ export const useMenus = defineStore('menu', () => {
     if (path) return `${parentPath}/${path}`;
     return parentPath;
   };
+
   const getFilterMenus = (arr, parentPath = '') => {
     const menus = [];
 
@@ -59,7 +60,7 @@ export const useMenus = defineStore('menu', () => {
       if (children?.length) {
         // 特殊处理：若只有一个不隐藏的子项目，生成 url 不隐藏，认为这个子项目的 path 应该和父路由合并
         if (item.children.filter((child) => !child.hidden).length <= 1) {
-          menu.url = generateUrl(item.children[0].path, menu.url); // ？？？ 就算他是 level1/level2 格式的路由，children 不要了？
+          menu.url = generateUrl(item.children[0].path, menu.url);
         } else {
           menu.children = getFilterMenus(item.children, menu.url);
         }
@@ -75,12 +76,8 @@ export const useMenus = defineStore('menu', () => {
   const setMenus = (data) => {
     menus.value = data;
   };
+  // 生成动态菜单
   const generateMenus = async () => {
-    // // 方式一：只有固定菜单
-    // const menus = getFilterMenus(fixedRoutes)
-    // commit('SET_MENUS', menus)
-
-    // 方式二：有动态菜单
     //  [{ id: '', name: '', resource: [ { id: '', name: '', access: [], cgi: [] } ], ... }, ...]
     const { code, data } = await apiGetSelfResource(); // todo 从接口获取当前用户的权限
     if (code !== 0) return;
@@ -90,7 +87,6 @@ export const useMenus = defineStore('menu', () => {
       router.removeRoute(item.name);
     });
     // 过滤出需要添加的动态路由
-
     let remoteResource = Array.from(
       new Set(
         data.list[0].resource.reduce((list, curr) => {
@@ -100,7 +96,6 @@ export const useMenus = defineStore('menu', () => {
       ),
     );
     const filterRoutes = getFilterRoutes(asyncRoutes, remoteResource);
-
     filterRoutes.forEach((route) => router.addRoute(route));
     console.log('🔎 ~ generateMenus ~ filterRoutes:', filterRoutes);
 

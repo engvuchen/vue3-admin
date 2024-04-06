@@ -377,7 +377,7 @@ const getUploadImg = (modal, name) => {
       username: 'test1',
       password: 'If7wTOZPcD1aXSjWMrsb6aRYwSb7BqBJ',
       path: '/img',
-      host: 'http://upload2.engvu.tech',
+      host: 'https://upload2.engvu.tech',
 
       // bucket: 'xiaoli-test',
       // username: 'test',
@@ -401,7 +401,6 @@ const getUploadImg = (modal, name) => {
     uploadData.append('policy', policy);
     uploadData.append('authorization', authorization);
 
-    // http://upload2.engvu.tech/img/126x84.png
     let res = await axios({ method: 'POST', url: `https://v0.api.upyun.com/${params.bucket}`, data: uploadData }).catch(
       (e) => {
         tips.error('Upload Error');
@@ -410,8 +409,6 @@ const getUploadImg = (modal, name) => {
     );
 
     if (res?.data?.url) {
-      console.log(555, params.host + res.data.url); // todo
-
       modal[name] = params.host + res.data.url;
     }
   };

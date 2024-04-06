@@ -21,4 +21,5 @@ export default {
   endtime: '结束时间',
   deleteTip: '删除此项，确认？',
   confirm: '确认',
+  //
 };

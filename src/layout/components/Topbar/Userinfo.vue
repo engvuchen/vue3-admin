@@ -13,7 +13,6 @@
     <template #dropdown>
       <el-dropdown-menu>
         <el-dropdown-item @click="jumpToSelfCenter">{{ $t('topbar.center') }}</el-dropdown-item>
-        <!-- <el-dropdown-item>{{ $t('topbar.password') }}</el-dropdown-item> -->
         <el-dropdown-item @click="logout">
           {{ $t('topbar.logout') }}
         </el-dropdown-item>

@@ -274,8 +274,6 @@ const onShowUpdForm = (row) => {
   });
 };
 const onSubmit = async (data) => {
-  console.log('🔎 ~ onSubmit ~ data:', data);
-
   ['access', 'cgi'].forEach((name) => {
     data[name] = Array.from(
       new Set(

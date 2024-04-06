@@ -8,7 +8,7 @@ export default [
     component: Layout,
     name: 'Dashboard',
     meta: {
-      title: 'menu.dashboard',
+      title: 'route.dashboard',
     },
     icon: 'icon-home',
     children: [
@@ -17,7 +17,7 @@ export default [
         name: 'home',
         component: Home,
         meta: {
-          title: 'menu.homepage',
+          title: 'route.homepage',
           affix: true,
         },
       },

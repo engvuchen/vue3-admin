@@ -25,7 +25,7 @@ export default defineComponent({
     const collapse = computed(() => sidebar.value.collapse);
 
     const closeSidebar = () => {
-      setCollapse(1);
+      setCollapse(true);
     };
 
     return {

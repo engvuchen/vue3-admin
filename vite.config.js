@@ -48,7 +48,7 @@ export default (env) => {
     server: {
       port: 3001,
       // open: true,
-      open: 'http://admin123.com', // boolean || string, true => 默认 localhost
+      open: 'https://admin123.com', // boolean || string, true => 默认 localhost
       // proxy: {
       //   '/api': {
       //     target: 'http://dev.api.xxx.com', // 后端接口的域名

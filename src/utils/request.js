@@ -64,7 +64,7 @@ service.interceptors.response.use(
     let isSilent = response?.config?.silent;
     // 业务错误
 
-    console.log(555, response?.data);
+    console.log('res data', response?.data);
     let code = response?.data?.code;
     if (!isSilent && code !== 0) ElMessage.error(errmap[code] || response?.data?.msg || '未知错误');
 

@@ -2,7 +2,7 @@ import { storeToRefs } from 'pinia';
 import { useTags as useTagsbar } from '@/pinia/modules/tags';
 import { useScrollbar } from './useScrollbar';
 import { watch, computed, ref, nextTick, onBeforeMount } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'; // todo 只能 setup 用。。。
 
 // 页面固定，没有删除 icon
 export const isAffix = (tag) => {
@@ -23,8 +23,7 @@ export const useTags = (scrollContainer) => {
     tagsItem.value[i] = el;
   };
 
-  const scrollbar = useScrollbar(tagsItem, scrollContainer);
-
+  const scrollbar = useScrollbar(tagsItem, scrollContainer); // todo
   watch(
     () => tagList.value.length,
     () => {
@@ -35,9 +34,9 @@ export const useTags = (scrollContainer) => {
   const initTags = () => {
     // 添加固定标签
     const affixTags = routes.value.filter((route) => isAffix(route));
-    for (const tag of affixTags) {
+    affixTags.forEach((tag) => {
       if (tag.name) addTag(tag);
-    }
+    });
     // 不在路由中的所有标签，需要删除
     const noUseTags = tagList.value.filter((tag) => routes.value.every((route) => route.name !== tag.name));
     noUseTags.forEach((tag) => {
@@ -62,6 +61,8 @@ export const useTags = (scrollContainer) => {
     nextTick(() => {
       for (const tag of tagsItem.value) {
         if (tag?.to?.path === route.value.path) {
+          console.log('scrollbar', scrollbar);
+
           scrollbar.moveToTarget(tag);
 
           if (tag.to.fullPath !== route.value.fullPath) {

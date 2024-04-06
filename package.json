@@ -17,7 +17,7 @@
     "last 2 versions"
   ],
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^1.6.8",
     "pinia": "^2.0.14",
     "vue": "^3.4.21",
     "vue-router": "^4.0.5",
@@ -26,8 +26,7 @@
   "devDependencies": {
     "@babel/core": "^7.21.0",
     "@babel/eslint-parser": "^7.19.1",
-    "@vitejs/plugin-vue": "^1.2.3",
-    "@vue/compiler-sfc": "^3.1.2",
+    "@vitejs/plugin-vue": "^5.0.4",
     "autoprefixer": "^10.2.5",
     "crypto-js": "^4.0.0",
     "element-plus": "^2.2.13",
@@ -38,7 +37,7 @@
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
     "sass": "^1.41.1",
-    "vite": "^2.3.7",
+    "vite": "^5.2.8",
     "vite-plugin-svg-icons": "^0.4.0",
     "vue-eslint-parser": "^9.1.0",
     "vue-i18n": "^9.0.0"

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getItem, setItem, removeItem } from '@/utils/storage'; // getItem和setItem是封装的操作localStorage的方法
+import { getItem, setItem, removeItem } from '@/utils/storage';
 const TAGLIST = 'VEA-TAGLIST';
 
 export const useTags = defineStore('tags', {
@@ -17,7 +17,7 @@ export const useTags = defineStore('tags', {
       // 添加tagList
       const target = {
         path,
-        fullPath,
+        fullPath, // 自定义 fullPath 用作判断
         name,
         meta,
         params,
