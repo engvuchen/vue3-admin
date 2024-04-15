@@ -10,7 +10,7 @@
     "build": "vite build",
     "serve": "vite preview",
     "lint": "eslint --fix --ext .js,.vue src",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "browserslist": [
     "> 1%",
