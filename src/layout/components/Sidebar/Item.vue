@@ -1,24 +1,15 @@
-
-
 <template>
-  <svg-icon class="icon" v-if="isCustomSvg" :name="icon" />
-  <component :is="icon" v-else-if="!!icon" class="icon" />
+  <svg-icon v-if="isCustomSvg" :name="icon" class="icon" />
+  <component v-else-if="!!icon" :is="icon" class="icon" />
   <span>{{ $t(title) }}</span>
 </template>
 
-<script>
-import { computed, defineComponent } from 'vue'
+<script setup>
+import { computed, getCurrentInstance } from 'vue';
+const { proxy } = getCurrentInstance();
 
-export default defineComponent({
-  props: ['title', 'icon'],
-  setup({ icon }) {
-    const isCustomSvg = computed(() => icon && icon.startsWith('icon-'))
-
-    return {
-      isCustomSvg,
-    }
-  },
-})
+defineProps(['title', 'icon']);
+const isCustomSvg = computed(() => proxy.icon && proxy.icon.startsWith('icon-'));
 </script>
 <style lang="scss" scoped>
 .icon {

@@ -71,9 +71,11 @@ router.beforeEach(async (to, from) => {
 
 router.afterEach((to) => {
   loadingInstance.close();
-  if (router.currentRoute.value.name === to.name) {
-    nextTick(() => {
-      document.title = getPageTitle(to.meta && to.meta.truetitle);
-    });
-  }
+  nextTick(() => {
+    document.title = getPageTitle(to.meta && to.meta.truetitle); // truetitle 是翻译之后的标题
+  });
+
+  // 防止重定向：前路由的名称为 A，你尝试导航到 B，但路由配置将 B 重定向到了 C。在 afterEach 守卫中， router.currentRoute.value.name 将会是 C，而 to.name 是 B，router.currentRoute.value.name === to.name 不成立
+  // if (router.currentRoute.value.name === to.name) {
+  // }
 });

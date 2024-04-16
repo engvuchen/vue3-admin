@@ -53,7 +53,7 @@ onBeforeMount(() => {
 watch(
   route,
   (newRoute) => {
-    route.value.meta.truetitle = proxy.$t(route.value.meta.title);
+    route.value.meta.truetitle = proxy.$t(route.value.meta.title); // 获取翻译后的标题，显示在 document.title
     breadcrumbs.value = getBreadcrumbs(newRoute);
     emit('on-breadcrumbs-change', breadcrumbs.value.length > 1);
   },

@@ -1,15 +1,13 @@
+import { useTags } from '@/pinia/modules/tags';
+import { onMounted, onBeforeUnmount, reactive, toRefs, nextTick } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { isAffix } from './useTags';
 
+export const useContextMenu = (tagList) => {
+  const router = useRouter();
+  const route = useRoute();
 
-import { useTags } from '@/pinia/modules/tags'
-import { onMounted, onBeforeUnmount, reactive, toRefs, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { isAffix } from './useTags'
-
-export const useContextMenu = tagList => {
-  const router = useRouter()
-  const route = useRoute()
-
-  const tagsStore = useTags()
+  const tagsStore = useTags();
 
   const state = reactive({
     visible: false,
@@ -17,89 +15,76 @@ export const useContextMenu = tagList => {
     left: 0,
     selectedTag: {},
     openMenu(tag, e) {
-      state.visible = true
-      state.left = e.clientX
-      state.top = e.clientY
-      state.selectedTag = tag
+      state.visible = true;
+      state.left = e.clientX;
+      state.top = e.clientY;
+      state.selectedTag = tag;
     },
     closeMenu() {
-      state.visible = false
+      state.visible = false;
     },
     refreshSelectedTag(tag) {
-      tagsStore.deCacheList(tag)
-      const { fullPath } = tag
+      tagsStore.deCacheList(tag);
       nextTick(() => {
-        router.replace({
-          path: '/redirect' + fullPath,
-        })
-      })
+        router.replace(tag);
+      });
     },
     closeTag(tag) {
-      if (isAffix(tag)) return
+      if (isAffix(tag)) return;
 
-      const closedTagIndex = tagList.value.findIndex(
-        item => item.fullPath === tag.fullPath
-      )
-      tagsStore.delTag(tag)
+      const closedTagIndex = tagList.value.findIndex((item) => item.fullPath === tag.fullPath);
+      tagsStore.delTag(tag);
       if (isActive(tag)) {
-        toLastTag(closedTagIndex - 1)
+        toLastTag(closedTagIndex - 1);
       }
     },
     closeOtherTags() {
-      tagsStore.delOtherTags(state.selectedTag)
-      router.push(state.selectedTag)
+      tagsStore.delOtherTags(state.selectedTag);
+      router.push(state.selectedTag);
     },
     closeLeftTags() {
-      state.closeSomeTags('left')
+      state.closeSomeTags('left');
     },
     closeRightTags() {
-      state.closeSomeTags('right')
+      state.closeSomeTags('right');
     },
     closeSomeTags(direction) {
-      const index = tagList.value.findIndex(
-        item => item.fullPath === state.selectedTag.fullPath
-      )
+      const index = tagList.value.findIndex((item) => item.fullPath === state.selectedTag.fullPath);
 
-      if (
-        (direction === 'left' && index <= 0) ||
-        (direction === 'right' && index >= tagList.value.length - 1)
-      ) {
-        return
+      if ((direction === 'left' && index <= 0) || (direction === 'right' && index >= tagList.value.length - 1)) {
+        return;
       }
 
-      const needToClose =
-        direction === 'left'
-          ? tagList.value.slice(0, index)
-          : tagList.value.slice(index + 1)
-      tagsStore.delSomeTags(needToClose)
-      router.push(state.selectedTag)
+      const needToClose = direction === 'left' ? tagList.value.slice(0, index) : tagList.value.slice(index + 1);
+      tagsStore.delSomeTags(needToClose);
+      router.push(state.selectedTag);
     },
     closeAllTags() {
-      tagsStore.delAllTags()
-      router.push('/')
+      tagsStore.delAllTags();
+      router.push('/');
     },
-  })
+  });
 
-  const isActive = tag => {
-    return tag.fullPath === route.fullPath
-  }
+  const isActive = (tag) => {
+    return tag.fullPath === route.fullPath;
+  };
 
-  const toLastTag = lastTagIndex => {
-    const lastTag = tagList.value[lastTagIndex]
+  const toLastTag = (lastTagIndex) => {
+    const lastTag = tagList.value[lastTagIndex];
     if (lastTag) {
-      router.push(lastTag.fullPath)
+      router.push(lastTag.fullPath);
     } else {
-      router.push('/')
+      router.push('/');
     }
-  }
+  };
 
   onMounted(() => {
-    document.addEventListener('click', state.closeMenu)
-  })
+    document.addEventListener('click', state.closeMenu);
+  });
 
   onBeforeUnmount(() => {
-    document.removeEventListener('click', state.closeMenu)
-  })
+    document.removeEventListener('click', state.closeMenu);
+  });
 
-  return toRefs(state)
-}
+  return toRefs(state);
+};

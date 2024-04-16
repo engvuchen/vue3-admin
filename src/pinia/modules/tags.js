@@ -39,6 +39,9 @@ export const useTags = defineStore('tags', {
 
       // 添加cacheList
       if (this.cacheList.includes(name)) return;
+
+      console.log('this.cacheList', this.cacheList);
+
       if (!meta.noCache) {
         this.cacheList.push(name);
       }

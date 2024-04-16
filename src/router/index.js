@@ -11,7 +11,7 @@ import test from './modules/test';
 
 /* 菜单栏路由 */
 export const fixedRoutes = [...home, ...login, ...self, ...test]; // 固定菜单
-export const asyncRoutes = [...user, ...test]; // 动态菜单
+export const asyncRoutes = [...user]; // 动态菜单
 
 const router = createRouter({
   history: createWebHashHistory(),
