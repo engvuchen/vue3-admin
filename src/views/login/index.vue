@@ -50,129 +50,98 @@
   </div>
 </template>
 
-<script>
-import { defineComponent, getCurrentInstance, reactive, toRefs, ref, watch } from 'vue';
-import { apiUserRegister, apiUserLogin } from '@/api/user';
+<script setup>
+import { getCurrentInstance, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import ChangeLang from '@/layout/components/Topbar/ChangeLang.vue';
-import useLang from '@/i18n/useLang';
 import { useApp } from '@/pinia/modules/app';
+import { apiUserRegister, apiUserLogin } from '@/api/user';
+import ChangeLang from '@/layout/components/Topbar/ChangeLang.vue';
 
-export default defineComponent({
-  components: { ChangeLang },
-  name: 'login',
-  setup() {
-    const { proxy: ctx } = getCurrentInstance(); // 可以把ctx当成vue2中的this
-    const router = useRouter();
-    const route = useRoute();
+const { proxy: ctx } = getCurrentInstance(); // 可以把ctx当成vue2中的this
+const router = useRouter();
+const route = useRoute();
 
-    const { lang } = useLang();
-    watch(lang, () => {
-      state.rules = getRules();
-    });
-    const getRules = () => ({
-      username: [
-        {
-          required: true,
-          message: ctx.$t('login.rules-username'),
-          trigger: 'blur',
-        },
-      ],
-      password: [
-        {
-          required: true,
-          message: ctx.$t('login.rules-password'),
-          trigger: 'blur',
-        },
-        // {
-        //   min: 3,
-        //   max: 12,
-        //   message: ctx.$t('login.rules-regpassword'),
-        //   trigger: 'blur',
-        // },
-      ],
-    });
+const form = ref(null);
+const model = ref({
+  username: 'admin',
+  password: '123',
+});
+const rules = ref({
+  username: [
+    {
+      required: true,
+      message: ctx.$t('login.rules-username'),
+      trigger: 'blur',
+    },
+  ],
+  password: [
+    {
+      required: true,
+      message: ctx.$t('login.rules-password'),
+      trigger: 'blur',
+    },
+  ],
+});
 
-    const btnState = ref({
-      register: {
-        disabled: false,
-        loading: false,
-        cgi: apiUserRegister,
-        txt: () => {
-          return btnState.value.register.loading ? ctx.$t('login.registering') : ctx.$t('login.register'); // 和登录共用一个等待中
-        },
-      },
-      login: {
-        disabled: false,
-        loading: false,
-        cgi: apiUserLogin,
-        txt: () => {
-          return btnState.value.login.loading ? ctx.$t('login.logining') : ctx.$t('login.login');
-        },
-      },
-    });
-    const switchBtnState = (type, flag = true) => {
-      let { [type]: currBtn, ...anotherBtn } = btnState.value;
-      currBtn.disabled = flag;
-      anotherBtn.disabled = flag;
-      currBtn.loading = flag;
-    };
-
-    const state = reactive({
-      model: {
-        username: 'admin',
-        password: '123',
-      },
-      rules: getRules(),
-      form: ref(null),
-      // submit 不需要定义响应式
-      submit: (type) => {
-        let { [type]: currBtn } = btnState.value;
-        switchBtnState(type, true);
-
-        let { cgi } = currBtn;
-
-        state.form.validate(async (valid) => {
-          if (!valid) return;
-
-          currBtn.loading = true;
-          const { code, data } = await cgi(state.model);
-
-          if (code !== 0) {
-            switchBtnState(type, false);
-            return;
-          }
-
-          ctx.$message.success({
-            message: '成功',
-            duration: 1000,
-          });
-
-          useApp().initToken(data);
-
-          if (!route.query.redirect) {
-            return router.push('/');
-          }
-
-          // 处理 redirect
-          const targetPath = decodeURIComponent(route.query.redirect);
-          if (targetPath.startsWith('http')) {
-            // 如果是一个url地址
-            window.location.href = targetPath;
-          } else if (targetPath.startsWith('/')) {
-            // 如果是内部路由地址
-            router.push(targetPath);
-          }
-        });
-      },
-    });
-
-    return {
-      ...toRefs(state), // 这个少不了。内层如果还包含了响应式定义，用这个才正常
-      btnState,
-    };
+const btnState = ref({
+  register: {
+    disabled: false,
+    loading: false,
+    txt: () => {
+      return btnState.value.register.loading ? ctx.$t('login.registering') : ctx.$t('login.register'); // 和登录共用一个等待中
+    },
+    cgi: apiUserRegister,
+  },
+  login: {
+    disabled: false,
+    loading: false,
+    txt: () => {
+      return btnState.value.login.loading ? ctx.$t('login.logining') : ctx.$t('login.login');
+    },
+    cgi: apiUserLogin,
   },
 });
+const switchBtnState = (type, flag = true) => {
+  let { [type]: currBtn, ...anotherBtn } = btnState.value;
+  currBtn.disabled = flag;
+  anotherBtn.disabled = flag;
+  currBtn.loading = flag;
+};
+const submit = (type) => {
+  let currBtn = btnState.value[type];
+  switchBtnState(type, true);
+
+  form.value.validate(async (valid) => {
+    if (!valid) return;
+
+    currBtn.loading = true;
+    const { code, data } = await currBtn.cgi(model.value);
+    if (code !== 0) {
+      switchBtnState(type, false);
+      return;
+    }
+
+    ctx.$message.success({
+      message: '成功',
+      duration: 1000,
+    });
+
+    useApp().initToken(data);
+
+    if (!route.query.redirect) {
+      return router.push('/');
+    }
+    // 处理 redirect
+    const targetPath = decodeURIComponent(route.query.redirect);
+    if (targetPath.startsWith('http')) {
+      // 如果是一个url地址，直接导航到新地址
+      window.location.href = targetPath;
+    } else if (targetPath.startsWith('/')) {
+      // 如果是内部路由地址
+      router.push(targetPath);
+    }
+  });
+};
 </script>
 
 <style lang="scss" scoped>

@@ -1,5 +1,3 @@
-
-
 <template>
   <el-dropdown trigger="hover">
     <div class="change-lang">
@@ -7,11 +5,7 @@
     </div>
     <template #dropdown>
       <el-dropdown-menu>
-        <el-dropdown-item
-          @click="changeLang(item.value)"
-          v-for="item in langlist"
-          :key="item.value"
-        >
+        <el-dropdown-item @click="changeLang(item.value)" v-for="item in langlist" :key="item.value">
           {{ item.name }}
         </el-dropdown-item>
       </el-dropdown-menu>
@@ -19,7 +13,7 @@
   </el-dropdown>
 </template>
 <script setup>
-import useLang from '@/i18n/useLang'
+import useLang from '@/i18n/useLang';
 const langlist = [
   {
     name: '简体中文',
@@ -29,8 +23,8 @@ const langlist = [
     name: 'English',
     value: 'en',
   },
-]
-const { changeLang } = useLang()
+];
+const { changeLang } = useLang();
 </script>
 
 <style lang="scss" scoped>

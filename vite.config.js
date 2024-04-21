@@ -6,7 +6,6 @@ import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 // https://vitejs.dev/config/
 export default (env) => {
   return defineConfig({
-    // base: '/vue3-element-admin-site/',
     plugins: [
       vue(),
       // https://github.com/vbenjs/vite-plugin-svg-icons/blob/main/README.zh_CN.md
@@ -32,7 +31,6 @@ export default (env) => {
     },
     server: {
       port: 3001,
-      // open: true,
       open: 'https://admin123.com', // boolean || string, true => 默认 localhost
       // proxy: {
       //   '/api': {
@@ -42,18 +40,15 @@ export default (env) => {
       //   },
       // },
     },
-    esbuild: false,
     build: {
-      terserOptions: {
-        compress: {
-          keep_infinity: true,
-          drop_console: true, // 删除 console
-        },
+      esbuild: {
+        pure: ['console.log'], // 删除 console.log
+        drop: ['debugger'], // 删除 debugger
       },
-      brotliSize: false, // 禁用该功能可能会提高大型项目的构建性能
+      reportCompressedSize: false, // 启用/禁用 gzip 压缩大小报告。压缩大型输出文件可能会很慢，因此禁用该功能可能会提高大型项目的构建性能。
       rollupOptions: {
         output: {
-          // 拆分单独模块
+          // 拆分单独模块 起效了
           manualChunks: {
             'element-plus': ['element-plus'],
           },
