@@ -20,7 +20,7 @@ export default (env) => {
         threshold: 500 * 1024, // 体积大于 threshold 才会被压缩,单位 byte，1024b=1KB。大于 500 KB，就会压缩
         algorithm: 'gzip', // 压缩算法,可选 [ 'gzip' , 'brotliCompress' ,'deflate' , 'deflateRaw']
         ext: '.gz', // 文件后缀
-        deleteOriginFile: true,
+        deleteOriginFile: false,
       }),
     ],
     css: {
