@@ -1,7 +1,8 @@
+import path from 'path';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import path from 'path';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
+import viteCompression from 'vite-plugin-compression';
 
 // https://vitejs.dev/config/
 export default (env) => {
@@ -12,6 +13,14 @@ export default (env) => {
       createSvgIconsPlugin({
         iconDirs: [path.resolve(__dirname, 'src/assets/svg')], // 指定需要缓存的图标文件夹
         symbolId: 'icon-[dir]-[name]', // 指定symbolId格式
+      }),
+      viteCompression({
+        verbose: true, // 是否在控制台输出压缩结果
+        disable: false, // 是否禁用,相当于开关在这里
+        threshold: 500 * 1024, // 体积大于 threshold 才会被压缩,单位 byte，1024b=1KB。大于 500 KB，就会压缩
+        algorithm: 'gzip', // 压缩算法,可选 [ 'gzip' , 'brotliCompress' ,'deflate' , 'deflateRaw']
+        ext: '.gz', // 文件后缀
+        deleteOriginalAssets: true,
       }),
     ],
     css: {

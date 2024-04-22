@@ -38,6 +38,7 @@
     "prettier": "^3.2.5",
     "sass": "^1.41.1",
     "vite": "^5.2.8",
+    "vite-plugin-compression": "^0.5.1",
     "vite-plugin-svg-icons": "^2.0.1",
     "vue-eslint-parser": "^9.1.0",
     "vue-i18n": "^9.0.0"
