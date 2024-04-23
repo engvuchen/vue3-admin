@@ -38,6 +38,7 @@ router.beforeEach(async (to, from) => {
       replace: true,
     };
   }
+  // const { menus, generateMenusAndCgis } = useMenus();
 
   // # 尝试获取用户信息。若 token 校验返回到登陆页
   // const {  getUserInfo } = useAccount();
@@ -54,10 +55,10 @@ router.beforeEach(async (to, from) => {
   }
 
   // login 成功 -> 若 menus 没有生成过，动态生成路由
-  const { menus, generateMenus } = useMenus();
+  const { menus, generateMenusAndCgis } = useMenus();
   if (!menus.length) {
     try {
-      await generateMenus();
+      await generateMenusAndCgis();
       return to.fullPath; // 添加动态路由后，必须加这一句触发重定向，否则会404
     } catch (err) {
       console.log('err', err);

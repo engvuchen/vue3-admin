@@ -45,13 +45,9 @@ const service = axios.create({
 service.interceptors.request.use(
   (config) => {
     const { authorization } = useApp();
-    if (authorization) {
-      config.headers.Authorization = authorization;
-    }
+    if (authorization) config.headers.Authorization = authorization;
+    if (config.data) walkData(config.data);
 
-    if (config.data) {
-      walkData(config.data);
-    }
     return config;
   },
   (error) => {
