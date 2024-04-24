@@ -6,7 +6,7 @@ import { useMenus } from '@/pinia/modules/menu';
 import errmap from '@/common/errcode';
 import tips from '@/utils/tips';
 
-const cgiWhiteList = ['/user/login', '/user/register', '/user/upd', '/user/info', '/resource/self'];
+const cgiWhiteList = ['/api/user/login', '/api/user/register', '/api/user/upd', '/api/user/info', '/api/resource/self'];
 // 去掉基本数据、对象、数组中，undefined、null 的值
 function walkData(data) {
   let isArray = Array.isArray(data);
@@ -42,13 +42,18 @@ const service = axios.create({
 // 拦截请求
 service.interceptors.request.use(
   (config) => {
+    const controller = new AbortController();
+    config.signal = controller.signal;
+
     const { authorization } = useApp();
     if (authorization) config.headers.Authorization = authorization;
     if (config.data) walkData(config.data);
 
     let url = config.url;
+    let fullUrl = config.baseURL + url;
+
     if (!url) return config;
-    if (cgiWhiteList.includes(url)) return config;
+    if (cgiWhiteList.includes(fullUrl)) return config;
 
     /**
      * 路由跳转的时候，才会进行 menus、cgi 的生成；
@@ -56,9 +61,10 @@ service.interceptors.request.use(
      * 2. 页面直接刷新 - 也会发生路由导航，cgis 也会生成
      */
     let { cgis } = useMenus();
-    if (!cgis.includes(url)) {
-      tips.error(`接口缺少权限：${url}`);
-      return;
+    if (!cgis.includes(fullUrl)) {
+      tips.error(`接口缺少权限：${fullUrl}`);
+      controller.abort(); // 出错一次，永远出错？？？
+      return config; // 不是 config，不会发起请求，但会报各种属性访问错误
     }
 
     return config;

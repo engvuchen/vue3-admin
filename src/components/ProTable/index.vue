@@ -325,11 +325,12 @@ export default defineComponent({
     const getTableData = async () => {
       state.loading = true;
       const searchModel = optimizeFields(props.search);
-      const { data, total } = await props.request({
-        page: state.page,
-        limit: state.limit,
-        ...searchModel,
-      });
+      const { data = [], total = 0 } =
+        (await props.request({
+          page: state.page,
+          limit: state.limit,
+          ...searchModel,
+        })) || {};
       state.loading = false;
       state.tableData = data;
       state.total = total;

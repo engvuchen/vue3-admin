@@ -204,7 +204,7 @@ const formConfig = ref({
   ],
 });
 setTimeout(async () => {
-  roleItems = await initRoleItems('', { page: 0, limit: 1000 });
+  roleItems = (await initRoleItems('', { page: 0, limit: 1000 })) || [];
   roleId2Zh = roleItems.reduce((map, curr) => {
     map[curr.value] = curr.label;
     return map;

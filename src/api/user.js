@@ -2,13 +2,13 @@ import request from '@/utils/request';
 
 /**
  * @route GET /api/user/list
- * @desc 获取所有用户信息
+ * @desc 获取所有用户信息。
  * @req { id, username, page, limit }
  * @res [{ id, username, avatar }]
  */
 export const apiGetUserList = (data) => {
   return request.get('/user/list', {
-    params: data,
+    params: data, // 和选项式相同，数据都拼接到请求链接上，
   });
 };
 
@@ -27,12 +27,10 @@ export const apiGetUserInfo = (data) => {
 /**
  * @route POST /api/user/upd
  * @req { username, password, avatar }
- * @desc 修改用户信息（username、password、avatar，任一存在即可）。需 token
+ * @desc 修改用户信息（username、password、avatar，任一存在即可）。需 token。
  */
 export const apiUserUpd = (data) => {
-  return request.post('/user/upd', {
-    data,
-  });
+  return request.post('/user/upd', data); // 和选项式不同，简易式直接展开到 data 到 请求体 https://axios-http.com/docs/post_example
 };
 
 /**
@@ -42,9 +40,7 @@ export const apiUserUpd = (data) => {
  * @access public
  */
 export const apiUserRegister = (data) => {
-  return request.post('/user/register', {
-    data,
-  });
+  return request.post('/user/register', data);
 };
 
 /**
@@ -55,9 +51,7 @@ export const apiUserRegister = (data) => {
  * 用户登录校验成功，返回 token（token存储了用户信息）
  */
 export const apiUserLogin = (data) => {
-  return request.post('/user/login', {
-    data,
-  });
+  return request.post('/user/login', data);
 };
 
 /**
@@ -66,9 +60,7 @@ export const apiUserLogin = (data) => {
  * @desc 删除用户
  */
 export const apiUserDel = (data) => {
-  return request.post('/user/del', {
-    data,
-  });
+  return request.post('/user/del', data);
 };
 
 /**
@@ -76,7 +68,5 @@ export const apiUserDel = (data) => {
  * @desc 非真实接口，测权限用
  */
 export const apiTest = (data) => {
-  return request.post('/user/test', {
-    data,
-  });
+  return request.post('/user/test', data);
 };

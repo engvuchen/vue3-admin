@@ -226,11 +226,11 @@ function handleSelectionChange(arr) {
 }
 // 请求函数
 function getList(params) {
+  apiTest();
+
   return {
     data: [],
     total: 0,
   };
 }
-
-apiTest();
 </script>
