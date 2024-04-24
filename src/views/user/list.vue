@@ -241,7 +241,6 @@ const onSubmit = async (data) => {
   if (res.code !== 0) return;
 
   let userRoleRes = await apiUserRoleModify({
-    // todo
     user_id: postData.id,
     role_id: data.role_id,
   });

@@ -109,6 +109,7 @@ export const useMenus = defineStore('menu', () => {
 
   return {
     menus,
+    cgis,
     setMenus,
     generateMenusAndCgis,
   };

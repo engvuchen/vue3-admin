@@ -15,8 +15,8 @@ export const apiGetResourceList = (data) => {
 
 /**
  * @route GET /api/resource/self
- * @req { name, cgi, access, page, limit } 实际 name 可以用，其他字段不知道是否可以
- * @desc 获取当前用户的资源列表。现获取角色、通过角色再获取资源。⬜️ 需要补充路由
+ * @req { page, limit } 实际用到 name
+ * @desc 获取当前用户的资源列表
  */
 export const apiGetSelfResource = (data) => {
   return request({

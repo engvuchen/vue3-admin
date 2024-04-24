@@ -20,7 +20,7 @@
       </el-button>
     </template>
     <template #status="{ row }">
-      <el-tag :type="row.status === 1 ? 'success' : 'error'">
+      <el-tag :type="row.status === 1 ? 'success' : 'danger'">
         {{ row.status === 1 ? $t('public.enabled') : $t('public.disabled') }}
       </el-tag>
     </template>
@@ -37,7 +37,7 @@
 
 <script setup>
 import { ref } from 'vue';
-// import { apiGetUserList } from '@/api/test'
+import { apiTest } from '@/api/user';
 
 // 表格列配置，大部分属性跟el-table-column配置一样
 const columns = [
@@ -226,22 +226,11 @@ function handleSelectionChange(arr) {
 }
 // 请求函数
 function getList(params) {
-  // console.log(params)
-  // // params是从组件接收的，包含分页和搜索字段。
-  // const { data } = await apiGetUserList(params)
-  // // 必须要返回一个对象，包含data数组和total总数
   return {
-    data: {},
+    data: [],
     total: 0,
   };
 }
 
-// export default defineComponent({
-//   name: 'testList',
-//   setup() {
-//     // const { proxy } = getCurrentInstance()
-
-//     return { ...toRefs(state), refresh, table };
-//   },
-// });
+apiTest();
 </script>

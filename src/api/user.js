@@ -7,9 +7,7 @@ import request from '@/utils/request';
  * @res [{ id, username, avatar }]
  */
 export const apiGetUserList = (data) => {
-  return request({
-    url: '/user/list',
-    method: 'get',
+  return request.get('/user/list', {
     params: data,
   });
 };
@@ -21,9 +19,7 @@ export const apiGetUserList = (data) => {
  * @res { id, username }
  */
 export const apiGetUserInfo = (data) => {
-  return request({
-    url: '/user/info',
-    method: 'get',
+  return request.get('/user/info', {
     params: data,
   });
 };
@@ -34,9 +30,7 @@ export const apiGetUserInfo = (data) => {
  * @desc 修改用户信息（username、password、avatar，任一存在即可）。需 token
  */
 export const apiUserUpd = (data) => {
-  return request({
-    url: '/user/upd',
-    method: 'post',
+  return request.post('/user/upd', {
     data,
   });
 };
@@ -48,9 +42,7 @@ export const apiUserUpd = (data) => {
  * @access public
  */
 export const apiUserRegister = (data) => {
-  return request({
-    url: '/user/register',
-    method: 'post',
+  return request.post('/user/register', {
     data,
   });
 };
@@ -63,9 +55,7 @@ export const apiUserRegister = (data) => {
  * 用户登录校验成功，返回 token（token存储了用户信息）
  */
 export const apiUserLogin = (data) => {
-  return request({
-    url: '/user/login',
-    method: 'post',
+  return request.post('/user/login', {
     data,
   });
 };
@@ -76,9 +66,17 @@ export const apiUserLogin = (data) => {
  * @desc 删除用户
  */
 export const apiUserDel = (data) => {
-  return request({
-    url: '/user/del',
-    method: 'post',
+  return request.post('/user/del', {
+    data,
+  });
+};
+
+/**
+ * @route POST /api/user/del
+ * @desc 非真实接口，测权限用
+ */
+export const apiTest = (data) => {
+  return request.post('/user/test', {
     data,
   });
 };

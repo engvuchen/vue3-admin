@@ -6,7 +6,7 @@ import { ElLoading } from 'element-plus';
 import { nextTick } from 'vue';
 
 let loadingInstance = null;
-const whiteList = ['login']; // 白名单，里面是路由对象的name
+const routeWhiteList = ['login']; // 白名单，里面是路由对象的name
 
 const getPageTitle = (title = '') => {
   const { title: appTitle } = useApp();
@@ -26,7 +26,7 @@ router.beforeEach(async (to, from) => {
     background: 'rgba(0, 0, 0, 0.7)',
   });
 
-  if (whiteList.includes(to.name)) return true;
+  if (routeWhiteList.includes(to.name)) return true;
 
   // # 没有 token，跳转 login 页，让用户重新登陆
   if (!window.localStorage[TOKEN]) {
@@ -38,7 +38,6 @@ router.beforeEach(async (to, from) => {
       replace: true,
     };
   }
-  // const { menus, generateMenusAndCgis } = useMenus();
 
   // # 尝试获取用户信息。若 token 校验返回到登陆页
   // const {  getUserInfo } = useAccount();
@@ -54,7 +53,7 @@ router.beforeEach(async (to, from) => {
     }; // token 验证失败，返回到登陆页
   }
 
-  // login 成功 -> 若 menus 没有生成过，动态生成路由
+  // login 成功 -> 若 menus 没有生成过，动态生成路由。动态生成过程，会修改路由树，没权限，路由在路由树中不存在，会被 404 的路由匹配捕获
   const { menus, generateMenusAndCgis } = useMenus();
   if (!menus.length) {
     try {
