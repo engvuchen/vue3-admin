@@ -1,5 +1,3 @@
-
-
 export default {
   menus: {
     // 菜单栏是否显示
@@ -23,4 +21,4 @@ export default {
     // 是否流式布局
     isFluid: true,
   },
-}
+};

@@ -26,10 +26,8 @@ export default (env) => {
     css: {
       preprocessorOptions: {
         scss: {
-          // 全局变量
           // additionalData: '@import "./src/assets/style/global-variables.scss";',
-          // element-plus 升级到 v2 需要改成以下写法
-          additionalData: `@use "./src/assets/style/global-variables.scss" as *;`,
+          additionalData: `@use "./src/assets/style/global-variables.scss" as *;`, // 每个样式表前都插入这一句 https://cn.vitejs.dev/config/shared-options.html#css-preprocessoroptions-extension-additionaldata
         },
       },
     },
@@ -57,8 +55,8 @@ export default (env) => {
       reportCompressedSize: false, // 启用/禁用 gzip 压缩大小报告。压缩大型输出文件可能会很慢，因此禁用该功能可能会提高大型项目的构建性能。
       rollupOptions: {
         output: {
-          // 拆分单独模块 起效了
           manualChunks: {
+            // 拆分单独模块
             'element-plus': ['element-plus'],
           },
         },

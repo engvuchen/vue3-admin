@@ -32,7 +32,6 @@
 - [Vue3](https://v3.vuejs.org/) - 熟悉 Vue 基础语法
 - [Vue-Router-Next](https://next.router.vuejs.org/zh/) - 熟悉 vue-router@4 基本使用
 - [Element-Plus](https://element-plus.gitee.io/#/zh-CN) - ui 基本使用
-- [Mock.js](https://github.com/nuysoft/Mock) - mockjs 基本语法
 
 ## 安装使用
 
