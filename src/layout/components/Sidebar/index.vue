@@ -6,35 +6,21 @@
   <div class="mask" @click="closeSidebar"></div>
 </template>
 
-<script>
+<script setup>
 import { useApp } from '@/pinia/modules/app';
 import { storeToRefs } from 'pinia';
-import { computed, defineComponent } from 'vue';
+import { computed } from 'vue';
 import Logo from './Logo.vue';
 import Menus from './Menus.vue';
 
-export default defineComponent({
-  components: {
-    Logo,
-    Menus,
-  },
-  setup() {
-    const appStore = useApp();
-    const { sidebar, device } = storeToRefs(appStore);
-    const { setCollapse } = appStore;
-    const collapse = computed(() => sidebar.value.collapse);
+const appStore = useApp();
+const { sidebar, device } = storeToRefs(appStore);
+const { setCollapse } = appStore;
+const collapse = computed(() => sidebar.value.collapse);
 
-    const closeSidebar = () => {
-      setCollapse(true);
-    };
-
-    return {
-      collapse,
-      device,
-      closeSidebar,
-    };
-  },
-});
+const closeSidebar = () => {
+  setCollapse(true);
+};
 </script>
 
 <style lang="scss" scoped>

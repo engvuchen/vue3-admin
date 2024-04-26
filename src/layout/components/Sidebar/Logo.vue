@@ -1,24 +1,16 @@
-
-
 <template>
   <div class="brand">
-    <img class="logo" src="~@/assets/logo.svg" @click="goHome" />
+    <img class="logo" src="@/assets/logo.svg" @click="goHome" />
     <div class="title">Vue3 Element Admin</div>
   </div>
 </template>
-<script>
-import { defineComponent } from 'vue'
-import { useRouter } from 'vue-router'
+<script setup>
+import { useRouter } from 'vue-router';
 
-export default defineComponent({
-  setup() {
-    const router = useRouter()
-    const goHome = () => {
-      router.push('/')
-    }
-    return { goHome }
-  },
-})
+const router = useRouter();
+const goHome = () => {
+  router.push('/');
+};
 </script>
 <style lang="scss" scoped>
 .brand {

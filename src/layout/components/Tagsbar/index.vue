@@ -37,40 +37,46 @@
   </ul>
 </template>
 
-<script>
-import { ref, defineComponent, computed, getCurrentInstance } from 'vue';
+<script setup>
+import { ref, computed, getCurrentInstance, onMounted } from 'vue';
 import { useTags, isAffix } from './hooks/useTags';
 import { useContextMenu } from './hooks/useContextMenu';
 import { useLayoutsettings } from '@/pinia/modules/layoutSettings';
 
-export default defineComponent({
-  name: 'Tagsbar',
-  mounted() {
-    const instance = getCurrentInstance();
-    instance.appContext.config.globalProperties.$tagsbar = this;
-  },
-  setup() {
-    const defaultSettings = useLayoutsettings();
-    const isTagsbarShow = computed(() => defaultSettings.tagsbar.isShow);
+const defaultSettings = useLayoutsettings();
+const isTagsbarShow = computed(() => defaultSettings.tagsbar.isShow);
 
-    const scrollContainer = ref(null);
+const scrollContainer = ref(null);
 
-    const tags = useTags(scrollContainer);
-    const contextMenu = useContextMenu(tags.tagList);
+// moveToTarget
+const { tagList, setItemRef, handleScroll } = useTags(scrollContainer);
 
-    const onScroll = (e) => {
-      tags.handleScroll(e); // 这里有问题
-      contextMenu.closeMenu.value();
-    };
+const {
+  visible,
+  top,
+  left,
+  selectedTag,
+  openMenu,
+  closeMenu,
+  refreshSelectedTag,
+  closeTag,
+  closeOtherTags,
+  closeLeftTags,
+  closeRightTags,
+  // closeSomeTags,
+  closeAllTags,
+} = useContextMenu(tagList);
 
-    return {
-      isAffix,
-      isTagsbarShow,
-      onScroll,
-      ...tags,
-      ...contextMenu,
-    };
-  },
+const onScroll = (e) => {
+  handleScroll(e);
+  closeMenu.value();
+};
+
+onMounted(() => {
+  const instance = getCurrentInstance();
+  instance.appContext.config.globalProperties.$tagsbar = () => {
+    refreshSelectedTag(selectedTag); // todo
+  };
 });
 </script>
 

@@ -40,7 +40,6 @@ router.beforeEach(async (to, from) => {
   }
 
   // # 尝试获取用户信息。若 token 校验返回到登陆页
-  // const {  getUserInfo } = useAccount();
   const userinfo = await useAccount().getUserInfo();
   if (!userinfo) {
     loadingInstance.close();

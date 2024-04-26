@@ -11,29 +11,25 @@
     <submenu v-for="submenu in menu.children" :key="submenu.url" :is-nest="true" :menu="submenu" />
   </el-sub-menu>
 </template>
-<script>
+<script setup>
+import Item from './Item.vue';
+
 /**
+ * 嵌套菜单结构：
+ *
  * el-sub-menu >
  *  el-menu-item-group 可选 >
  *    el-menu-item
  */
 
-import { defineComponent } from 'vue';
-import Item from './Item.vue';
-export default defineComponent({
-  name: 'Submenu',
-  components: {
-    Item,
+defineProps({
+  menu: {
+    type: Object,
+    required: true,
   },
-  props: {
-    menu: {
-      type: Object,
-      required: true,
-    },
-    isNest: {
-      type: Boolean,
-      default: false,
-    },
+  isNest: {
+    type: Boolean,
+    default: false,
   },
 });
 </script>

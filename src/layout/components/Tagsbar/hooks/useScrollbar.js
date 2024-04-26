@@ -1,7 +1,6 @@
 import { ref } from 'vue';
 
 export const useScrollbar = (tagsItem, scrollContainer) => {
-  // const scrollContainer = ref(null);
   const scrollLeft = ref(0);
 
   const doScroll = (val) => {
@@ -12,7 +11,6 @@ export const useScrollbar = (tagsItem, scrollContainer) => {
   const handleScroll = (e) => {
     // const $wrap = scrollContainer.value.wrap$;
     const $wrap = scrollContainer.value.wrapRef;
-    console.log('🔎 ~ handleScroll ~ wrap:', $wrap);
     if (!$wrap) return;
 
     if ($wrap.offsetWidth + scrollLeft.value > $wrap?.children?.[0]?.scrollWidth) {
@@ -54,7 +52,7 @@ export const useScrollbar = (tagsItem, scrollContainer) => {
   };
 
   return {
-    scrollContainer,
+    // scrollContainer,
     handleScroll,
     moveToTarget,
   };

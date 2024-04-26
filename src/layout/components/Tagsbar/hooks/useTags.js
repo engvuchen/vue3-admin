@@ -2,7 +2,7 @@ import { storeToRefs } from 'pinia';
 import { useTags as useTagsbar } from '@/pinia/modules/tags';
 import { useScrollbar } from './useScrollbar';
 import { watch, computed, ref, nextTick, onBeforeMount } from 'vue';
-import { useRouter } from 'vue-router'; // todo 只能 setup 用。。。
+import { useRouter } from 'vue-router';
 
 // 页面固定，没有删除 icon
 export const isAffix = (tag) => {
@@ -12,6 +12,7 @@ export const isAffix = (tag) => {
 export const useTags = (scrollContainer) => {
   const tagStore = useTagsbar();
   const { tagList } = storeToRefs(tagStore);
+
   const { addTag, delTag, saveActivePosition, updateTagList } = tagStore;
   const router = useRouter();
   const route = router.currentRoute;
@@ -23,7 +24,7 @@ export const useTags = (scrollContainer) => {
     tagsItem.value[i] = el;
   };
 
-  const scrollbar = useScrollbar(tagsItem, scrollContainer); // todo
+  const scrollbar = useScrollbar(tagsItem, scrollContainer); // {, handleScroll, moveToTarget }
   watch(
     () => tagList.value.length,
     () => {
@@ -46,7 +47,15 @@ export const useTags = (scrollContainer) => {
 
   const addTagList = () => {
     const tag = route.value;
-    if (!!tag.name && tag.matched[0].components.default.name === 'layout') {
+
+    // tag.matched[0].components.default.name - 选项式 匹配 name
+    // tag.matched[0].components.default.__file => setup 匹配文件路径
+
+    let startPointComponent = tag.matched[0].components.default;
+    let routeStartsWithLayoutComponent =
+      startPointComponent.name === 'layout' || startPointComponent.__file.endsWith('/layout/index.vue');
+
+    if (tag.name && routeStartsWithLayoutComponent) {
       addTag(tag);
     }
   };
@@ -81,15 +90,18 @@ export const useTags = (scrollContainer) => {
   });
 
   watch(route, (newRoute, oldRoute) => {
+    console.log('🔎 ~ userTags watch ~ route:', route);
+
     saveTagPosition(oldRoute); // 保存标签的位置
     addTagList();
     moveToCurrentTag();
   });
 
+  // tagList, setItemRef, handleScroll, moveToTarget
   return {
     tagList,
     setItemRef,
-    isAffix,
+    // isAffix,
     ...scrollbar,
   };
 };
