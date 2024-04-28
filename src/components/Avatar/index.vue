@@ -5,7 +5,7 @@
       <h3>admin</h3>
     </template>
     <template v-else>
-      <img class="avatar" :src="userinfo.avatar" />
+      <img class="avatar" :src="userinfo.avatar" alt="avatar" />
       <h3>{{ userinfo.name }}</h3>
     </template>
   </div>

@@ -6,7 +6,7 @@
         admin
       </template>
       <template v-else>
-        <img class="avatar" :src="userinfo.avatar" />
+        <img class="avatar" :src="userinfo.avatar" alt="avatar" />
         {{ userinfo.name }}
       </template>
     </div>

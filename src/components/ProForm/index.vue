@@ -152,7 +152,7 @@
           :on-error="onUploadError"
           class="uploader"
         >
-          <img v-if="formModal[item.name]" :src="formModal[item.name]" class="preview" />
+          <img v-if="formModal[item.name]" :src="formModal[item.name]" class="preview" alt="preview" />
           <el-icon v-else class="uploader-icon"><Plus /></el-icon>
         </el-upload>
         <div v-html="item.attributes.help" class="help mr-top--10"></div>
