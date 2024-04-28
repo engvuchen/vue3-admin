@@ -52,8 +52,10 @@ export const useTags = (scrollContainer) => {
     // tag.matched[0].components.default.__file => setup 匹配文件路径
 
     let startPointComponent = tag.matched[0].components.default;
+    console.log('🔎 ~ addTagList ~ startPointComponent:', startPointComponent); // 线上找不到这个
+
     let routeStartsWithLayoutComponent =
-      startPointComponent.name === 'layout' || startPointComponent.__file.endsWith('/layout/index.vue');
+      startPointComponent?.name === 'layout' || startPointComponent?.__file?.endsWith('/layout/index.vue');
 
     if (tag.name && routeStartsWithLayoutComponent) {
       addTag(tag);
