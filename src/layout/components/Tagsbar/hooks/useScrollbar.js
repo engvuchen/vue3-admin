@@ -26,8 +26,6 @@ export const useScrollbar = (tagsItem, scrollContainer) => {
 
   const moveToTarget = (currentTag) => {
     const $wrap = scrollContainer.value.wrapRef;
-    console.log('🔎 ~ moveToTarget ~ $wrap:', $wrap);
-
     if (!$wrap) return;
 
     const tagList = tagsItem.value;

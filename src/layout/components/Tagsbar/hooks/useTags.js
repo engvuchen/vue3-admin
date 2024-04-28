@@ -67,8 +67,6 @@ export const useTags = (scrollContainer) => {
     nextTick(() => {
       for (const tag of tagsItem.value) {
         if (tag?.to?.path === route.value.path) {
-          console.log('scrollbar', scrollbar);
-
           scrollbar.moveToTarget(tag);
 
           if (tag.to.fullPath !== route.value.fullPath) {
@@ -87,8 +85,6 @@ export const useTags = (scrollContainer) => {
   });
 
   watch(route, (newRoute, oldRoute) => {
-    console.log('🔎 ~ userTags watch ~ route:', route);
-
     saveTagPosition(oldRoute); // 保存标签的位置
     addTagList();
     moveToCurrentTag();

@@ -125,8 +125,6 @@ const getList = async (params) => {
     curr.role_id = user2role[curr.id] || [];
   });
 
-  console.log('list', list);
-
   return {
     data: list,
     total: res.data.total || 0,
