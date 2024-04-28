@@ -5,22 +5,14 @@
     </keep-alive>
   </router-view>
 </template>
-<script>
-import { storeToRefs } from 'pinia';
-import { computed, defineComponent } from 'vue';
+<script setup>
+// https://cn.vuejs.org/guide/built-ins/suspense.html#combining-with-other-components
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { storeToRefs } from 'pinia';
 import { useTags } from '@/pinia/modules/tags';
 
-export default defineComponent({
-  setup() {
-    const route = useRoute();
-    const { cacheList } = storeToRefs(useTags());
-    const key = computed(() => route.fullPath);
-
-    return {
-      cacheList,
-      key,
-    };
-  },
-});
+const route = useRoute();
+const { cacheList } = storeToRefs(useTags());
+const key = computed(() => route.fullPath);
 </script>

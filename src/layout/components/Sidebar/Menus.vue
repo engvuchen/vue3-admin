@@ -17,11 +17,11 @@
 </template>
 <script setup>
 import { computed } from 'vue';
-import Submenu from './Submenu.vue';
 import { useRoute } from 'vue-router';
-import config from './config/menu.module.scss';
 import { storeToRefs } from 'pinia';
-import { useMenus } from '@/pinia/modules/menu'; // todo4
+import Submenu from './Submenu.vue';
+import config from './config/menu.module.scss';
+import { useMenus } from '@/pinia/modules/menu';
 
 defineProps({
   collapse: {
@@ -36,8 +36,6 @@ defineProps({
 
 const route = useRoute();
 const { menus } = storeToRefs(useMenus());
-console.log('🔎 ~ menus:', menus.value);
-
 const activePath = computed(() => route.path);
 const variables = computed(() => config);
 </script>

@@ -46,20 +46,15 @@ export const useTags = (scrollContainer) => {
   };
 
   const addTagList = () => {
-    const tag = route.value;
-
     // tag.matched[0].components.default.name - 选项式 匹配 name
     // tag.matched[0].components.default.__file => setup 匹配文件路径
+    // let startPointComponent = tag.matched[0].components.default // 线上只有 { setup, __name, __scopeId }
+    // let routeStartsWithLayoutComponent =
+    //   startPointComponent?.name === 'layout' || startPointComponent?.__file?.endsWith('/layout/index.vue');
 
-    let startPointComponent = tag.matched[0].components.default;
-    console.log('🔎 ~ addTagList ~ startPointComponent:', startPointComponent); // 线上找不到这个
-
-    let routeStartsWithLayoutComponent =
-      startPointComponent?.name === 'layout' || startPointComponent?.__file?.endsWith('/layout/index.vue');
-
-    if (tag.name && routeStartsWithLayoutComponent) {
-      addTag(tag);
-    }
+    // 路由必须被 Layout 包裹，否则不会出 router-view
+    const tag = route.value;
+    if (tag.name) addTag(tag);
   };
 
   const saveTagPosition = (tag) => {

@@ -1,19 +1,19 @@
 <template>
   <div class="wrapper" :class="{ fluid: isFluid }">
     <!-- #左侧菜单 -->
-    <sidebar v-if="isMenusShow && !isHorizontalMenu" />
+    <Sidebar v-if="isMenusShow && !isHorizontalMenu" />
     <!-- #右侧面板 -->
     <div class="right" :class="{ flex: isTopbarFixed }">
       <!-- #上部分功能栏 -->
       <div class="top">
         <!-- 头像 -->
-        <topbar />
+        <Topbar />
         <!-- 横向菜单 -->
-        <menus mode="horizontal" v-if="isMenusShow && isHorizontalMenu" />
+        <Menus mode="horizontal" v-if="isMenusShow && isHorizontalMenu" />
         <!-- 标签栏 -->
-        <tagsbar />
+        <Tagsbar />
         <!-- 面包屑导航 -->
-        <breadcrumbs v-if="isBreadcrumbsShow" @on-breadcrumbs-change="handleBreadcrumbsChange" />
+        <Breadcrumbs v-if="isBreadcrumbsShow" @on-breadcrumbs-change="handleBreadcrumbsChange" />
       </div>
       <!-- #页面主题 -->
       <div class="main" :class="{ pt0: isBreadcrumbsShow && paddingFlag }">
@@ -24,14 +24,14 @@
 </template>
 <script setup>
 import { ref, computed } from 'vue';
+import { useResizeHandler } from './hooks/useResizeHandler';
+import { useLayoutsettings } from '@/pinia/modules/layoutSettings';
 import Sidebar from './components/Sidebar/index.vue';
 import Topbar from './components/Topbar/index.vue';
 import Menus from './components/Sidebar/Menus.vue';
 import Tagsbar from './components/Tagsbar/index.vue';
 import Breadcrumbs from './components/Topbar/Breadcrumbs.vue';
 import Content from './components/Content/index.vue';
-import { useResizeHandler } from './hooks/useResizeHandler';
-import { useLayoutsettings } from '@/pinia/modules/layoutSettings';
 
 useResizeHandler();
 const defaultSettings = useLayoutsettings();
