@@ -71,12 +71,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, toRefs, getCurrentInstance, toRaw, nextTick } from 'vue';
+import { ref, reactive, toRefs, toRaw, nextTick } from 'vue';
 import { Delete, Edit } from '@element-plus/icons-vue';
 import { apiGetResourceList, apiResourceModify, apiResourceDel } from '@/api/resource';
 import tips from '@/utils/tips';
 import { validMultiLineTxt } from '@/utils/validate';
-const { proxy } = getCurrentInstance();
 
 // 表格
 const { searchConfig, columns } = toRefs(
@@ -170,7 +169,6 @@ const formConfig = ref({
   fields: [
     // id
     {
-      // label: proxy.$t('user/resource.id'),
       name: 'id',
       attributes: {
         hide: true,
@@ -180,7 +178,7 @@ const formConfig = ref({
     // name
     {
       component: 'text',
-      label: proxy.$t('user/resource.name'),
+      label: 'user/resource.name',
       name: 'name',
       // attributes: {},
       validity: [
@@ -195,7 +193,7 @@ const formConfig = ref({
     {
       component: 'textarea',
       name: 'access',
-      label: proxy.$t('user/resource.access'), // user/resource.batchDelete
+      label: 'user/resource.access', // user/resource.batchDelete
       attributes: {
         multiple: true,
         style: {
@@ -223,7 +221,7 @@ const formConfig = ref({
     {
       component: 'textarea',
       name: 'cgi',
-      label: proxy.$t('user/resource.cgi'),
+      label: 'user/resource.cgi',
       attributes: {
         multiple: true,
         style: {

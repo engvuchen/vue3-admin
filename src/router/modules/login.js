@@ -4,6 +4,7 @@ export default [
   {
     path: '/login',
     name: 'login',
+    hide: true,
     component: Login,
   },
 ];

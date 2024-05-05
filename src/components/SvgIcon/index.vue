@@ -1,27 +1,20 @@
-
-
 <template>
   <svg class="icon" aria-hidden="true">
     <use :xlink:href="symbolId" />
   </svg>
 </template>
 
-<script>
-import { defineComponent, computed } from 'vue'
+<script setup>
+import { computed } from 'vue';
 
-export default defineComponent({
-  name: 'SvgIcon',
-  props: {
-    name: {
-      type: String,
-      required: true,
-    },
+const props = defineProps({
+  name: {
+    type: String,
+    required: true,
   },
-  setup(props) {
-    const symbolId = computed(() => `#icon-${props.name}`)
-    return { symbolId }
-  },
-})
+});
+
+const symbolId = computed(() => `#icon-${props.name}`);
 </script>
 
 <style lang="scss" scoped>

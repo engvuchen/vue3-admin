@@ -20,35 +20,23 @@
     </template>
   </el-dropdown>
 </template>
-<script>
-import { defineComponent } from 'vue';
+<script setup>
 import { useRouter } from 'vue-router';
 import { useUserinfo } from '@/components/Avatar/hooks/useUserinfo';
 import { useApp } from '@/pinia/modules/app';
 
-export default defineComponent({
-  components: {},
-  setup() {
-    const router = useRouter();
-    const { userinfo } = useUserinfo();
+const router = useRouter();
+const { userinfo } = useUserinfo();
 
-    // 退出
-    const logout = () => {
-      // 清除token
-      useApp().clearToken();
-      router.push('/login');
-    };
-    const jumpToSelfCenter = () => {
-      router.push('/self');
-    };
-
-    return {
-      userinfo,
-      logout,
-      jumpToSelfCenter,
-    };
-  },
-});
+// 退出
+const logout = () => {
+  // 清除token
+  useApp().clearToken();
+  router.push('/login');
+};
+const jumpToSelfCenter = () => {
+  router.push('/self');
+};
 </script>
 
 <style lang="scss" scoped>

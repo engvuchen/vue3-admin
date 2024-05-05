@@ -23,12 +23,14 @@ export const useContextMenu = (tagList) => {
     closeMenu() {
       state.visible = false;
     },
+    // 刷新
     refreshSelectedTag(tag) {
       tagsStore.deCacheList(tag);
       nextTick(() => {
         router.replace(tag);
       });
     },
+    // 关闭
     closeTag(tag) {
       if (isAffix(tag)) return;
 

@@ -6,7 +6,7 @@ export default {
   'rules-regpassword': '6 to 12 characters in length',
   registering: 'Please wait...',
   register: 'Sign up',
-  login: 'Sign',
+  login: 'Login',
   logining: 'Please wait...',
   loginsuccess: 'Success',
 };

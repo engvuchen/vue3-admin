@@ -5,11 +5,10 @@
 </template>
 
 <script setup>
-import { computed, getCurrentInstance } from 'vue';
-const { proxy } = getCurrentInstance();
+import { computed } from 'vue';
 
-defineProps(['title', 'icon']);
-const isCustomSvg = computed(() => proxy.icon && proxy.icon.startsWith('icon-'));
+const props = defineProps(['title', 'icon']);
+const isCustomSvg = computed(() => props?.icon?.startsWith?.('icon-'));
 </script>
 <style lang="scss" scoped>
 .icon {

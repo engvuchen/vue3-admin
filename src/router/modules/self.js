@@ -6,6 +6,7 @@ export default [
   {
     path: '/self',
     component: Layout,
+    hide: true,
     meta: {
       title: 'self.title',
     },
@@ -17,7 +18,6 @@ export default [
         component: Self,
         meta: {
           title: 'self.title',
-          hide: true,
         },
       },
     ],

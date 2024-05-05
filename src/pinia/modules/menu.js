@@ -8,10 +8,6 @@ export const useMenus = defineStore('menu', () => {
   /**
    * 递归遍历项目载入的所有路由，匹配远程的 path 列表，匹配上的才被收集
    *
-   * path = '' 的处理：
-   * 1. 值在子路由。配置 `/user`，父路由 `/user`，子路由 `path=''`。`/user` 父路由匹配成功，子路由空串也能匹配成功。
-   * 2. 值在父路由。也能匹配成功，但这个路由没有什么作用。
-   *
    * @param {Array} targetRoutes [ { path, name, children } ]
    * @param {Array} ajaxRoutes [ 'path1', 'path2' ] 管理端配置的路径
    * @param {Array} result
@@ -19,7 +15,7 @@ export const useMenus = defineStore('menu', () => {
    */
   const getAccessibleRoutes = (targetRoutes = [], ajaxRoutes = [], result = []) => {
     targetRoutes.forEach((curr) => {
-      // 找不到 相等 或 父集 => 不相等 或 不是父集。
+      // 远程配置 找不到和当前 相等 或 当前是配置的父级 => 不相等 或 不是父集
       if (!ajaxRoutes.find((item) => item.startsWith(curr.path))) return;
 
       let { children = [], ...rest } = curr;
@@ -35,8 +31,8 @@ export const useMenus = defineStore('menu', () => {
     const menus = [];
 
     for (let i = 0; i < routes.length; i++) {
-      let { path = '', meta: { title = '' } = {}, icon = '', hidden, children = [] } = routes[i];
-      if (hidden || !title) continue;
+      let { path = '', icon = '', hide, meta: { title = '' } = {}, children = [] } = routes[i];
+      if (hide) continue;
 
       const menu = {
         url: path,
@@ -83,10 +79,8 @@ export const useMenus = defineStore('menu', () => {
     const { code, data } = await apiGetSelfResource(); // 从接口获取当前用户的权限
     if (code !== 0) return;
 
-    // 添加路由前，先删除所有动态路由。需要 name 删除, adm 方案只是隐藏，路径输入正确即可打开页面
-    asyncRoutes.forEach((item) => router.removeRoute(item.name));
-
-    paddingFullPath([...fixedRoutes, ...asyncRoutes]); // 补全路由 path
+    // 补全子路由 path。父路由 path='/user'，子路由 path='list'，子路由补全为 /user/list
+    paddingFullPath([...fixedRoutes, ...asyncRoutes]);
 
     // 获取远程路由、cgi
     let resources = [];

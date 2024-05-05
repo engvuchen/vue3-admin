@@ -46,14 +46,10 @@ export const useTags = (scrollContainer) => {
   };
 
   const addTagList = () => {
-    // tag.matched[0].components.default.name - 选项式 匹配 name
-    // tag.matched[0].components.default.__file => setup 匹配文件路径
-    // let startPointComponent = tag.matched[0].components.default // 线上只有 { setup, __name, __scopeId }
-    // let routeStartsWithLayoutComponent =
-    //   startPointComponent?.name === 'layout' || startPointComponent?.__file?.endsWith('/layout/index.vue');
-
     // 路由必须被 Layout 包裹，否则不会出 router-view
     const tag = route.value;
+    console.log('🔎 ~ addTagList ~ tag:', tag); // todo 看起来是根据 router item.name 判断；keep-alive 是根据组件的 name 判断
+
     if (tag.name) addTag(tag);
   };
 
@@ -84,6 +80,7 @@ export const useTags = (scrollContainer) => {
     moveToCurrentTag();
   });
 
+  // 路由变化，saveTagPosition、addTagList（自定义对象加入到 tagList）、moveToCurrentTag
   watch(route, (newRoute, oldRoute) => {
     saveTagPosition(oldRoute); // 保存标签的位置
     addTagList();

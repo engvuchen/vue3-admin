@@ -53,13 +53,12 @@
 </template>
 
 <script setup>
-import { ref, getCurrentInstance, toRaw, nextTick } from 'vue';
+import { ref, toRaw, nextTick } from 'vue';
 import { Delete, Edit } from '@element-plus/icons-vue';
 import { apiGetUserList, apiUserUpd, apiUserDel } from '@/api/user';
 import { apiGetRoleList } from '@/api/role';
 import { apiGetUserRoleList, apiUserRoleModify } from '@/api/user_role';
 import tips from '@/utils/tips';
-const { proxy } = getCurrentInstance();
 
 // 表格
 const table = ref(null);
@@ -166,7 +165,7 @@ const formConfig = ref({
     // username
     {
       component: 'text',
-      label: proxy.$t('user/list.name'),
+      label: 'user/list.name',
       name: 'username',
       validity: [
         {
@@ -179,7 +178,7 @@ const formConfig = ref({
     // role_Id
     {
       component: 'select',
-      label: proxy.$t('user/list.role_id'),
+      label: 'user/list.role_id',
       name: 'role_id',
       items: [],
       attributes: {

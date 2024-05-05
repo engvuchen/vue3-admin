@@ -4,28 +4,17 @@
   </el-config-provider>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
+<script setup>
+import { ref } from 'vue';
 import { ElConfigProvider } from 'element-plus';
-// https://www.bilibili.com/read/cv25825714/
-import localeZH from 'element-plus/dist/locale/zh-cn.mjs';
+import localeZH from 'element-plus/dist/locale/zh-cn.mjs'; // // https://www.bilibili.com/read/cv25825714/
 import localeEN from 'element-plus/dist/locale/en.mjs';
 import useLang from '@/i18n/useLang';
 
-export default defineComponent({
-  components: {
-    [ElConfigProvider.name]: ElConfigProvider,
-  },
-  setup() {
-    const { lang } = useLang();
-    return {
-      lang,
-      locales: {
-        'zh-cn': localeZH,
-        en: localeEN,
-      },
-    };
-  },
+const { lang } = useLang();
+const locales = ref({
+  'zh-cn': localeZH,
+  en: localeEN,
 });
 </script>
 

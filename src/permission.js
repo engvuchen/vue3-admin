@@ -52,7 +52,7 @@ router.beforeEach(async (to, from) => {
     }; // token 验证失败，返回到登陆页
   }
 
-  // login 成功 -> 若 menus 没有生成过，动态生成路由。动态生成过程，会修改路由树，没权限，路由在路由树中不存在，会被 404 的路由匹配捕获
+  // login 成功，重新生成 menus
   const { menus, generateMenusAndCgis } = useMenus();
   if (!menus.length) {
     try {
@@ -73,8 +73,4 @@ router.afterEach((to) => {
   nextTick(() => {
     document.title = getPageTitle(to.meta && to.meta.truetitle); // truetitle 是翻译之后的标题
   });
-
-  // 防止重定向：前路由的名称为 A，你尝试导航到 B，但路由配置将 B 重定向到了 C。在 afterEach 守卫中， router.currentRoute.value.name 将会是 C，而 to.name 是 B，router.currentRoute.value.name === to.name 不成立
-  // if (router.currentRoute.value.name === to.name) {
-  // }
 });

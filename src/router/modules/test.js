@@ -36,7 +36,7 @@ export default [
         meta: {
           title: 'menu.testAdd',
         },
-        hidden: true, // 不在菜单中显示
+        hide: true,
       },
       {
         path: 'edit/:id',
@@ -45,7 +45,7 @@ export default [
         meta: {
           title: 'menu.testEdit',
         },
-        hidden: true, // 不在菜单中显示
+        hide: true,
       },
       // {
       //   path: 'auth',

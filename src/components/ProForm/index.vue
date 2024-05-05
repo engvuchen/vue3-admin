@@ -8,166 +8,169 @@
     :inline="true"
     :label-width="config.labelWidth"
   >
-    <el-form-item v-for="item in config.fields" :key="item.name" :label="item.label" :prop="item.name">
-      <!-- custom -->
-      <slot v-if="item.component === 'custom'" :name="item.slot" />
-      <!-- select -->
-      <!-- remote-show-suffix -->
-      <el-select
-        clearable
-        value-key="value"
-        v-else-if="item.component === 'select'"
-        v-model="formModal[item.name]"
-        :filterable="!!item?.attributes?.filterable"
-        :multiple="!!item?.attributes?.multiple"
-        :placeholder="item.label"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-        :remote="item?.attributes?.remote"
-        :remote-method="(query) => wrapperSelectRemoteMethod(item, query)"
-        :loading="item?.attributes?.loading"
-      >
-        <el-option
-          v-for="option in item?.items"
-          :key="option.value"
-          :label="option.label"
-          :value="option.value"
-        ></el-option>
-      </el-select>
-      <!-- radio -->
-      <el-radio-group
-        v-model="formModal[item.name]"
-        v-else-if="item.component === 'radio'"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-      >
-        <el-radio v-for="option of item.items" :key="option.value" :label="option.value">
-          {{ $t(option.label) }}
-        </el-radio>
-      </el-radio-group>
-      <!-- radio-button -->
-      <el-radio-group
-        v-model="formModal[item.name]"
-        v-else-if="item.component === 'radio-button'"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-      >
-        <el-radio-button v-for="option of item.items" :key="option.value" :label="option.value">
-          {{ $t(option.label) }}
-        </el-radio-button>
-      </el-radio-group>
-      <!-- checkbox -->
-      <el-checkbox-group
-        v-model="formModal[item.name]"
-        v-else-if="item.component === 'checkbox'"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-      >
-        <el-checkbox v-for="option of item.items" :key="option.value" :label="option.value">
-          {{ $t(option.label) }}
-        </el-checkbox>
-      </el-checkbox-group>
-      <!-- checkbox-button -->
-      <el-checkbox-group
-        v-model="formModal[item.name]"
-        v-else-if="item.component === 'checkbox-button'"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-      >
-        <el-checkbox-button v-for="option of item.items" :key="option.value" :label="option.value">
-          {{ $t(option.label) }}
-        </el-checkbox-button>
-      </el-checkbox-group>
-      <!-- date -->
-      <el-date-picker
-        v-else-if="item.component === 'date'"
-        v-model="formModal[item.name]"
-        type="date"
-        format="YYYY-MM-DD"
-        clearable
-        @change="handleDateChange($event, item, 'YYYY-MM-DD')"
-        :placeholder="$t(item.label)"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-      ></el-date-picker>
-      <!-- datatime -->
-      <el-date-picker
-        v-else-if="item.component === 'datetime'"
-        v-model="formModal[item.name]"
-        type="datetime"
-        clearable
-        @change="handleDateChange($event, item, 'YYYY-MM-DD HH:mm:ss')"
-        format="YYYY-MM-DD HH:mm:ss"
-        :placeholder="$t(item.label)"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-      ></el-date-picker>
-      <!-- daterange -->
-      <el-date-picker
-        v-else-if="item.component === 'daterange'"
-        v-model="formModal[item.name]"
-        type="daterange"
-        format="YYYY-MM-DD"
-        range-separator="-"
-        :start-placeholder="$t('public.startdate')"
-        :end-placeholder="$t('public.enddate')"
-        clearable
-        @change="handleRangeChange($event, item, 'YYYY-MM-DD')"
-        :style="{ ...item?.attributes?.style }"
-      ></el-date-picker>
-      <!-- datatimerange -->
-      <el-date-picker
-        v-else-if="item.component === 'datetimerange'"
-        v-model="formModal[item.name]"
-        type="datetimerange"
-        format="YYYY-MM-DD HH:mm:ss"
-        range-separator="-"
-        :start-placeholder="$t('public.starttime')"
-        :end-placeholder="$t('public.endtime')"
-        clearable
-        @change="handleRangeChange($event, item, 'YYYY-MM-DD HH:mm:ss')"
-        :style="{ ...item?.attributes?.style }"
-      ></el-date-picker>
-      <!-- number -->
-      <el-input-number
-        v-else-if="item.component === 'number'"
-        v-model="formModal[item.name]"
-        :placeholder="item.label"
-        controls-position="right"
-        :min="item.min"
-        :max="item.max"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-      />
-      <!-- textarea -->
-      <el-input
-        v-else-if="item.component === 'textarea'"
-        :maxlength="item.maxlength"
-        type="textarea"
-        clearable
-        v-model="formModal[item.name]"
-        :placeholder="item.label"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-      >
-      </el-input>
-      <!-- upload -->
-      <template v-else-if="item.component === 'upload'">
-        <el-upload
-          :action="item?.attributes?.action || '#'"
-          :show-file-list="Boolean(item?.attributes?.showFileList)"
-          :before-upload="getBeforeUpload(item)"
-          :http-request="getUploadImg(formModal, item.name)"
-          :on-error="onUploadError"
-          class="uploader"
+    <template v-for="item in config.fields" :key="item.name">
+      <el-form-item v-if="!item?.attributes?.hide" :label="$t(item.label)" :prop="item.name">
+        <!-- custom -->
+        <slot v-if="item.component === 'custom'" :name="item.slot" />
+        <!-- select -->
+        <!-- remote-show-suffix -->
+        <el-select
+          clearable
+          value-key="value"
+          v-else-if="item.component === 'select'"
+          v-model="formModal[item.name]"
+          :filterable="!!item?.attributes?.filterable"
+          :multiple="!!item?.attributes?.multiple"
+          :placeholder="$t(item.label)"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+          :remote="item?.attributes?.remote"
+          :remote-method="(query) => wrapperSelectRemoteMethod(item, query)"
+          :loading="item?.attributes?.loading"
         >
-          <img v-if="formModal[item.name]" :src="formModal[item.name]" class="preview" alt="preview" />
-          <el-icon v-else class="uploader-icon"><Plus /></el-icon>
-        </el-upload>
-        <div v-html="item.attributes.help" class="help mr-top--10"></div>
-      </template>
-      <!-- input -->
-      <el-input
-        v-else
-        :maxlength="item.maxlength"
-        v-model="formModal[item.name]"
-        clearable
-        :placeholder="item.label"
-        :style="{ width: config.inputWidth, ...item?.attributes?.style }"
-      >
-      </el-input>
-    </el-form-item>
+          <el-option
+            v-for="option in item?.items"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          ></el-option>
+        </el-select>
+        <!-- radio -->
+        <el-radio-group
+          v-model="formModal[item.name]"
+          v-else-if="item.component === 'radio'"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        >
+          <el-radio v-for="option of item.items" :key="option.value" :label="option.value">
+            {{ $t(option.label) }}
+          </el-radio>
+        </el-radio-group>
+        <!-- radio-button -->
+        <el-radio-group
+          v-model="formModal[item.name]"
+          v-else-if="item.component === 'radio-button'"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        >
+          <el-radio-button v-for="option of item.items" :key="option.value" :label="option.value">
+            {{ $t(option.label) }}
+          </el-radio-button>
+        </el-radio-group>
+        <!-- checkbox -->
+        <el-checkbox-group
+          v-model="formModal[item.name]"
+          v-else-if="item.component === 'checkbox'"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        >
+          <el-checkbox v-for="option of item.items" :key="option.value" :label="option.value">
+            {{ $t(option.label) }}
+          </el-checkbox>
+        </el-checkbox-group>
+        <!-- checkbox-button -->
+        <el-checkbox-group
+          v-model="formModal[item.name]"
+          v-else-if="item.component === 'checkbox-button'"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        >
+          <el-checkbox-button v-for="option of item.items" :key="option.value" :label="option.value">
+            {{ $t(option.label) }}
+          </el-checkbox-button>
+        </el-checkbox-group>
+        <!-- date -->
+        <el-date-picker
+          v-else-if="item.component === 'date'"
+          v-model="formModal[item.name]"
+          type="date"
+          format="YYYY-MM-DD"
+          clearable
+          @change="handleDateChange($event, item, 'YYYY-MM-DD')"
+          :placeholder="$t(item.label)"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        ></el-date-picker>
+        <!-- datatime -->
+        <el-date-picker
+          v-else-if="item.component === 'datetime'"
+          v-model="formModal[item.name]"
+          type="datetime"
+          clearable
+          @change="handleDateChange($event, item, 'YYYY-MM-DD HH:mm:ss')"
+          format="YYYY-MM-DD HH:mm:ss"
+          :placeholder="$t(item.label)"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        ></el-date-picker>
+        <!-- daterange -->
+        <el-date-picker
+          v-else-if="item.component === 'daterange'"
+          v-model="formModal[item.name]"
+          type="daterange"
+          format="YYYY-MM-DD"
+          range-separator="-"
+          :start-placeholder="$t('public.startdate')"
+          :end-placeholder="$t('public.enddate')"
+          clearable
+          @change="handleRangeChange($event, item, 'YYYY-MM-DD')"
+          :style="{ ...item?.attributes?.style }"
+        ></el-date-picker>
+        <!-- datatimerange -->
+        <el-date-picker
+          v-else-if="item.component === 'datetimerange'"
+          v-model="formModal[item.name]"
+          type="datetimerange"
+          format="YYYY-MM-DD HH:mm:ss"
+          range-separator="-"
+          :start-placeholder="$t('public.starttime')"
+          :end-placeholder="$t('public.endtime')"
+          clearable
+          @change="handleRangeChange($event, item, 'YYYY-MM-DD HH:mm:ss')"
+          :style="{ ...item?.attributes?.style }"
+        ></el-date-picker>
+        <!-- number -->
+        <el-input-number
+          v-else-if="item.component === 'number'"
+          v-model="formModal[item.name]"
+          :placeholder="$t(item.label)"
+          controls-position="right"
+          :min="item.min"
+          :max="item.max"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        />
+        <!-- textarea -->
+        <el-input
+          v-else-if="item.component === 'textarea'"
+          :maxlength="item.maxlength"
+          type="textarea"
+          clearable
+          v-model="formModal[item.name]"
+          :placeholder="$t(item.label)"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        >
+        </el-input>
+        <!-- upload -->
+        <template v-else-if="item.component === 'upload'">
+          <el-upload
+            :action="item?.attributes?.action || '#'"
+            :show-file-list="Boolean(item?.attributes?.showFileList)"
+            :before-upload="getBeforeUpload(item)"
+            :http-request="getUploadImg(formModal, item.name)"
+            :on-error="onUploadError"
+            class="uploader"
+          >
+            <img v-if="formModal[item.name]" :src="formModal[item.name]" class="preview" alt="preview" />
+            <el-icon v-else class="uploader-icon"><Plus /></el-icon>
+          </el-upload>
+          <div v-html="item.attributes.help" class="help mr-top--10"></div>
+        </template>
+        <!-- input -->
+        <el-input
+          v-else
+          :maxlength="item.maxlength"
+          v-model="formModal[item.name]"
+          clearable
+          :placeholder="$t(item.label)"
+          :style="{ width: config.inputWidth, ...item?.attributes?.style }"
+        >
+        </el-input>
+      </el-form-item>
+    </template>
+
     <div class="btn-group">
       <el-button @click="onCancel">
         {{ $t('public.cancel') }}
@@ -180,7 +183,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, toRaw } from 'vue';
+import { ref, toRaw } from 'vue';
 import axios from 'axios';
 import { HexMD5, b64hamcsha1 } from '@/utils/hash';
 import tips from '@/utils/tips';
@@ -213,23 +216,20 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(['submit', 'cancel']);
-/** 生成 modal，rules */
-const walkConfig = (config) => {
+
+/** 返回 modal，rules */
+const initModalAndRules = (config) => {
   let modal = {};
   let rules = {};
 
-  // hide 的表单项，添加到 modal。视图不渲染
-  config.fields = config.fields.filter((curr) => {
-    if (curr?.attributes?.hide) {
-      modal[curr.name] = curr.value || '';
-      return false;
-    }
-    return true;
-  });
-  let { fields } = config;
-  fields.forEach((item, index) => {
+  // 遍历 fields，check-button/calendar 等特殊组件，初始化 value；生成 rules
+  // let { fields } = config;
+  config.fields.forEach((item, index) => {
     // 填充空 value, attributes, validity，防止初始化报错
-    fields[index] = { attributes: {}, validity: {}, ...item };
+    if (!item.label) item.label = '';
+    config.fields[index] = { attributes: {}, validity: {}, ...item };
+
+    modal[item.name] = item.value || '';
 
     // 处理特殊组件的 value
     switch (item.component) {
@@ -240,19 +240,15 @@ const walkConfig = (config) => {
       default:
         break;
     }
-    if (item.value !== undefined) {
-      modal[item.name] = item.value;
-
-      // 日期范围和时间范围真实变量默认值
-      if (
-        (item.component === 'daterange' || item.component === 'datetimerange') &&
-        !!item.trueNames &&
-        Array.isArray(item.value)
-      ) {
-        item.value.forEach((val, index) => {
-          modal[item.trueNames[index]] = val;
-        });
-      }
+    // 日期范围和时间范围真实变量默认值
+    if (
+      (item.component === 'daterange' || item.component === 'datetimerange') &&
+      !!item.trueNames &&
+      Array.isArray(item.value)
+    ) {
+      item.value.forEach((val, index) => {
+        modal[item.trueNames[index]] = val;
+      });
     }
 
     // 生成 rules
@@ -264,7 +260,7 @@ const walkConfig = (config) => {
   return { modal, rules };
 };
 const form = ref(null);
-const { modal, rules } = walkConfig(toRaw(props.config)); // config 的变化，不再影响 modal
+const { modal, rules } = initModalAndRules(props.config); // init 后，fieldItem.value 不会影响 modal
 const formModal = ref(modal);
 const formRules = ref(rules);
 
@@ -365,10 +361,8 @@ const getBeforeUpload = (config) => {
 };
 const getUploadImg = (modal, name) => {
   return async (options) => {
-    const file = options.file;
-
     const uploadData = new FormData();
-
+    const file = options.file;
     uploadData.append('file', file);
 
     // https://help.upyun.com/knowledge-base/form_api/
@@ -378,13 +372,6 @@ const getUploadImg = (modal, name) => {
       password: 'If7wTOZPcD1aXSjWMrsb6aRYwSb7BqBJ',
       path: '/img',
       host: 'https://upload2.engvu.tech',
-
-      // bucket: 'xiaoli-test',
-      // username: 'test',
-      // password: '0LjHlUNs8n0RWbEPi3c0BB3dOJBkfhwd',
-      // path: '/img',
-      // testCdnUrl: 'http://xiaoli-test.test.upcdn.net',
-      // imgLocalUrl: '',
     };
     /* 计算policy */
     const policyObj = {
@@ -407,7 +394,6 @@ const getUploadImg = (modal, name) => {
         console.error(e);
       },
     );
-
     if (res?.data?.url) {
       modal[name] = params.host + res.data.url;
     }

@@ -12,9 +12,14 @@ export const useTags = defineStore('tags', {
     saveActivePosition(index) {
       this.activePosition = index;
     },
+    // 添加 tagList
     addTag({ path, fullPath = path, name, meta, params, query }) {
-      if (this.tagList.some((v) => v.path === path)) return false;
-      // 添加tagList
+      if (name && !this.cacheList.includes(name) && !meta.noCache) {
+        this.cacheList.push(name);
+      }
+
+      if (this.tagList.some((v) => v.path === path)) return; // todo tagList 是目前打开的标签列表
+
       const target = {
         path,
         fullPath, // 自定义 fullPath 用作判断
@@ -34,52 +39,37 @@ export const useTags = defineStore('tags', {
       } else {
         this.tagList.splice(this.activePosition + 1, 0, target);
       }
-      // 保存到localStorage
       setItem(TAGLIST, this.tagList);
-
-      // 添加cacheList
-      if (this.cacheList.includes(name)) return;
-
-      console.log('this.cacheList', this.cacheList);
-
-      if (!meta.noCache) {
-        this.cacheList.push(name);
-      }
     },
+    // 删除 tagList - 无调用
     deTagList(tag) {
-      // 删除tagList
       this.tagList = this.tagList.filter((v) => v.path !== tag.path);
-      // 保存到localStorage
       setItem(TAGLIST, this.tagList);
     },
+    // 删除 cacheList。this.cacheList 去掉自己，keep-alive 失效
     deCacheList(tag) {
-      // 删除cacheList
       this.cacheList = this.cacheList.filter((v) => v !== tag.name);
     },
     delTag(tag) {
       // 删除tagList
       this.deTagList(tag);
-
       // 删除cacheList
       this.deCacheList(tag);
     },
     delOtherTags(tag) {
       this.tagList = this.tagList.filter((v) => !!v.meta.affix || v.path === tag.path);
-      // 保存到localStorage
       setItem(TAGLIST, this.tagList);
 
       this.cacheList = this.cacheList.filter((v) => v === tag.name);
     },
     delSomeTags(tags) {
       this.tagList = this.tagList.filter((v) => !!v.meta.affix || tags.every((tag) => tag.path !== v.path));
-      // 保存到localStorage
       setItem(TAGLIST, this.tagList);
 
       this.cacheList = this.cacheList.filter((v) => tags.every((tag) => tag.name !== v));
     },
     delAllTags() {
       this.tagList = this.tagList.filter((v) => !!v.meta.affix);
-      // 保存到localStorage
       removeItem(TAGLIST);
       this.cacheList = [];
     },
@@ -87,14 +77,13 @@ export const useTags = defineStore('tags', {
       const index = this.tagList.findIndex((v) => v.path === tag.path);
       if (index > -1) {
         this.tagList[index] = { ...this.tagList[index], ...tag };
-        // 保存到localStorage
+
         setItem(TAGLIST, this.tagList);
       }
     },
     clearAllTags() {
       this.cacheList = [];
       this.tagList = [];
-      // 保存到localStorage
       removeItem(TAGLIST);
     },
   },

@@ -1,4 +1,3 @@
-
 <template>
   <div class="error">
     <template v-if="error === '403'">
@@ -21,12 +20,8 @@
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue'
-
-export default defineComponent({
-  props: ['error'],
-})
+<script setup>
+defineProps(['error']);
 </script>
 
 <style lang="scss" scoped>

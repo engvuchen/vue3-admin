@@ -1,17 +1,14 @@
 <template>
   <div class="self">
-    <pro-form ref="proform" :config="formConfig" @cancel="onCancel" @submit="onSubmit"></pro-form>
+    <pro-form ref="proform" :config="formConfig" @submit="onSubmit"></pro-form>
   </div>
 </template>
 
 <script setup>
-import { ref, getCurrentInstance } from 'vue';
-// import { useRouter } from 'vue-router';
+import { ref } from 'vue';
 import { apiUserUpd } from '@/api/user';
 import { useAccount } from '@/pinia/modules/account';
 import tips from '@/utils/tips';
-const { proxy } = getCurrentInstance();
-// const router = useRouter(); // script setup 一定需要把 useRouter 放在外层
 
 const { userinfo, getUserInfo } = useAccount(); // {id, username, avatar}
 const initFields = (config) => {
@@ -20,7 +17,7 @@ const initFields = (config) => {
     {
       component: 'text',
       name: 'id',
-      label: proxy.$t('self.id'),
+      label: 'self.id',
       value: userinfo.id,
       attributes: {
         hide: true,
@@ -29,24 +26,24 @@ const initFields = (config) => {
     // username
     {
       component: 'text',
-      label: proxy.$t('self.username'),
+      label: 'self.username',
       name: 'username',
       value: userinfo.username,
     },
     // password
     {
       component: 'text',
-      label: proxy.$t('self.newPassword'),
+      label: 'self.newPassword',
       name: 'password',
     },
     // avatar
     {
       component: 'upload',
-      label: proxy.$t('self.avatar'),
+      label: 'self.avatar',
       name: 'avatar',
       value: userinfo.avatar,
       attributes: {
-        help: 'JPG、PNG，小于1MB',
+        help: 'JPG、PNG，<= 1MB',
         accept: ['jpg', 'png'],
         size: 1,
       },
@@ -82,8 +79,11 @@ const onSubmit = async (data) => {
   // if (password) return router.push('/login');
   if (username || avatar) getUserInfo(true);
 };
-const onCancel = () => {
-  initFields(formConfig);
+</script>
+
+<script>
+export default {
+  name: 'self',
 };
 </script>
 

@@ -53,30 +53,19 @@
   </div>
 </template>
 
-<script>
-import { defineComponent, ref } from 'vue';
+<script setup>
+import { ref } from 'vue';
 import { useErrorlog } from '@/pinia/modules/errorLog';
 import { storeToRefs } from 'pinia';
 
-export default defineComponent({
-  name: 'ErrorLog',
-  setup() {
-    const dialogTableVisible = ref(false);
-    const errorStore = useErrorlog();
-    const { logs: errorLogs } = storeToRefs(errorStore);
-    const { clearErrorLog } = errorStore;
-    const clearAll = () => {
-      dialogTableVisible.value = false;
-      clearErrorLog();
-    };
-
-    return {
-      dialogTableVisible,
-      errorLogs,
-      clearAll,
-    };
-  },
-});
+const dialogTableVisible = ref(false);
+const errorStore = useErrorlog();
+const { logs: errorLogs } = storeToRefs(errorStore);
+const { clearErrorLog } = errorStore;
+const clearAll = () => {
+  dialogTableVisible.value = false;
+  clearErrorLog();
+};
 </script>
 
 <style scoped>
