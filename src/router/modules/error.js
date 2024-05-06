@@ -15,6 +15,7 @@ export default [
   {
     path: '/error',
     component: Layout,
+    hide: true,
     children: [
       {
         path: '403',
@@ -71,6 +72,7 @@ export default [
     path: '/:pathMatch(.*)',
     name: 'not-found',
     component: Error,
+    hide: true,
     props: {
       error: '404',
     },

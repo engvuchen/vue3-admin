@@ -22,7 +22,7 @@ const getPageTitle = (title = '') => {
 router.beforeEach(async (to, from) => {
   loadingInstance = ElLoading.service({
     lock: true,
-    text: '加载数据中，请稍候~',
+    text: 'Loading, Please wait...',
     background: 'rgba(0, 0, 0, 0.7)',
   });
 

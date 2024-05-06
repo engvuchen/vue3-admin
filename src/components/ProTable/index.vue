@@ -198,8 +198,93 @@
     ></el-pagination>
   </div>
 </template>
-<script>
-import { defineComponent, reactive, toRefs, onBeforeMount, watch } from 'vue';
+<script setup>
+// setup > beforeCreate和created
+import { ref, onBeforeMount, computed } from 'vue';
+
+const props = defineProps({
+  // 请求数据的方法
+  request: {
+    type: Function,
+  },
+  // 表格标题
+  title: {
+    type: String,
+    default: '',
+  },
+  // 是否隐藏标题栏
+  hideTitleBar: {
+    type: Boolean,
+    default: false,
+  },
+  // 是否隐藏按钮操作
+  hideToolbar: {
+    type: Boolean,
+    default: false,
+  },
+  // 搜索表单配置，false表示不显示搜索表单
+  search: {
+    type: [Boolean, Object],
+    default: false,
+  },
+  border: {
+    type: Boolean,
+    default: false,
+  },
+  // 表头配置
+  columns: {
+    type: Array,
+    default: () => [],
+  },
+  // 行数据的Key，同elementUI的table组件的row-key
+  rowKey: {
+    type: [String, Function],
+    default: () => {},
+  },
+  // 分页配置，false表示不显示分页
+  pagination: {
+    type: [Boolean, Object],
+    default: () => ({}),
+  },
+});
+const emit = defineEmits(['submit', 'cancel']);
+
+let tableData = ref([]);
+let total = ref(20);
+let page = ref(0);
+let limit = props?.pagination?.limit || 10;
+let searchModel = computed(() => getSearchModel(props.search));
+let loading = ref(false);
+let paginationConfig = ref(null);
+
+// watch(
+//   () => props.search,
+//   (val) => {
+//     searchModel = getSearchModel(val);
+//   },
+//   { deep: true },
+// );
+
+onBeforeMount(() => {
+  console.log('searchModel', searchModel);
+  getTableData();
+});
+
+if (typeof props.pagination === 'object') {
+  const {
+    show = true,
+    layout = 'total, sizes, prev, pager, next, jumper',
+    pageSizes = [10, 20, 30, 40, 50, 100],
+    style = {},
+  } = props.pagination; // 只接受
+  paginationConfig = {
+    show,
+    layout,
+    pageSizes,
+    style,
+  };
+}
+
 const formatDate = (date, format) => {
   let obj = {
     'M+': date.getMonth() + 1,
@@ -252,187 +337,107 @@ const getSearchModel = (search) => {
   }
   return searchModel;
 };
-export default defineComponent({
-  props: {
-    // 请求数据的方法
-    request: {
-      type: Function,
-    },
-    // 表格标题
-    title: {
-      type: String,
-      default: '',
-    },
-    // 是否隐藏标题栏
-    hideTitleBar: {
-      type: Boolean,
-      default: false,
-    },
-    // 是否隐藏按钮操作
-    hideToolbar: {
-      type: Boolean,
-      default: false,
-    },
-    // 搜索表单配置，false表示不显示搜索表单
-    search: {
-      type: [Boolean, Object],
-      default: false,
-    },
-    border: {
-      type: Boolean,
-      default: false,
-    },
-    // 表头配置
-    columns: {
-      type: Array,
-      default: () => [],
-    },
-    // 行数据的Key，同elementUI的table组件的row-key
-    rowKey: {
-      type: [String, Function],
-      default: () => {},
-    },
-    // 分页配置，false表示不显示分页
-    pagination: {
-      type: [Boolean, Object],
-      default: () => ({}),
-    },
-  },
-  setup(props, { emit }) {
-    /**
-     * 优化搜索字段，
-     * 1、如果搜索配置有transform处理函数，执行transform
-     * 2、删除日期范围默认的name字段
-     */
-    const optimizeFields = (search) => {
-      const searchModel = JSON.parse(JSON.stringify(state.searchModel));
-      let fields = search?.fields || [];
-      fields.forEach((item) => {
-        if (!searchModel.hasOwnProperty(item.name)) {
-          return;
-        }
-        if (item.transform) {
-          searchModel[item.name] = item.transform(searchModel[item.name]);
-        }
-        if ((item.type === 'daterange' || item.type === 'datetimerange') && !!item.trueNames) {
-          delete searchModel[item.name];
-        }
-      });
-      return searchModel;
-    };
 
-    // 请求列表数据
-    const getTableData = async () => {
-      state.loading = true;
-      const searchModel = optimizeFields(props.search);
-      const { data = [], total = 0 } =
-        (await props.request({
-          page: state.page,
-          limit: state.limit,
-          ...searchModel,
-        })) || {};
-      state.loading = false;
-      state.tableData = data;
-      state.total = total;
-    };
-
-    const state = reactive({
-      searchModel: getSearchModel(props.search),
-      loading: false,
-      tableData: [],
-      total: 20,
-      page: 0,
-      limit: (!!props.pagination && props.pagination.limit) || 10,
-      paginationConfig: {
-        show: false,
-      },
-      // 搜索
-      handleSearch() {
-        state.page = 0;
-        getTableData();
-      },
-      // 重置函数
-      handleReset() {
-        if (JSON.stringify(state.searchModel) === '{}') {
-          return;
-        }
-        state.page = 0;
-        state.searchModel = getSearchModel(props.search);
-        getTableData();
-      },
-      // 刷新
-      refresh() {
-        getTableData();
-      },
-
-      // 当前页变化
-      handleCurrentChange() {
-        getTableData();
-      },
-      // 改变每页size数量
-      handleSizeChange() {
-        state.page = 0;
-        getTableData();
-      },
-      // 全选
-      handleSelectionChange(arr) {
-        emit('selectionChange', arr);
-      },
-      // 过滤方法
-      filterHandler(value, row, column) {
-        const property = column['property'];
-        return row[property] === value;
-      },
-      // 日期范围
-      handleDateChange(date, item, format) {
-        state.searchModel[item.name] = date ? formatDate(date, format) : '';
-      },
-      handleRangeChange(date, item, format) {
-        const arr = !!date && date.map((d) => formatDate(d, format));
-        state.searchModel[item.name] = arr ? arr : [];
-
-        if (!item.trueNames) {
-          return;
-        }
-
-        if (arr) {
-          arr.forEach((val, index) => {
-            state.searchModel[item.trueNames[index]] = val;
-          });
-        } else {
-          item.trueNames.forEach((key) => {
-            delete state.searchModel[key];
-          });
-        }
-      },
-    });
-
-    if (typeof props.pagination === 'object') {
-      const { layout, pageSizes, style } = props.pagination;
-      state.paginationConfig = {
-        show: true,
-        layout: layout || 'total, sizes, prev, pager, next, jumper',
-        pageSizes: pageSizes || [10, 20, 30, 40, 50, 100],
-        style: style || {},
-      };
+/**
+ * 优化搜索字段，
+ * 1、如果搜索配置有transform处理函数，执行transform
+ * 2、删除日期范围默认的name字段
+ */
+const optimizeFields = (search) => {
+  const modal = JSON.parse(JSON.stringify(searchModel.value));
+  let fields = search?.fields || [];
+  fields.forEach((item) => {
+    if (!modal.hasOwnProperty(item.name)) {
+      return;
     }
+    if (item.transform) {
+      modal[item.name] = item.transform(modal[item.name]);
+    }
+    if ((item.type === 'daterange' || item.type === 'datetimerange') && !!item.trueNames) {
+      delete modal[item.name];
+    }
+  });
 
-    watch(
-      () => props.search,
-      (val) => {
-        state.searchModel = getSearchModel(val);
-      },
-      { deep: true },
-    );
+  return modal;
+};
+// 请求列表数据
+const getTableData = async () => {
+  loading.value = true;
 
-    onBeforeMount(() => {
-      getTableData();
+  const searchModel = optimizeFields(props.search);
+  const { data = [], total: totalNum = 0 } =
+    (await props.request({
+      // tood
+      page: page.value,
+      limit: limit.value,
+      ...searchModel,
+    })) || {};
+  loading.value = false;
+
+  tableData.value = data;
+  total.value = totalNum;
+};
+
+// 搜索
+const handleSearch = () => {
+  page.value = 0;
+  getTableData();
+};
+// 重置函数
+const handleReset = () => {
+  if (JSON.stringify(searchModel) === '{}') {
+    return;
+  }
+  page.value = 0;
+  searchModel = getSearchModel(props.search);
+  getTableData();
+};
+// 刷新
+const refresh = () => {
+  getTableData();
+};
+
+// 当前页变化
+const handleCurrentChange = () => {
+  getTableData();
+};
+// 改变每页size数量
+const handleSizeChange = () => {
+  page.value = 0;
+  getTableData();
+};
+// 全选
+const handleSelectionChange = (arr) => {
+  emit('selectionChange', arr);
+};
+// 过滤方法
+const filterHandler = (value, row, column) => {
+  const property = column['property'];
+  return row[property] === value;
+};
+// 日期范围
+const handleDateChange = (date, item, format) => {
+  searchModel[item.name] = date ? formatDate(date, format) : '';
+};
+const handleRangeChange = (date, item, format) => {
+  const arr = !!date && date.map((d) => formatDate(d, format));
+  searchModel[item.name] = arr ? arr : [];
+
+  if (!item.trueNames) return;
+
+  if (arr) {
+    arr.forEach((val, index) => {
+      searchModel[item.trueNames[index]] = val;
     });
+  } else {
+    item.trueNames.forEach((key) => {
+      delete searchModel[key];
+    });
+  }
+};
 
-    return {
-      ...toRefs(state),
-    };
-  },
+defineExpose({
+  refresh,
 });
 </script>
 <style lang="scss" scoped>

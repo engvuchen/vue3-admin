@@ -75,7 +75,7 @@ const searchConfig = ref({
 });
 // 表格列配置，大部分属性跟el-table-column配置一样
 const columns = [
-  { type: 'selection', width: 56 },
+  // { type: 'selection', width: 56 },
   { label: 'user/list.index', type: 'index', width: 80 },
   {
     label: 'user/list.name',
