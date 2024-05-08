@@ -7,6 +7,7 @@
       :request="getList"
       :columns="columns"
       :search="searchConfig"
+      :pagination="paginationConfig"
     >
       <!-- 工具栏 -->
       <template #toolbar>
@@ -71,74 +72,70 @@
 </template>
 
 <script setup>
-import { ref, reactive, toRefs, toRaw, nextTick } from 'vue';
+import { ref, toRaw, nextTick } from 'vue';
 import { Delete, Edit } from '@element-plus/icons-vue';
 import { apiGetResourceList, apiResourceModify, apiResourceDel } from '@/api/resource';
 import tips from '@/utils/tips';
 import { validMultiLineTxt } from '@/utils/validate';
 
 // 表格
-const { searchConfig, columns } = toRefs(
-  reactive({
-    request: apiGetResourceList,
-    searchConfig: {
-      labelWidth: '80px',
-      inputWidth: '200px',
-      fields: [
-        {
-          type: 'text',
-          label: 'user/resource.name',
-          name: 'name',
-        },
-        {
-          type: 'text',
-          label: 'user/resource.access',
-          name: 'access',
-        },
-        {
-          type: 'text',
-          label: 'user/resource.cgi',
-          name: 'cgi',
-        },
-      ],
+const searchConfig = ref({
+  labelWidth: '80px',
+  inputWidth: '200px',
+  fields: [
+    {
+      type: 'text',
+      label: 'user/resource.name',
+      name: 'name',
     },
-    columns: [
-      { label: 'user/resource.index', type: 'index', width: 80 },
-      {
-        label: 'user/resource.name',
-        prop: 'name',
-        'min-width': 100,
-        // sortable: true,
-      },
-      {
-        label: 'user/resource.access',
-        prop: 'access',
-        // sortable: true,
-        tdSlot: 'access', // 先定义所有 slot 出口，proForm 根据配置渲染 slot 入口
-        wrap: false,
-      },
-      {
-        label: 'user/resource.cgi',
-        prop: 'cgi',
-        // sortable: true,
-        tdSlot: 'cgi',
-        wrap: false,
-      },
-      {
-        tdSlot: 'operate',
-        label: 'public.operate',
-        width: 200,
-        align: 'center',
-      },
-    ],
-    paginationConfig: {
-      layout: 'total, prev, pager, next, sizes',
-      pageSize: 10,
-      pageSizes: [5, 10, 20, 50],
-      style: { 'justify-content': 'flex-end' },
+    {
+      type: 'text',
+      label: 'user/resource.access',
+      name: 'access',
     },
-  }),
-);
+    {
+      type: 'text',
+      label: 'user/resource.cgi',
+      name: 'cgi',
+    },
+  ],
+});
+const paginationConfig = ref({
+  // layout: 'total, prev, pager, next, sizes',
+  pageSize: 10,
+  pageSizes: [5, 10, 20, 50],
+  style: { 'justify-content': 'flex-end' },
+});
+const columns = ref([
+  { label: 'user/resource.index', type: 'index', width: 80 },
+  {
+    label: 'user/resource.name',
+    prop: 'name',
+    'min-width': 100,
+    // sortable: true,
+  },
+  {
+    label: 'user/resource.access',
+    prop: 'access',
+    // sortable: true,
+    tdSlot: 'access', // 先定义所有 slot 出口，proForm 根据配置渲染 slot 入口
+    wrap: false,
+  },
+  {
+    label: 'user/resource.cgi',
+    prop: 'cgi',
+    // sortable: true,
+    tdSlot: 'cgi',
+    wrap: false,
+  },
+  {
+    tdSlot: 'operate',
+    label: 'public.operate',
+    width: 200,
+    align: 'center',
+  },
+]);
+
 const table = ref(null);
 const refresh = () => {
   table.value.refresh();

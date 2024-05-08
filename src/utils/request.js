@@ -7,7 +7,7 @@ import errmap from '@/common/errcode';
 import tips from '@/utils/tips';
 
 const cgiWhiteList = ['/api/user/login', '/api/user/register', '/api/user/upd', '/api/user/info', '/api/resource/self'];
-// 去掉基本数据、对象、数组中，undefined、null 的值
+// 去掉基本数据、对象、数组中，undefined、null, '' 的值
 function walkData(data) {
   let isArray = Array.isArray(data);
 
@@ -22,7 +22,8 @@ function walkData(data) {
 
   Object.keys(data).forEach((key, index) => {
     let val = data[key];
-    if (val === undefined || val === null) {
+
+    if ([undefined, null, ''].includes(val)) {
       delete data[key];
     }
 

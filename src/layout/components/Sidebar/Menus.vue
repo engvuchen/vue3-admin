@@ -102,11 +102,6 @@ const variables = computed(() => config);
     border: none;
   }
 }
-
-// 写死第一个路由 hover 出现菜单的位置；目前不知道为什么它是 right-start，其他是 bottom-start
-.el-popper.is-pure.is-light:nth-of-type(3) {
-  inset: 94px auto auto 0px !important;
-}
 </style>
 
 <style lang="scss" scoped>
@@ -120,5 +115,14 @@ const variables = computed(() => config);
   .menu {
     border: none;
   }
+
+  /**
+    * 横向菜单，菜单折叠项在全局的 popover 容器内（el-popper-container），第三个是菜单 （退出登录 + 语言切换 + 第一个菜单 .. + 页码）；
+    * 竖向菜单。菜单折叠项不在 popover 容器内，第三个是页码
+    */
+  // 写死第一个路由 hover 出现菜单的位置；目前不知道为什么它是 right-start，其他是 bottom-start
+  // .el-popper.is-pure.is-light:nth-of-type(3) { //
+  //   inset: 94px auto auto 0px !important;
+  // }
 }
 </style>

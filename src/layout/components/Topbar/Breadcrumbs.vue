@@ -22,7 +22,7 @@
 import { useApp } from '@/pinia/modules/app';
 import { useLayoutsettings } from '@/pinia/modules/layoutSettings';
 import { storeToRefs } from 'pinia';
-import { computed, ref, onBeforeMount, watch, getCurrentInstance, defineEmits } from 'vue';
+import { computed, ref, onBeforeMount, watch, getCurrentInstance } from 'vue';
 import { useRouter } from 'vue-router';
 
 const { proxy } = getCurrentInstance();

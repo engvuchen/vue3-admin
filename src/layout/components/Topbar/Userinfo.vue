@@ -13,9 +13,7 @@
     <template #dropdown>
       <el-dropdown-menu>
         <el-dropdown-item @click="jumpToSelfCenter">{{ $t('topbar.center') }}</el-dropdown-item>
-        <el-dropdown-item @click="logout">
-          {{ $t('topbar.logout') }}
-        </el-dropdown-item>
+        <el-dropdown-item @click="logout">{{ $t('topbar.logout') }}</el-dropdown-item>
       </el-dropdown-menu>
     </template>
   </el-dropdown>
@@ -28,9 +26,7 @@ import { useApp } from '@/pinia/modules/app';
 const router = useRouter();
 const { userinfo } = useUserinfo();
 
-// 退出
 const logout = () => {
-  // 清除token
   useApp().clearToken();
   router.push('/login');
 };
