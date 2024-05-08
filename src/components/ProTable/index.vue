@@ -186,21 +186,21 @@
     <!-- 分页 -->
     <el-pagination
       v-if="paginationConfig.show && total > 0"
-      class="pagination"
+      v-model:currentPage="page"
+      v-model:page-size="limit"
+      :total="total"
+      :page-sizes="paginationConfig.pageSizes"
+      :layout="paginationConfig.layout"
       :style="paginationConfig.style"
       @size-change="handleSizeChange"
-      v-model:currentPage="page"
       @current-change="handleCurrentChange"
-      :page-sizes="paginationConfig.pageSizes"
-      v-model:limit="limit"
-      :layout="paginationConfig.layout"
-      :total="total"
+      class="pagination"
     ></el-pagination>
   </div>
 </template>
 <script setup>
-// setup > beforeCreate和created
-import { ref, onBeforeMount, computed } from 'vue';
+// setup > beforeCreate、 created
+import { ref, onBeforeMount, toRaw, toRefs } from 'vue';
 
 const props = defineProps({
   // 请求数据的方法
@@ -241,50 +241,146 @@ const props = defineProps({
     type: [String, Function],
     default: () => {},
   },
-  // 分页配置，false表示不显示分页
+  // 分页配置，false 表示不显示分页
   pagination: {
     type: [Boolean, Object],
-    default: () => ({}),
+    default: () => {},
   },
 });
 const emit = defineEmits(['submit', 'cancel']);
 
-let tableData = ref([]);
-let total = ref(20);
-let page = ref(0);
-let limit = props?.pagination?.limit || 10;
-let searchModel = computed(() => getSearchModel(props.search));
 let loading = ref(false);
-let paginationConfig = ref(null);
+let tableData = ref([]);
+const paginationConfig = ref({
+  page: 0,
+  limit: 10,
+  total: 0,
+  show: true,
+  layout: 'total, sizes, prev, pager, next, jumper',
+  pageSizes: [5, 10, 20, 50],
+  style: {},
+  ...props.pagination,
+});
 
-// watch(
-//   () => props.search,
-//   (val) => {
-//     searchModel = getSearchModel(val);
-//   },
-//   { deep: true },
-// );
+const { total, page, limit } = toRefs(paginationConfig.value);
+
+/** 特定组件要特殊处理，初始化查询 modal */
+const getSearchModel = (search) => {
+  const result = {};
+
+  if (search?.fields) {
+    search.fields.forEach((item) => {
+      switch (item.type) {
+        case 'checkbox':
+        case 'checkbox-button':
+          result[item.name] = [];
+          break;
+        default:
+          break;
+      }
+      if (item.defaultValue !== undefined) {
+        result[item.name] = item.defaultValue;
+        // 日期范围和时间范围真实变量默认值
+        if (
+          (item.type === 'daterange' || item.type === 'datetimerange') &&
+          !!item.trueNames &&
+          Array.isArray(item.defaultValue)
+        ) {
+          item.defaultValue.forEach((val, index) => {
+            result[item.trueNames[index]] = val;
+          });
+        }
+      }
+    });
+  }
+
+  return result;
+};
+let searchModel = ref(getSearchModel(props.search));
+
+/**
+ * 处理搜索字段
+ * 1、如果搜索配置有 transform 处理函数，执行transform
+ * 2、删除日期范围默认的name字段
+ */
+const optimizeFields = (search) => {
+  const modal = JSON.parse(JSON.stringify(toRaw(searchModel.value))); // 这种不用 searchModel.value
+
+  let fields = search?.fields || [];
+  fields.forEach((item) => {
+    if (!modal.hasOwnProperty(item.name)) return;
+
+    if (item.transform) {
+      modal[item.name] = item.transform(modal[item.name]);
+    }
+    if ((item.type === 'daterange' || item.type === 'datetimerange') && !!item.trueNames) {
+      delete modal[item.name];
+    }
+  });
+
+  return modal;
+};
+// 请求列表数据
+const getTableData = async () => {
+  loading.value = true;
+
+  const search = optimizeFields(props.search);
+  const { data = [], total: totalNum = 0 } =
+    (await props.request({
+      page: page.value,
+      limit: limit.value,
+      ...search,
+    })) || {};
+  loading.value = false;
+
+  tableData.value = data;
+  total.value = totalNum;
+};
 
 onBeforeMount(() => {
-  console.log('searchModel', searchModel);
   getTableData();
 });
 
-if (typeof props.pagination === 'object') {
-  const {
-    show = true,
-    layout = 'total, sizes, prev, pager, next, jumper',
-    pageSizes = [10, 20, 30, 40, 50, 100],
-    style = {},
-  } = props.pagination; // 只接受
-  paginationConfig = {
-    show,
-    layout,
-    pageSizes,
-    style,
-  };
-}
+// 搜索
+const handleSearch = () => {
+  page.value = 0;
+  getTableData();
+};
+// 重置函数
+const handleReset = () => {
+  if (JSON.stringify(toRaw(searchModel.value)) === '{}') {
+    return;
+  }
 
+  page.value = 0;
+  searchModel = ref(getSearchModel(props.search));
+  getTableData();
+};
+// 刷新
+const refresh = () => {
+  getTableData();
+};
+
+// 当前页变化
+const handleCurrentChange = () => {
+  getTableData();
+};
+// 改变每页size数量
+const handleSizeChange = (val) => {
+  page.value = 0;
+  limit.value = val;
+
+  getTableData();
+};
+// 全选
+const handleSelectionChange = (arr) => {
+  emit('selectionChange', arr);
+};
+// 过滤方法
+const filterHandler = (value, row, column) => {
+  const property = column['property'];
+  return row[property] === value;
+};
 const formatDate = (date, format) => {
   let obj = {
     'M+': date.getMonth() + 1,
@@ -307,113 +403,6 @@ const formatDate = (date, format) => {
     }
   }
   return format;
-};
-const getSearchModel = (search) => {
-  const searchModel = {};
-  if (search && search.fields) {
-    search.fields.forEach((item) => {
-      switch (item.type) {
-        case 'checkbox':
-        case 'checkbox-button':
-          searchModel[item.name] = [];
-          break;
-        default:
-          break;
-      }
-      if (item.defaultValue !== undefined) {
-        searchModel[item.name] = item.defaultValue;
-        // 日期范围和时间范围真实变量默认值
-        if (
-          (item.type === 'daterange' || item.type === 'datetimerange') &&
-          !!item.trueNames &&
-          Array.isArray(item.defaultValue)
-        ) {
-          item.defaultValue.forEach((val, index) => {
-            searchModel[item.trueNames[index]] = val;
-          });
-        }
-      }
-    });
-  }
-  return searchModel;
-};
-
-/**
- * 优化搜索字段，
- * 1、如果搜索配置有transform处理函数，执行transform
- * 2、删除日期范围默认的name字段
- */
-const optimizeFields = (search) => {
-  const modal = JSON.parse(JSON.stringify(searchModel.value));
-  let fields = search?.fields || [];
-  fields.forEach((item) => {
-    if (!modal.hasOwnProperty(item.name)) {
-      return;
-    }
-    if (item.transform) {
-      modal[item.name] = item.transform(modal[item.name]);
-    }
-    if ((item.type === 'daterange' || item.type === 'datetimerange') && !!item.trueNames) {
-      delete modal[item.name];
-    }
-  });
-
-  return modal;
-};
-// 请求列表数据
-const getTableData = async () => {
-  loading.value = true;
-
-  const searchModel = optimizeFields(props.search);
-  const { data = [], total: totalNum = 0 } =
-    (await props.request({
-      // tood
-      page: page.value,
-      limit: limit.value,
-      ...searchModel,
-    })) || {};
-  loading.value = false;
-
-  tableData.value = data;
-  total.value = totalNum;
-};
-
-// 搜索
-const handleSearch = () => {
-  page.value = 0;
-  getTableData();
-};
-// 重置函数
-const handleReset = () => {
-  if (JSON.stringify(searchModel) === '{}') {
-    return;
-  }
-  page.value = 0;
-  searchModel = getSearchModel(props.search);
-  getTableData();
-};
-// 刷新
-const refresh = () => {
-  getTableData();
-};
-
-// 当前页变化
-const handleCurrentChange = () => {
-  getTableData();
-};
-// 改变每页size数量
-const handleSizeChange = () => {
-  page.value = 0;
-  getTableData();
-};
-// 全选
-const handleSelectionChange = (arr) => {
-  emit('selectionChange', arr);
-};
-// 过滤方法
-const filterHandler = (value, row, column) => {
-  const property = column['property'];
-  return row[property] === value;
 };
 // 日期范围
 const handleDateChange = (date, item, format) => {
