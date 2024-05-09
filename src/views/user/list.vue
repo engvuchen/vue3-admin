@@ -3,9 +3,9 @@
     <pro-table ref="table" :title="$t('user/list.title')" :request="getList" :columns="columns" :search="searchConfig">
       <!-- 工具栏 -->
       <template #toolbar>
-        <el-button icon="Plus" @click="onShowAddForm">
+        <!-- <el-button icon="Plus" @click="onShowAddForm">
           {{ $t('user/list.add') }}
-        </el-button>
+        </el-button> -->
         <el-button icon="Refresh" @click="refresh">
           {{ $t('user/list.refresh') }}
         </el-button>
@@ -53,6 +53,10 @@
 </template>
 
 <script setup>
+/**
+ * 给已存在的用户绑定权限
+ */
+
 import { ref, toRaw, nextTick } from 'vue';
 import { Delete, Edit } from '@element-plus/icons-vue';
 import { apiGetUserList, apiUserUpd, apiUserDel } from '@/api/user';
@@ -211,14 +215,14 @@ setTimeout(async () => {
   found.items = roleItems;
 });
 
-const onShowAddForm = () => {
-  formModalVisible.value = true;
-  formTitle.value = '添加';
+// const onShowAddForm = () => {
+//   formModalVisible.value = true;
+//   formTitle.value = '添加';
 
-  nextTick(() => {
-    proform?.value?.resetFields();
-  });
-};
+//   nextTick(() => {
+//     proform?.value?.resetFields();
+//   });
+// };
 const onShowUpdForm = (row) => {
   formModalVisible.value = true;
   formTitle.value = '编辑';
@@ -234,6 +238,7 @@ const onSubmit = async (data) => {
     ...(data.id ? { id: data.id } : {}),
     username: data.username,
   };
+
   let res = await apiUserUpd(postData);
   if (res.code !== 0) return;
 

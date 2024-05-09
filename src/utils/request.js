@@ -57,15 +57,15 @@ service.interceptors.request.use(
     if (cgiWhiteList.includes(fullUrl)) return config;
 
     /**
-     * 路由跳转的时候，才会进行 menus、cgi 的生成；
+     * 路由跳转时，才进行 menus、cgi 的生成；
      * 1. 登陆之后跳 - 可以
      * 2. 页面直接刷新 - 也会发生路由导航，cgis 也会生成
      */
     let { cgis } = useMenus();
     if (!cgis.includes(fullUrl)) {
       tips.error(`接口缺少权限：${fullUrl}`);
-      controller.abort(); // 出错一次，永远出错？？？
-      return config; // 不是 config，不会发起请求，但会报各种属性访问错误
+      controller.abort();
+      return config; // 不返回 config，也不会发起请求，但会报各种属性访问错误
     }
 
     return config;

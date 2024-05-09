@@ -269,23 +269,19 @@ const onShowUpdForm = (row) => {
   });
 };
 const onSubmit = async (data) => {
-  ['access', 'cgi'].forEach((name) => {
-    data[name] = Array.from(
-      new Set(
-        data[name]
-          .replace(/[,;\n]+/g, ',')
-          .split(',')
-          .filter((str) => str),
-      ),
-    );
-  });
-
   let postData = {};
   let needs = ['id', 'name', 'access', 'cgi'];
+  let toUniArrNames = ['access', 'cgi'];
   needs.forEach((key) => {
-    if (data[key]) {
-      postData[key] = data[key];
+    let val = data[key];
+    if (!val) return;
+    if (toUniArrNames.includes(key)) {
+      val = val
+        .replace(/[,;\n]+/g, ',')
+        .split(',')
+        .filter((str) => str);
     }
+    postData[key] = val;
   });
 
   let res = await apiResourceModify(postData);

@@ -252,7 +252,7 @@ const emit = defineEmits(['submit', 'cancel']);
 let loading = ref(false);
 let tableData = ref([]);
 const paginationConfig = ref({
-  page: 0,
+  page: 1,
   limit: 10,
   total: 0,
   show: true,
@@ -325,9 +325,11 @@ const getTableData = async () => {
   loading.value = true;
 
   const search = optimizeFields(props.search);
+
+  let rawPage = toRaw(page.value);
   const { data = [], total: totalNum = 0 } =
     (await props.request({
-      page: page.value,
+      page: rawPage ? --rawPage : rawPage,
       limit: limit.value,
       ...search,
     })) || {};
