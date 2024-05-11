@@ -1,25 +1,35 @@
-<div align="center"> <a href="https://github.com/huzhushan/vue3-element-admin"> <img alt="VEA Logo" width="160" src="https://upload2.engvu.tech/img/logo.png"> </a> <br> <br>
+<div align="center">
+  <div>
+    <a href="https://github.com/engvuchen/vue3-admin">
+        <img alt="VEA Logo" width="160" src="https://upload2.engvu.tech/img/logo.png">
+    </a>
+  </div>
 
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
+  <div align="center">
+      <img src="https://img.shields.io/badge/Vue-3.4.21-brightgreen.svg"/>
+      <img src="https://img.shields.io/badge/Vite-5.2.8-green.svg"/>
+      <img src="https://img.shields.io/badge/Element Plus-2.7.2-blue.svg"/>
+      <img src="https://img.shields.io/badge/license-MIT-green.svg"/>
+  </div>
 
-<h1>Vue3 Element Admin</h1>
+  <div align="center">
+    <a target="_blank" href="http://admin.engvu.tech">👀 在线预览</a>
+  </div>
+
+  <h1>Vue3 Element Admin</h1>
 </div>
 
 ## 简介
 
-**Vue3 Element Admin** 是一个免费开源的中后台模版。基于`vue3`+`ElementPlus`+`Vite`开发，是一个开箱即用的中后台系统前端解决方案，它可以帮助你快速搭建企业级中后台产品原型，也可用于学习参考。
+**Vue3 Element Admin** 是一个免费开源的中后台模版。基于 `Vue3` + `ElementPlus` + `Vite` 开发，是一个开箱即用的中后台系统前端解决方案，它可以帮助你快速搭建企业级中后台产品原型，也可用于学习参考。
 
-- [在线预览](http://admin.engvu.tech)
-- [使用文档](https://huzhushan.gitee.io/vue3-element-admin)
+- **简洁易用**：基于 [vue-element-admin]((https://huzhushan.gitee.io/vue3-element-admin)) 升级，解决一系列适配问题。
 
-## 项目地址
+- **数据交互**：配套 [Koa2 服务](https://github.com/engvuchen/v3-admin-koa2.git) 和 [在线接口文档](https://apifox.com/apidoc/shared-c0a3914c-08d9-48d9-9425-e845fc50a961)。
 
-- [github 项目地址](https://github.com/huzhushan/vue3-element-admin)
+- **权限管理**：可控制页面、接口权限。
 
-## 视频教程
-
-- [使用 vue3-element-admin 开发后台管理系统](https://www.bilibili.com/video/BV12v411V7ho/)
-- [vue3-element-admin 架构搭建过程](https://study.163.com/course/courseMain.htm?courseId=1211577825&share=2&shareId=400000000685053) 
+- **基础设施**：动态路由、按钮权限、国际化、代码规范、Git 提交规范、常用组件封装。
 
 ## 技术储备
 
@@ -34,17 +44,16 @@
 
 ## 安装使用
 
+最近一次 node.js 运行版本是 `18.16.0`。
+
 ```bash
 # 克隆项目
-git clone https://github.com/huzhushan/vue3-element-admin.git
+git clone https://github.com/engvuchen/vue3-admin.git
 
 # 进入项目目录
 cd vue3-element-admin
 
-# 安装依赖
-npm install
-
-# 建议不要直接使用 cnpm 安装依赖，会有各种诡异的 bug。可以通过如下操作解决 npm 下载速度慢的问题
+# 通过如下操作提速 npm 下载。建议不直接使用 cnpm 安装依赖，会有各种诡异的 bug。
 npm install --registry=https://registry.npm.taobao.org
 
 # 启动服务
@@ -55,6 +64,20 @@ npm start
 
 ```bash
 npm run build
+```
+
+## 页面代理方案
+
+基于 [`Proxy SwitchyOmega`](https://chromewebstore.google.com/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif?pli=1)、[`whistle`](https://wproxy.org/whistle/) 方案；
+
+`Proxy Proxy SwitchyOmega` 配置文件，从插件界面导入此配置（从备份文件恢复）即可，[下载链接](https://www.jianguoyun.com/p/DRr5-jcQwfi6CRiCj8QFIAA)。
+
+`whistle`:
+
+```
+/^https?://admin.engvu.tech/(?!api)(.*)/ http://127.0.0.1:3001/$1
+wss://admin.engvu.tech ws://127.0.0.1:3001/
+/^https?://admin.engvu.tech/api/(.*)/ http://127.0.0.1:5000/api/$1
 ```
 
 ## 更新日志
@@ -71,7 +94,7 @@ npm run build
 2. 创建自己的分支: `git checkout -b feat/xxxx`
 3. 提交你的修改: `git commit -am 'feat(function): add xxxxx'`
 4. 推送您的分支: `git push origin feat/xxxx`
-5. 提交`pull request`
+5. 提交 `pull request`
 
 ## Git 贡献提交规范
 
@@ -98,21 +121,6 @@ npm run build
 | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt=" Edge" width="24px" height="24px" /></br>IE | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt=" Edge" width="24px" height="24px" /></br>Edge | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" /></br>Firefox | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" /></br>Chrome | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" /></br>Safari |
 | :----------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------: |
 |                                                                   not support                                                                    |                                                                  last 2 versions                                                                   |                                                                        last 2 versions                                                                        |                                                                      last 2 versions                                                                      |                                                                      last 2 versions                                                                      |
-
-## 维护者
-
-[@huzhushan](https://github.com/huzhushan)
-
-## 捐赠
-
-如果你觉得这个项目对你有帮助，你可以帮作者买一杯果汁表示支持:tropical_drink:
-![donate](https://huzhushan.gitee.io/vue3-element-admin/donate.png)
-
-## 交流
-
-`Vue3-Element-Admin` 是完全开源免费的项目，在帮助开发者更方便地进行中大型管理系统开发，同时也提供 QQ 交流群使用问题欢迎在群内提问。
-
-- QQ 群 `734037120`
 
 ## License
 
