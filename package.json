@@ -47,7 +47,7 @@
       "npm run lint",
       "prettier --write"
     ],
-    "*.{js,vue,json,css,html,json}": [
+    "*.{js,vue,html}": [
       "eslint --fix",
       "prettier --write"
     ]
