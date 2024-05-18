@@ -9,7 +9,7 @@
     "start": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "lint": "eslint --fix --ext .js,.vue src",
+    "lint": "npx lint-staged",
     "prepare": "husky || true"
   },
   "browserslist": [
@@ -43,10 +43,6 @@
     "vue-i18n": "^9.0.0"
   },
   "lint-staged": {
-    "src/**/*.{js,vue}": [
-      "npm run lint",
-      "prettier --write"
-    ],
     "*.{js,vue,html}": [
       "eslint --fix",
       "prettier --write"
