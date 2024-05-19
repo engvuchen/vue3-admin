@@ -80,10 +80,6 @@ wss://admin.engvu.tech ws://127.0.0.1:3001/
 /^https?://admin.engvu.tech/api/(.*)/ http://127.0.0.1:5000/api/$1
 ```
 
-## 更新日志
-
-[CHANGELOG](https://github.com/huzhushan/vue3-element-admin/releases)
-
 ## 如何贡献
 
 非常欢迎你的加入！[提一个 Issue](https://github.com/huzhushan/vue3-element-admin/issues/new/choose) 或者提交一个 Pull Request。
@@ -121,7 +117,3 @@ wss://admin.engvu.tech ws://127.0.0.1:3001/
 | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt=" Edge" width="24px" height="24px" /></br>IE | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt=" Edge" width="24px" height="24px" /></br>Edge | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" /></br>Firefox | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" /></br>Chrome | <img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" /></br>Safari |
 | :----------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------: |
 |                                                                   not support                                                                    |                                                                  last 2 versions                                                                   |                                                                        last 2 versions                                                                        |                                                                      last 2 versions                                                                      |                                                                      last 2 versions                                                                      |
-
-## License
-
-[MIT © ZSEN-2020](./LICENSE)
