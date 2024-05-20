@@ -5,10 +5,7 @@
         <i class="el-icon-user" />
         admin
       </template>
-      <template v-else>
-        <img class="avatar" :src="userinfo.avatar" alt="avatar" />
-        {{ userinfo.name }}
-      </template>
+      <template v-else> <img class="avatar" :src="userinfo.avatar" alt="avatar" />{{ userinfo.username }}</template>
     </div>
     <template #dropdown>
       <el-dropdown-menu>

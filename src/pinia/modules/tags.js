@@ -1,3 +1,7 @@
+/**
+ * 标签管理的基础能力
+ */
+
 import { defineStore } from 'pinia';
 import { getItem, setItem, removeItem } from '@/utils/storage';
 const TAGLIST = 'VEA-TAGLIST';
@@ -18,8 +22,9 @@ export const useTags = defineStore('tags', {
         this.cacheList.push(name);
       }
 
-      if (this.tagList.some((v) => v.path === path)) return; // todo tagList 是目前打开的标签列表
+      if (this.tagList.some((v) => v.path === path)) return; // tagList 是已打开的标签列表
 
+      // tag 的数据结构
       const target = {
         path,
         fullPath, // 自定义 fullPath 用作判断
@@ -73,11 +78,11 @@ export const useTags = defineStore('tags', {
       removeItem(TAGLIST);
       this.cacheList = [];
     },
+    /** 在 this.tagList 匹配 tag.path，若匹配上，将 tag 合并到这个项，写入结果到 localStorage  */
     updateTagList(tag) {
-      const index = this.tagList.findIndex((v) => v.path === tag.path);
-      if (index > -1) {
-        this.tagList[index] = { ...this.tagList[index], ...tag };
-
+      const found = this.tagList.find((v) => v.path === tag.path);
+      if (found) {
+        Object.assign(found, tag);
         setItem(TAGLIST, this.tagList);
       }
     },

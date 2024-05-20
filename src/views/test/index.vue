@@ -234,3 +234,9 @@ function getList(params) {
   };
 }
 </script>
+
+<script>
+export default {
+  name: 'test-list', // 该 name 须跟路由配置的 name 一致，不一致或不设置 name，则不缓存
+};
+</script>

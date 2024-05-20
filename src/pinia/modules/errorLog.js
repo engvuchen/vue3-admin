@@ -1,5 +1,4 @@
-
-import { defineStore } from 'pinia'
+import { defineStore } from 'pinia';
 
 export const useErrorlog = defineStore('errorLog', {
   state: () => ({
@@ -10,10 +9,10 @@ export const useErrorlog = defineStore('errorLog', {
       // 可以根据需要将错误上报给服务器
       // ....code.......
 
-      this.logs.push(log)
+      this.logs.push(log);
     },
     clearErrorLog() {
-      this.logs.splice(0)
+      this.logs.splice(0);
     },
   },
-})
+});

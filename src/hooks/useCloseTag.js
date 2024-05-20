@@ -4,10 +4,10 @@ import { useRoute, useRouter } from 'vue-router';
 
 // 关闭当前标签
 export default () => {
-  const instance = getCurrentInstance();
   const router = useRouter();
   const route = useRoute();
   const { delTag } = useTags();
+  const instance = getCurrentInstance();
 
   /**
    * @param {String} fullPath 要跳转到那个页面的地址
@@ -17,14 +17,19 @@ export default () => {
    */
   function closeTag({ fullPath, reload, f5 } = {}) {
     delTag(route);
+
     fullPath ? router.push(fullPath) : router.back();
 
-    reload &&
+    if (reload) {
       setTimeout(() => {
-        instance.appContext.config.globalProperties.$tagsbar.refreshSelectedTag(route);
+        // const instance = getCurrentInstance(); // 不在外层获取，则为 null
+        let refreshSelectedTag = instance.appContext.config.globalProperties?.$refreshSelectedTag;
+        refreshSelectedTag.value(); // route 是 /test（列表），但 refreshSelectedTag 其实是 Add（新增） 上的
       }, 500);
-
-    f5 && setTimeout(() => window.location.reload(), 500);
+    }
+    if (f5) {
+      setTimeout(() => window.location.reload(), 500);
+    }
   }
 
   return { closeTag };

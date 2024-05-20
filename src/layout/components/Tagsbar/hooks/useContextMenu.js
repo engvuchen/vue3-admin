@@ -14,17 +14,20 @@ export const useContextMenu = (tagList) => {
     top: 0,
     left: 0,
     selectedTag: {},
+    // 开启右键菜单
     openMenu(tag, e) {
       state.visible = true;
       state.left = e.clientX;
       state.top = e.clientY;
       state.selectedTag = tag;
     },
+    // 关闭右键菜单
     closeMenu() {
+      // ?
       state.visible = false;
     },
     // 刷新
-    refreshSelectedTag(tag) {
+    refreshSelectedTag(tag = state.selectedTag) {
       tagsStore.deCacheList(tag);
       nextTick(() => {
         router.replace(tag);
@@ -71,6 +74,7 @@ export const useContextMenu = (tagList) => {
     return tag.fullPath === route.fullPath;
   };
 
+  // 尝试跳转到上一个标签，否则返回首页
   const toLastTag = (lastTagIndex) => {
     const lastTag = tagList.value[lastTagIndex];
     if (lastTag) {
@@ -80,10 +84,10 @@ export const useContextMenu = (tagList) => {
     }
   };
 
+  // todo click 关闭
   onMounted(() => {
     document.addEventListener('click', state.closeMenu);
   });
-
   onBeforeUnmount(() => {
     document.removeEventListener('click', state.closeMenu);
   });

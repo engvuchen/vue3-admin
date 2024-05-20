@@ -23,7 +23,7 @@ export default [
     children: [
       {
         path: '',
-        name: 'testList',
+        name: 'test-list',
         component: List,
         meta: {
           title: 'menu.testList',
@@ -31,7 +31,7 @@ export default [
       },
       {
         path: 'add',
-        name: 'testAdd',
+        name: 'test-add',
         component: Add,
         meta: {
           title: 'menu.testAdd',
@@ -40,7 +40,7 @@ export default [
       },
       {
         path: 'edit/:id',
-        name: 'testEdit',
+        name: 'test-edit',
         component: Edit,
         meta: {
           title: 'menu.testEdit',

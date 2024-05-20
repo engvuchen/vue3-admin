@@ -23,7 +23,6 @@ export const useScrollbar = (tagsItem, scrollContainer) => {
     const eventDelta = e.wheelDelta || -e.deltaY;
     doScroll(scrollLeft.value - eventDelta / 4);
   };
-
   const moveToTarget = (currentTag) => {
     const $wrap = scrollContainer.value.wrapRef;
     if (!$wrap) return;

@@ -17,7 +17,6 @@
           @contextmenu.prevent="openMenu(tag, $event)"
         >
           <span class="title">{{ $t(tag.title) }}</span>
-
           <el-icon v-if="!isAffix(tag)" class="el-icon-close" @click.prevent.stop="closeTag(tag)">
             <Close />
           </el-icon>
@@ -74,9 +73,7 @@ const onScroll = (e) => {
 
 onMounted(() => {
   const instance = getCurrentInstance();
-  instance.appContext.config.globalProperties.$tagsbar = () => {
-    refreshSelectedTag(selectedTag); // todo
-  };
+  instance.appContext.config.globalProperties.$refreshSelectedTag = refreshSelectedTag;
 });
 </script>
 
