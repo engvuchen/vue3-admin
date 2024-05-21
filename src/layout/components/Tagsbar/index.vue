@@ -1,6 +1,7 @@
 <template>
   <div class="tags-container" :class="{ hide: !isTagsbarShow }">
-    <el-scrollbar ref="scrollContainer" :vertical="false" class="scroll-container" @wheel.prevent="onScroll">
+    <!-- <el-scrollbar ref="scrollContainer" :vertical="false" class="scroll-container" @wheel.prevent="onScroll"> -->
+    <el-scrollbar ref="scrollContainer" :vertical="false" class="scroll-container" @wheel="onScroll">
       <router-link
         v-for="(tag, i) in tagList"
         :key="tag.fullPath"
@@ -47,8 +48,9 @@ const isTagsbarShow = computed(() => defaultSettings.tagsbar.isShow);
 
 const scrollContainer = ref(null);
 
-// moveToTarget
-const { tagList, setItemRef, handleScroll } = useTags(scrollContainer);
+let useTagsStore = useTags(scrollContainer); // moveToTarget, handleScroll
+let tagList = useTagsStore.tagList;
+const { setItemRef } = useTagsStore;
 
 const {
   visible,
@@ -67,7 +69,7 @@ const {
 } = useContextMenu(tagList);
 
 const onScroll = (e) => {
-  handleScroll(e);
+  // handleScroll(e); // 没有替换浏览器 scroll 事件的必要
   closeMenu.value();
 };
 

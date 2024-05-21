@@ -1,13 +1,26 @@
-import { useTags } from '@/pinia/modules/tags';
 import { onMounted, onBeforeUnmount, reactive, toRefs, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useTags } from '@/pinia/modules/tags';
 import { isAffix } from './useTags';
 
 export const useContextMenu = (tagList) => {
   const router = useRouter();
   const route = useRoute();
-
   const tagsStore = useTags();
+
+  // 判断标签是否为当前路由
+  const isActive = (tag) => {
+    return tag.fullPath === route.fullPath;
+  };
+  // 接受一个索引，尝试跳转到上一个标签，否则返回首页
+  const toLastTag = (lastTagIndex) => {
+    const lastTag = tagList[lastTagIndex];
+    if (lastTag) {
+      router.push(lastTag.fullPath);
+    } else {
+      router.push('/');
+    }
+  };
 
   const state = reactive({
     visible: false,
@@ -23,7 +36,6 @@ export const useContextMenu = (tagList) => {
     },
     // 关闭右键菜单
     closeMenu() {
-      // ?
       state.visible = false;
     },
     // 刷新
@@ -37,30 +49,24 @@ export const useContextMenu = (tagList) => {
     closeTag(tag) {
       if (isAffix(tag)) return;
 
-      const closedTagIndex = tagList.value.findIndex((item) => item.fullPath === tag.fullPath);
+      const closedTagIndex = tagList.findIndex((item) => item.fullPath === tag.fullPath);
+      // 关闭的标签是当前路由 - 关闭的是当前页面，页面显示为上一级
+      if (isActive(tag)) toLastTag(closedTagIndex - 1);
+
       tagsStore.delTag(tag);
-      if (isActive(tag)) {
-        toLastTag(closedTagIndex - 1);
-      }
     },
     closeOtherTags() {
       tagsStore.delOtherTags(state.selectedTag);
       router.push(state.selectedTag);
     },
-    closeLeftTags() {
-      state.closeSomeTags('left');
-    },
-    closeRightTags() {
-      state.closeSomeTags('right');
-    },
     closeSomeTags(direction) {
-      const index = tagList.value.findIndex((item) => item.fullPath === state.selectedTag.fullPath);
+      const index = tagList.findIndex((item) => item.fullPath === state.selectedTag.fullPath);
 
-      if ((direction === 'left' && index <= 0) || (direction === 'right' && index >= tagList.value.length - 1)) {
+      if ((direction === 'left' && index <= 0) || (direction === 'right' && index >= tagList.length - 1)) {
         return;
       }
 
-      const needToClose = direction === 'left' ? tagList.value.slice(0, index) : tagList.value.slice(index + 1);
+      const needToClose = direction === 'left' ? tagList.slice(0, index) : tagList.slice(index + 1);
       tagsStore.delSomeTags(needToClose);
       router.push(state.selectedTag);
     },
@@ -68,23 +74,16 @@ export const useContextMenu = (tagList) => {
       tagsStore.delAllTags();
       router.push('/');
     },
+
+    closeLeftTags() {
+      state.closeSomeTags('left');
+    },
+    closeRightTags() {
+      state.closeSomeTags('right');
+    },
   });
 
-  const isActive = (tag) => {
-    return tag.fullPath === route.fullPath;
-  };
-
-  // 尝试跳转到上一个标签，否则返回首页
-  const toLastTag = (lastTagIndex) => {
-    const lastTag = tagList.value[lastTagIndex];
-    if (lastTag) {
-      router.push(lastTag.fullPath);
-    } else {
-      router.push('/');
-    }
-  };
-
-  // todo click 关闭
+  // 任意 click，关闭右键菜单
   onMounted(() => {
     document.addEventListener('click', state.closeMenu);
   });
