@@ -5,9 +5,9 @@ import error from './modules/error';
 import login from './modules/login';
 import home from './modules/home';
 import self from './modules/self';
+import test from './modules/test';
 
 import user from './modules/user';
-import test from './modules/test';
 
 /* 菜单栏路由 */
 export const fixedRoutes = [...home, ...login, ...self, ...test, ...redirect, ...error]; // 固定菜单
@@ -20,9 +20,7 @@ const router = createRouter({
       path: '/',
       redirect: '/home',
     },
-    // ...redirect, // 统一的重定向配置
     ...fixedRoutes,
-    // ...asyncRoutes,
   ],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {

@@ -7,8 +7,6 @@ export const useErrorlog = defineStore('errorLog', {
   actions: {
     addErrorLog(log) {
       // 可以根据需要将错误上报给服务器
-      // ....code.......
-
       this.logs.push(log);
     },
     clearErrorLog() {

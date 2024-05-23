@@ -46,28 +46,6 @@ export default [
       },
     ],
   },
-  // {
-  //   path: '/403',
-  //   name: 'forbidden',
-  //   component: Error,
-  //   props: {
-  //     error: '403',
-  //   },
-  //   beforeEnter() {
-  //     return checkUserinfo('403')
-  //   },
-  // },
-  // {
-  //   path: '/500',
-  //   name: 'server-error',
-  //   component: Error,
-  //   props: {
-  //     error: '500',
-  //   },
-  //   beforeEnter() {
-  //     return checkUserinfo('500')
-  //   },
-  // },
   {
     path: '/:pathMatch(.*)',
     name: 'not-found',

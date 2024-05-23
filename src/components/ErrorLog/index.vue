@@ -9,37 +9,29 @@
     <el-dialog v-model="dialogTableVisible" width="80%" append-to-body>
       <template #title>
         <span style="padding-right: 10px">错误日志</span>
-        <el-button size="small" type="primary" icon="el-icon-delete" @click="clearAll"> Clear All </el-button>
+        <el-button size="small" type="primary" icon="delete" @click="clearAll"> Clear All </el-button>
       </template>
       <el-table :data="errorLogs" border>
         <el-table-column label="Message">
           <template #default="{ row }">
             <div style="margin-bottom: 10px">
               <span class="message-title" style="padding-right: 16px"> 页面: </span>
-              <el-tag type="success">
-                {{ row.url }}
-              </el-tag>
+              <el-tag type="success">{{ row.url }}</el-tag>
             </div>
 
             <div style="margin-bottom: 10px">
               <span class="message-title">事件源:</span>
-              <el-tag type="primary">
-                {{ row.info && row.info }}
-              </el-tag>
+              <el-tag type="primary">{{ row?.info }}</el-tag>
             </div>
 
             <div style="margin-bottom: 10px">
               <span class="message-title">错误提示:</span>
-              <el-tag type="danger">
-                {{ row.err && row.err.message }}
-              </el-tag>
+              <el-tag type="danger">{{ row?.err?.message }}</el-tag>
             </div>
 
             <div v-if="row.err && row.err.config">
               <span class="message-title" style="padding-right: 16px"> 接口地址: </span>
-              <el-tag type="info">
-                {{ row.err && row.err.config && row.err.config.url }}
-              </el-tag>
+              <el-tag type="info">{{ row?.err?.config?.url }}</el-tag>
             </div>
           </template>
         </el-table-column>
@@ -60,8 +52,7 @@ import { storeToRefs } from 'pinia';
 
 const dialogTableVisible = ref(false);
 const errorStore = useErrorlog();
-const { logs: errorLogs } = storeToRefs(errorStore);
-const { clearErrorLog } = errorStore;
+const { logs: errorLogs, clearErrorLog } = storeToRefs(errorStore); // [ {err, info, url, id} ]
 const clearAll = () => {
   dialogTableVisible.value = false;
   clearErrorLog();
