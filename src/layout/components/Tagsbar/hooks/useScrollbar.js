@@ -45,8 +45,7 @@ export const useScrollbar = (tagsItem, scrollContainer) => {
       // $wrap.offsetWidth + 溢出可视区域宽度 = $wrap.scrollWidth
       doScroll($wrap.scrollWidth - $wrap.offsetWidth);
     } else {
-      const el = currentTag.$el.nextElementSibling; // ？为什么是下一个节点
-      console.log('🔎 ~ moveToTarget ~ currentTag.$el:', currentTag.$el);
+      const el = currentTag.$el.nextElementSibling; // ？todo 为什么是下一个节点
 
       /**
        * el.offsetLeft 是当前元素左边界距离最近的具有定位（position不是static）的父元素的左边界的距离。

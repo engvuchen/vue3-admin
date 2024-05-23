@@ -40,8 +40,7 @@ const getBreadcrumbs = (route) => {
   if (route.name === 'home') {
     return home;
   } else {
-    const matched = route.matched.filter((item) => !!item.meta && !!item.meta.title);
-
+    const matched = route.matched.filter((item) => item?.meta?.title);
     return [...home, ...matched];
   }
 };
@@ -53,7 +52,9 @@ onBeforeMount(() => {
 watch(
   route,
   (newRoute) => {
-    route.value.meta.truetitle = proxy.$t(route.value.meta.title); // 获取翻译后的标题，显示在 document.title
+    // // 获取翻译后的标题，显示在 document.title。注意标签点击“刷新”，产生一次 redirect，没有翻译
+    route.value.meta.truetitle = route.value.meta.title ? proxy.$t(route.value.meta.title) : 'unknown';
+
     breadcrumbs.value = getBreadcrumbs(newRoute);
     emit('on-breadcrumbs-change', breadcrumbs.value.length > 1);
   },

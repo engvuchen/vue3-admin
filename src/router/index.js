@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 
-// import redirect from './modules/redirect';
+import redirect from './modules/redirect';
 import error from './modules/error';
 import login from './modules/login';
 import home from './modules/home';
@@ -10,7 +10,7 @@ import user from './modules/user';
 import test from './modules/test';
 
 /* 菜单栏路由 */
-export const fixedRoutes = [...home, ...login, ...self, ...test, ...error]; // 固定菜单
+export const fixedRoutes = [...home, ...login, ...self, ...test, ...redirect, ...error]; // 固定菜单
 export const asyncRoutes = [...user]; // 动态菜单 - 由权限管理控制
 
 const router = createRouter({

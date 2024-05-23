@@ -39,7 +39,7 @@
 
 <script setup>
 import { ref, computed, getCurrentInstance, onMounted } from 'vue';
-import { useTags, isAffix } from './hooks/useTags';
+import { useBusinessTags, isAffix } from './hooks/useBusinessTags';
 import { useContextMenu } from './hooks/useContextMenu';
 import { useLayoutsettings } from '@/pinia/modules/layoutSettings';
 
@@ -48,9 +48,9 @@ const isTagsbarShow = computed(() => defaultSettings.tagsbar.isShow);
 
 const scrollContainer = ref(null);
 
-let useTagsStore = useTags(scrollContainer); // moveToTarget, handleScroll
-let tagList = useTagsStore.tagList;
-const { setItemRef } = useTagsStore;
+let useBusinessTagsStore = useBusinessTags(scrollContainer); // moveToTarget, handleScroll
+let tagList = useBusinessTagsStore.tagList;
+const { setItemRef } = useBusinessTagsStore;
 
 const {
   visible,

@@ -1,7 +1,7 @@
-import { onMounted, onBeforeUnmount, reactive, toRefs, nextTick } from 'vue';
+import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTags } from '@/pinia/modules/tags';
-import { isAffix } from './useTags';
+import { isAffix } from './useBusinessTags';
 
 export const useContextMenu = (tagList) => {
   const router = useRouter();
@@ -22,74 +22,88 @@ export const useContextMenu = (tagList) => {
     }
   };
 
-  const state = reactive({
-    visible: false,
-    top: 0,
-    left: 0,
-    selectedTag: {},
-    // 开启右键菜单
-    openMenu(tag, e) {
-      state.visible = true;
-      state.left = e.clientX;
-      state.top = e.clientY;
-      state.selectedTag = tag;
-    },
-    // 关闭右键菜单
-    closeMenu() {
-      state.visible = false;
-    },
-    // 刷新
-    refreshSelectedTag(tag = state.selectedTag) {
-      tagsStore.deCacheList(tag);
-      nextTick(() => {
-        router.replace(tag);
+  const visible = ref(false);
+  const top = ref(0);
+  const left = ref(0);
+  const selectedTag = ref({});
+
+  // 开启右键菜单
+  const openMenu = (tag, e) => {
+    visible.value = true;
+    left.value = e.clientX;
+    top.value = e.clientY;
+    selectedTag.value = tag;
+  };
+  // 关闭右键菜单
+  const closeMenu = () => {
+    visible.value = false;
+  };
+  // 刷新
+  const refreshSelectedTag = (tag = selectedTag) => {
+    tagsStore.deCacheList(tag);
+    nextTick(() => {
+      router.replace({
+        path: `/redirect${tag.fullPath}`,
       });
-    },
-    // 关闭
-    closeTag(tag) {
-      if (isAffix(tag)) return;
+    });
+  };
+  // 关闭当前标签
+  const closeTag = (tag) => {
+    if (isAffix(tag)) return;
 
-      const closedTagIndex = tagList.findIndex((item) => item.fullPath === tag.fullPath);
-      // 关闭的标签是当前路由 - 关闭的是当前页面，页面显示为上一级
-      if (isActive(tag)) toLastTag(closedTagIndex - 1);
+    const closedTagIndex = tagList.findIndex((item) => item.fullPath === tag.fullPath);
+    // 关闭的标签是当前路由 - 关闭的是当前页面，页面显示为上一级
+    if (isActive(tag)) toLastTag(closedTagIndex - 1);
 
-      tagsStore.delTag(tag);
-    },
-    closeOtherTags() {
-      tagsStore.delOtherTags(state.selectedTag);
-      router.push(state.selectedTag);
-    },
-    closeSomeTags(direction) {
-      const index = tagList.findIndex((item) => item.fullPath === state.selectedTag.fullPath);
+    tagsStore.delTag(tag);
+  };
+  const closeOtherTags = () => {
+    tagsStore.delOtherTags(selectedTag.value);
+    router.push(selectedTag.value);
+  };
+  const closeSomeTags = (direction) => {
+    const index = tagList.findIndex((item) => item.fullPath === selectedTag.value.fullPath);
+    if ((direction === 'left' && index <= 0) || (direction === 'right' && index >= tagList.length - 1)) {
+      return;
+    }
 
-      if ((direction === 'left' && index <= 0) || (direction === 'right' && index >= tagList.length - 1)) {
-        return;
-      }
+    const needToClose = direction === 'left' ? tagList.slice(0, index) : tagList.slice(index + 1);
+    tagsStore.delSomeTags(needToClose);
+    router.push(selectedTag.value);
+  };
 
-      const needToClose = direction === 'left' ? tagList.slice(0, index) : tagList.slice(index + 1);
-      tagsStore.delSomeTags(needToClose);
-      router.push(state.selectedTag);
-    },
-    closeAllTags() {
-      tagsStore.delAllTags();
-      router.push('/');
-    },
-
-    closeLeftTags() {
-      state.closeSomeTags('left');
-    },
-    closeRightTags() {
-      state.closeSomeTags('right');
-    },
-  });
+  const closeAllTags = () => {
+    tagsStore.delAllTags();
+    router.push('/');
+  };
+  const closeLeftTags = () => {
+    closeSomeTags('left');
+  };
+  const closeRightTags = () => {
+    closeSomeTags('right');
+  };
 
   // 任意 click，关闭右键菜单
   onMounted(() => {
-    document.addEventListener('click', state.closeMenu);
+    document.addEventListener('click', closeMenu);
   });
   onBeforeUnmount(() => {
-    document.removeEventListener('click', state.closeMenu);
+    document.removeEventListener('click', closeMenu);
   });
 
-  return toRefs(state);
+  return {
+    visible,
+    top,
+    left,
+    selectedTag,
+    openMenu,
+    closeMenu,
+    refreshSelectedTag,
+    closeTag,
+    closeOtherTags,
+    closeSomeTags,
+    closeAllTags,
+    closeLeftTags,
+    closeRightTags,
+  };
 };

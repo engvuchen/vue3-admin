@@ -6,6 +6,22 @@ import { defineStore } from 'pinia';
 import { getItem, setItem, removeItem } from '@/utils/storage';
 const TAGLIST = 'VEA-TAGLIST';
 
+// 负责条件的项，才在列表中保留
+function remainListItem(list, ...args) {
+  let condition = args.pop();
+  if (typeof condition !== 'function') return console.error('removeListItem: 最后一个参数需要是函数');
+
+  let remains = [];
+  while (list.length) {
+    let item = list.shift();
+    let result = condition(item, ...args);
+    if (result) remains.push(item);
+  }
+
+  console.log('remainListItem, remains', remains);
+  list.push(...remains);
+}
+
 export const useTags = defineStore('tags', {
   state: () => ({
     tagList: getItem(TAGLIST) || [],
@@ -23,9 +39,6 @@ export const useTags = defineStore('tags', {
       if (name && !meta.noCache && !this.cacheList.includes(name)) {
         this.cacheList.push(name);
       }
-
-      console.log('addTag', this.tagList);
-
       // 在 tagList 中已存在，不重复添加
       if (this.tagList.some((v) => v.path === path)) return;
 
@@ -57,21 +70,33 @@ export const useTags = defineStore('tags', {
       this.deTagList(tag);
       this.deCacheList(tag);
     },
-    /** 标签仅保留固定或自己 */
+    /** 标签仅保留固定、自己 */
     delOtherTags(tag) {
-      this.tagList = this.tagList.filter((v) => !!v?.meta?.affix || v.path === tag.path);
+      remainListItem(this.tagList, tag, (item, tag) => {
+        if (item?.meta?.affix || item.path === tag.path) {
+          return true;
+        }
+      });
       setItem(TAGLIST, this.tagList);
 
-      this.cacheList = this.cacheList.filter((v) => v === tag.name);
+      console.log('this.tagList', this.tagList); // todo
+
+      remainListItem(this.cacheList, tag, (item, tag) => item === tag.name);
     },
+    /** 保留和 tags 不一致的 */
     delSomeTags(tags) {
-      this.tagList = this.tagList.filter((v) => !!v.meta.affix || tags.every((tag) => tag.path !== v.path));
+      remainListItem(
+        this.tagList,
+        tags,
+        (item, tags) => item?.meta?.affix || tags.every((_item) => _item.path !== item.path),
+      );
       setItem(TAGLIST, this.tagList);
 
-      this.cacheList = this.cacheList.filter((v) => tags.every((tag) => tag.name !== v));
+      remainListItem(this.cacheList, tags, (name, tags) => tags.every((item) => item.name !== name));
     },
     delAllTags() {
-      this.tagList = this.tagList.filter((v) => !!v.meta.affix);
+      remainListItem(this.tagList, (tag) => tag?.meta?.affix);
+
       removeItem(TAGLIST);
       this.cacheList = [];
     },
@@ -90,24 +115,20 @@ export const useTags = defineStore('tags', {
 
     // 从 tagList 中删除匹配项
     deTagList(tag) {
-      // this.tagList = this.tagList.filter((v) => v.path !== tag.path); // 这里的 filter 会让从源头开始的响应式丢失，因为直接替换了；然后本来的方案是 用到的地方tagList，用 storeToRefs 重新监听了一次-重新建立了 { value: tagList }，这时候 tagList 变化没问题；
+      // filter 直接替换，会导致其他地方 tagList.value 的响应式丢失；
+      // 原来的方案：用到的 tagList，用 storeToRefs 重新监听了一次 - 重新建立了 { value: tagList }，这时候 tagList 变化没问题；
+      // this.tagList = this.tagList.filter((v) => v.path !== tag.path);
 
       let foundIndex = this.tagList.findIndex((item) => item.path === tag.path);
       if (foundIndex === -1) return;
-
       this.tagList.splice(foundIndex, 1);
-
-      console.log('tag this.tagList', this.tagList);
 
       setItem(TAGLIST, this.tagList);
     },
     // 从 cacheList 中删除匹配项。keep-alive 失效
     deCacheList(tag) {
-      // this.cacheList = this.cacheList.filter((v) => v !== tag.name);
-
       let foundIndex = this.cacheList.findIndex((item) => item.path === tag.path);
       if (foundIndex === -1) return;
-
       this.cacheList.splice(foundIndex, 1);
     },
   },

@@ -5,7 +5,8 @@ export default {
   setup() {
     const router = useRouter();
     const route = useRoute();
-    router.replace(route.fullPath.replace(/^\/redirect/, '')); // 完整路由去掉 redirect
+    let ori = route.fullPath.replace(/^\/redirect/, '');
+    router.replace(ori); // 完整路由去掉 redirect
   },
   render() {
     return h('div');
