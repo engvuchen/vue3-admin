@@ -35,15 +35,6 @@ export default [
           error: '500',
         },
       },
-      {
-        path: ':pathMatch(.*)',
-        name: 'error-not-found',
-        component: Error,
-        meta: { title: '404' },
-        props: {
-          error: '404',
-        },
-      },
     ],
   },
   {
