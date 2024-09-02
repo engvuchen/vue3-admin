@@ -21,6 +21,15 @@ export default [
           affix: true,
         },
       },
+      {
+        path: 'test',
+        name: 'home',
+        component: Home,
+        meta: {
+          title: 'route.homepage',
+          affix: true,
+        },
+      },
     ],
   },
 ];

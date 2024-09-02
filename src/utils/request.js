@@ -6,7 +6,15 @@ import { useMenus } from '@/pinia/modules/menu';
 import errmap from '@/common/errcode';
 import tips from '@/utils/tips';
 
-const cgiWhiteList = ['/api/user/login', '/api/user/register', '/api/user/upd', '/api/user/info', '/api/resource/self'];
+const cgiWhiteList = ['/api/user/login', '/api/user/register']; // '/api/user/upd', '/api/user/info', '/api/resource/self'
+
+const pendingRequests = new Map(); // 用于存储正在进行的请求
+// 生成请求的唯一标识符
+const getRequestKey = (config) => {
+  const { method, url, params, data } = config;
+  return [method, url, JSON.stringify(params), JSON.stringify(data)].join('&');
+};
+
 // 去掉基本数据、对象、数组中，undefined、null, '' 的值
 function walkData(data) {
   let isArray = Array.isArray(data);
@@ -34,11 +42,16 @@ function walkData(data) {
 
   return data;
 }
+function stop(controller, config, errmsg) {
+  if (errmsg) tips.error(errmsg);
+  controller.abort();
+  return config; // 直接 return 会报各种属性访问错误
+}
 
 const service = axios.create({
   baseURL: '/api',
   timeout: 10000,
-  withCredentials: true, // 跨域请求发送 cookie
+  // withCredentials: true, // 跨域请求发送 cookie；纯后端验证不需要，通过 authorization 头发送 token
 });
 // 拦截请求
 service.interceptors.request.use(
@@ -46,27 +59,38 @@ service.interceptors.request.use(
     const controller = new AbortController();
     config.signal = controller.signal;
 
-    const { authorization } = useApp();
-    if (authorization) config.headers.Authorization = authorization;
-    if (config.data) walkData(config.data);
+    const requestKey = getRequestKey(config); // 可以考虑给这个路径、参数做一个 MD5
+    // 如果这个请求已经存在，取消它
+    if (pendingRequests.has(requestKey)) {
+      const storeController = pendingRequests.get(requestKey);
+      return stop(storeController, config);
+    }
+    // 添加新的请求
+    pendingRequests.set(requestKey, controller);
 
     let url = config.url;
+    if (!url) return stop(controller, config, `缺少 url`);
+
     let fullUrl = config.baseURL + url;
 
-    if (!url) return config;
+    // 白名单接口，不验证 token、接口权限
     if (cgiWhiteList.includes(fullUrl)) return config;
 
     /**
-     * 路由跳转时，才进行 menus、cgi 的生成；
+     * 验证权限。路由跳转时，才进行 menus、cgi 的生成；
      * 1. 登陆之后跳 - 可以
      * 2. 页面直接刷新 - 也会发生路由导航，cgis 也会生成
      */
     let { cgis } = useMenus();
     if (!cgis.includes(fullUrl)) {
-      tips.error(`接口缺少权限：${fullUrl}`);
-      controller.abort();
-      return config; // 不返回 config，也不会发起请求，但会报各种属性访问错误
+      return stop(controller, config, `接口缺少权限：${fullUrl}`);
     }
+
+    const { authorization } = useApp();
+    if (!authorization) return stop(controller, stop, '缺少 authorization');
+
+    if (authorization) config.headers.Authorization = authorization;
+    if (config.data) walkData(config.data);
 
     return config;
   },
@@ -78,6 +102,9 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   // 业务错误。status=200
   (response) => {
+    const requestKey = getRequestKey(response.config);
+    pendingRequests.delete(requestKey); // 请求完成，移除记录
+
     let isSilent = response?.config?.silent;
     let code = response?.data?.code;
     if (!isSilent && code !== 0) ElMessage.error(errmap[code] || response?.data?.msg || '未知错误');
@@ -94,6 +121,8 @@ service.interceptors.response.use(
   // 网络错误 status=500/400，或请求被取消
   async (error) => {
     console.log('network error', error);
+    const requestKey = getRequestKey(error.config || {});
+    pendingRequests.delete(requestKey); // 请求失败，也移除记录
 
     let response = error?.response;
     let isSilent = response?.config?.silent;
