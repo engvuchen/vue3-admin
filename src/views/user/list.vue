@@ -64,6 +64,13 @@ import { apiGetRoleList } from '@/api/role';
 import { apiGetUserRoleList, apiUserRoleModify } from '@/api/user_role';
 import tips from '@/utils/tips';
 
+// onBeforeRouteLeave useRouter
+import { onBeforeRouteUpdate } from 'vue-router';
+
+onBeforeRouteUpdate((to, from) => {
+  console.log('onBeforeRouteUpdate');
+});
+
 // 表格
 const table = ref(null);
 const searchConfig = ref({

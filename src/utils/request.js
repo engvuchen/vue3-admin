@@ -6,12 +6,16 @@ import { useMenus } from '@/pinia/modules/menu';
 import errmap from '@/common/errcode';
 import tips from '@/utils/tips';
 
-const cgiWhiteList = ['/api/user/login', '/api/user/register']; // '/api/user/upd', '/api/user/info', '/api/resource/self'
+const cgiWhiteList = ['/api/user/login', '/api/user/register', '/api/user/info', '/api/user/upd', '/api/resource/self'];
+// 需要 token，但查自己的话，应该可以的
 
 const pendingRequests = new Map(); // 用于存储正在进行的请求
 // 生成请求的唯一标识符
 const getRequestKey = (config) => {
   const { method, url, params, data } = config;
+  // console.log("🔎 ~ getRequestKey ~ params:", params);
+  console.log('🔎 ~ getRequestKey ~ data:', typeof data);
+
   return [method, url, JSON.stringify(params), JSON.stringify(data)].join('&');
 };
 
@@ -56,25 +60,40 @@ const service = axios.create({
 // 拦截请求
 service.interceptors.request.use(
   (config) => {
+    console.log('🔎 ~ req config:', config);
+
     const controller = new AbortController();
     config.signal = controller.signal;
+
+    if (!config.lessToken) {
+      const { authorization } = useApp();
+      if (authorization) {
+        config.headers.Authorization = authorization;
+      } else {
+        return stop(controller, stop, '缺少 authorization');
+      }
+    }
 
     const requestKey = getRequestKey(config); // 可以考虑给这个路径、参数做一个 MD5
     // 如果这个请求已经存在，取消它
     if (pendingRequests.has(requestKey)) {
+      console.log('取消', requestKey, pendingRequests);
+
       const storeController = pendingRequests.get(requestKey);
       return stop(storeController, config);
     }
     // 添加新的请求
     pendingRequests.set(requestKey, controller);
+    console.log('set', requestKey);
+
+    if (config.data) walkData(config.data);
 
     let url = config.url;
     if (!url) return stop(controller, config, `缺少 url`);
 
     let fullUrl = config.baseURL + url;
-
-    // 白名单接口，不验证 token、接口权限
-    if (cgiWhiteList.includes(fullUrl)) return config;
+    // 白名单接口，不验证 token、接口权限、不添加 authorization
+    if (cgiWhiteList.includes(fullUrl)) return config; // todo
 
     /**
      * 验证权限。路由跳转时，才进行 menus、cgi 的生成；
@@ -86,12 +105,6 @@ service.interceptors.request.use(
       return stop(controller, config, `接口缺少权限：${fullUrl}`);
     }
 
-    const { authorization } = useApp();
-    if (!authorization) return stop(controller, stop, '缺少 authorization');
-
-    if (authorization) config.headers.Authorization = authorization;
-    if (config.data) walkData(config.data);
-
     return config;
   },
   (error) => {
@@ -102,8 +115,12 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   // 业务错误。status=200
   (response) => {
-    const requestKey = getRequestKey(response.config);
+    console.log('🔎 ~ response:', response); // todo 这里本来就 stringify 了？
+    const requestKey = getRequestKey(response.config); // 再
     pendingRequests.delete(requestKey); // 请求完成，移除记录
+
+    // console.log('delete', requestKey);
+    console.log('🔎 ~ pendingRequests:', pendingRequests.size);
 
     let isSilent = response?.config?.silent;
     let code = response?.data?.code;

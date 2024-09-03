@@ -38,6 +38,14 @@ export default [
           title: 'route.resource_manage',
         },
       },
+      {
+        path: '/user/resource/list',
+        // name: 'userResource',
+        component: Resource,
+        meta: {
+          title: 'route.resource_manage',
+        },
+      },
     ],
   },
 ];

@@ -40,7 +40,7 @@ export const apiUserUpd = (data) => {
  * @access public
  */
 export const apiUserRegister = (data) => {
-  return request.post('/user/register', data);
+  return request.post('/user/register', data, { lessToken: true });
 };
 
 /**
@@ -51,7 +51,7 @@ export const apiUserRegister = (data) => {
  * 用户登录校验成功，返回 token（token存储了用户信息）
  */
 export const apiUserLogin = (data) => {
-  return request.post('/user/login', data);
+  return request.post('/user/login', data, { lessToken: true });
 };
 
 /**
