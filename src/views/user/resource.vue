@@ -86,7 +86,7 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, useRouter } from 'vue-router';
 let router = useRouter();
 
 function jump(id) {
-  router.push(`/user/list?id=${id}`);
+  router.push(`/user/resource?id=${id}`); // 仅仅是参数变了，再次回到本页触发 onBeforeRouteUpdate
 }
 
 // 表格

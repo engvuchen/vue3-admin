@@ -28,7 +28,7 @@ router.beforeEach(async (to, from) => {
 
   if (routeWhiteList.includes(to.name)) return true;
 
-  // # 没有 token，跳转 login 页，让用户重新登陆
+  // 没有 token，跳转 login 页，让用户重新登陆
   if (!window.localStorage[TOKEN]) {
     return {
       name: 'login',
@@ -38,8 +38,7 @@ router.beforeEach(async (to, from) => {
       replace: true,
     };
   }
-
-  // # 尝试获取用户信息。若 token 校验返回到登陆页
+  // 获取不到用户信息。返回到登陆页
   const userinfo = await useAccount().getUserInfo();
   if (!userinfo) {
     loadingInstance.close();
@@ -51,8 +50,7 @@ router.beforeEach(async (to, from) => {
       replace: true,
     }; // token 验证失败，返回到登陆页
   }
-
-  // login 成功，重新生成 menus
+  // 生成 menus。一般只有 login 跳到内页，才重新生成
   const { menus, generateMenusAndCgis } = useMenus();
   if (!menus.length) {
     try {
