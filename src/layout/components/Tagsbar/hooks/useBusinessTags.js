@@ -80,7 +80,6 @@ export const useBusinessTags = (scrollContainer) => {
 
   // router-link 的 ref
   const setItemRef = (i, el) => {
-    console.log('🔎 ~ setItemRef ~ el:', el);
     // el 是对 router-link 的 ref 引用 { activeClass, ariaCurrentValue, custom, exactActiveClass, replace, to }
 
     tagItems[i] = el;
