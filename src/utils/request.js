@@ -5,18 +5,23 @@ import { useApp } from '@/pinia/modules/app';
 import { useMenus } from '@/pinia/modules/menu';
 import errmap from '@/common/errcode';
 import tips from '@/utils/tips';
+import { HexMD5 } from '@/utils/hash';
 
 const cgiWhiteList = ['/api/user/login', '/api/user/register', '/api/user/info', '/api/user/upd', '/api/resource/self'];
-// 需要 token，但查自己的话，应该可以的
+// 2类，一类需要 token；一类不需要，但查自己的话，应该可以的
 
 const pendingRequests = new Map(); // 用于存储正在进行的请求
 // 生成请求的唯一标识符
 const getRequestKey = (config) => {
-  const { method, url, params, data } = config;
+  let { method, url, params, data } = config;
   // console.log("🔎 ~ getRequestKey ~ params:", params);
   console.log('🔎 ~ getRequestKey ~ data:', typeof data);
 
-  return [method, url, JSON.stringify(params), JSON.stringify(data)].join('&');
+  if (Object.prototype.toString.call(data).slice(8, -1) === 'Object') {
+    data = JSON.stringify(data);
+  }
+
+  return HexMD5.MD5([method, url, JSON.stringify(params), JSON.stringify(data)].join('&')).toString(HexMD5.enc.Hex);
 };
 
 // 去掉基本数据、对象、数组中，undefined、null, '' 的值
@@ -60,8 +65,6 @@ const service = axios.create({
 // 拦截请求
 service.interceptors.request.use(
   (config) => {
-    console.log('🔎 ~ req config:', config);
-
     const controller = new AbortController();
     config.signal = controller.signal;
 
