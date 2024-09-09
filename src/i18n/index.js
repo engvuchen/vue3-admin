@@ -1,12 +1,19 @@
 import { createI18n } from 'vue-i18n';
 
 const getMessage = (modules) => {
-  return Object.entries(modules).reduce((module, [path, mod]) => {
-    // './locales/zh-cn/error.js' -> 'error'
-    const moduleName = path.replace(/^\.\/locales\/[\w-]+\/(.*)\.\w+$/, '$1');
-    module[moduleName] = mod.default;
-    return module;
-  }, {});
+  let obj = {};
+  modules.keys().forEach((key) => {
+    // vite './locales/zh-cn/error.js' -> 'error'
+    // webpack5
+    // 1. './error.js' -> 'error'
+    // 2. '/user/resource.js' -> '/user/resource'
+    // https://juejin.cn/post/7194649442979577893
+
+    let [, moduleName] = /[/]?([a-zA-Z/]+)[.]js/.exec(key);
+    obj[moduleName] = modules(key).default;
+  });
+
+  return obj;
 };
 
 const messagesZhCn = require.context('./locales/zh-cn', true, /\.js$/);

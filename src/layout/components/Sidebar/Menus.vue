@@ -21,6 +21,8 @@ import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import Submenu from './Submenu.vue';
 import config from './config/menu.module.scss';
+console.log('🔎 ~ config:', config, config.menuBg);
+
 import { useMenus } from '@/pinia/modules/menu';
 
 defineProps({

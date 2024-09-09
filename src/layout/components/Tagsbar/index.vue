@@ -70,7 +70,7 @@ const {
 
 const onScroll = (e) => {
   // handleScroll(e); // 没有替换浏览器 scroll 事件的必要
-  closeMenu.value();
+  closeMenu();
 };
 
 onMounted(() => {
