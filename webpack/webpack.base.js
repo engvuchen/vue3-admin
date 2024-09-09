@@ -31,8 +31,23 @@ module.exports = {
   // 配置入口
   entry: resolve(__dirname, '..', 'src', 'main.js'),
   optimization: {
-    // 暂时不要压缩代码
-    minimize: true,
+    minimize: true, // 暂时不要压缩代码
+    // 用文件的名字作为chunk的名字
+    chunkIds: 'named',
+    splitChunks: {
+      // 任意模块都可以拆分
+      chunks: 'all',
+      cacheGroups: {
+        // 屁用 node_modules 模块：
+        vendors: {
+          name: 'vendors',
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10,
+          // 不需要重复拆跟 chunk
+          reuseExistingChunk: true,
+        },
+      },
+    },
   },
   // 配置打包出口
   output: {

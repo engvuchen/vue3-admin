@@ -9,13 +9,16 @@ const getMessage = (modules) => {
   }, {});
 };
 
+const messagesZhCn = require.context('./locales/zh-cn', true, /\.js$/);
+const messagesEn = require.context('./locales/en', true, /\.js$/);
+
 export default createI18n({
   legacy: false,
   globalInjection: true,
   locale: localStorage.getItem('__VEA__lang') || 'zh-cn',
   fallbackLocale: 'zh-cn',
   messages: {
-    'zh-cn': getMessage(import.meta.glob('./locales/zh-cn/**/*.js', { eager: true })),
-    en: getMessage(import.meta.glob('./locales/en/**/*.js', { eager: true })),
+    'zh-cn': getMessage(messagesZhCn),
+    en: getMessage(messagesEn),
   },
 });

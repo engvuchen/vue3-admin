@@ -1,7 +1,7 @@
-const Layout = () => import('@/layout/index.vue');
-const List = () => import('@/views/user/list.vue');
-const Role = () => import('@/views/user/role.vue');
-const Resource = () => import('@/views/user/resource.vue');
+const Layout = () => /* webpackChunkName: "user" */ import('@/layout/index.vue');
+const List = () => /* webpackChunkName: "user" */ import('@/views/user/list.vue');
+const Role = () => /* webpackChunkName: "user" */ import('@/views/user/role.vue');
+const Resource = () => /* webpackChunkName: "user" */ import('@/views/user/resource.vue');
 
 export default [
   {

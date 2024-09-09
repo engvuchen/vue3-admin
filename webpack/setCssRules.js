@@ -13,7 +13,12 @@ function setCssRules(type, isProd) {
   ];
 
   if (type === 'scss') {
-    loaders.push('sass-loader'); // 如果是 SCSS 文件，额外处理 Sass 文件
+    loaders.push({
+      loader: 'sass-loader',
+      options: {
+        additionalData: '@use "@/assets/style/global-variables.scss" as *;',
+      },
+    }); // 如果是 SCSS 文件，额外处理 Sass 文件
   }
 
   return loaders;
