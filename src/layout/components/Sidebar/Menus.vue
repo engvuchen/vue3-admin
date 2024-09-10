@@ -22,31 +22,7 @@ import { storeToRefs } from 'pinia';
 import Submenu from './Submenu.vue';
 import { useMenus } from '@/pinia/modules/menu';
 
-// :background-color="variables.menuBg"
-// :text-color="variables.menuTextColor"
-// :active-text-color="variables.menuActiveTextColor"
-
-// import config from './config/menu.sass';
-// import { menuBg } from './config/menu.module.scss';
-// import config from './config/menu.module.scss';
-
-// import config from './config/menu.module.scss'; // namedExport=true，空对象
-
 import * as config from './config/menu.module.scss'; // namedExport=true，空对象
-
-console.log('🔎 ~ config:', config); // style-loader true 得到什么？false 得到什么？
-
-// true -> { default: undefined, menuActiveTextColor... }
-
-// vue-style-loader false { menuActiveTextColor... }
-
-// console.log('🔎 ~ menuBg:', menuBg);
-// import config from './config/menu.module.scss';
-// import './config/menu.module.scss';
-// import style from './config/menu.scss';
-
-// console.log('🔎 ~ config:', config, Object.keys(config));
-// console.log('🔎 ~ style:', style);
 
 defineProps({
   collapse: {
