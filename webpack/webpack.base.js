@@ -13,10 +13,8 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 let nodeEnv = process.env.NODE_ENV || 'development';
 const isProd = nodeEnv === 'production';
 
-const envVars = ['.env', `.env.${nodeEnv}`, `.env.${nodeEnv}.local`, '.env.local'].filter(Boolean);
-
+const envVars = ['.env', `.env.${nodeEnv}`, `.env.${nodeEnv}.local`, '.env.local'];
 // 读取当前构建环境对应的环境变量文件的所有内容，将其注入到环境变量中
-
 envVars.forEach((envVar) => {
   const envFilePath = resolve(__dirname, '..', envVar);
   const envFileExists = require('fs').existsSync(envFilePath);
@@ -34,9 +32,8 @@ module.exports = {
   output: {
     path: resolve(__dirname, '..', 'dist'),
     filename: 'js/[name].[contenthash:6].js', // 使用文件指纹
-    clean: true, // 从 webpack5 开始，只要开启这个开关，那么每一次构建会自动清理输出目录
-    // 打包后访问的资源前缀
-    publicPath: '/',
+    clean: true, // 从 webpack5 开始，clean=true,每一次构建会自动清理输出目录
+    publicPath: '/', // 打包后访问的资源前缀
   },
   // 配置路径别名
   resolve: {
@@ -44,37 +41,33 @@ module.exports = {
       '@': resolve(__dirname, '..', 'src'),
       vue$: 'vue/dist/vue.runtime.esm-bundler.js',
     },
-    // 配置模块的访问路径
-    extensions: ['.js', '.ts', '.tsx', '.vue', '.json'],
+    extensions: ['.js', '.ts', '.tsx', '.vue', '.json'], // 配置模块的访问路径。'/util' -> 'util.js'
   },
   optimization: {
-    // minimize: true, // 压缩代码
-    // 用文件的名字作为chunk的名字
-    chunkIds: 'named',
+    chunkIds: 'named', // 用文件的名字作为chunk的名字
     runtimeChunk: { name: 'runtime' }, // runtime 独立打包
     splitChunks: {
-      // 任意模块都可以拆分
-      chunks: 'all',
+      chunks: 'all', // 任意模块都可以拆分F
       cacheGroups: {
         // node_modules 独立拆成另一个包
         vendors: {
           name: 'vendors',
           test: /[\\/]node_modules[\\/]/,
           priority: -10,
-          // 不需要重复拆 chunk
-          reuseExistingChunk: true,
+          reuseExistingChunk: true, // 不需要重复拆开 chunk
         },
       },
     },
   },
-  // 配置插件
+  // cache: {
+  //   type: 'filesystem',
+  // },
+  // 配置 plugins
   plugins: [
     new HtmlWebpackPlugin({
-      // 指定 html 模板的路径
       // template: resolve(__dirname, '..', 'public', 'index.html'),
-      template: resolve(__dirname, '../index.html'),
-      // 该配置会注入到 html 文件的模板语法中
-      title: process.env.VUE_APP_TITLE,
+      template: resolve(__dirname, '..', 'index.html'), // 指定 html 模板的路径
+      title: process.env.VUE_APP_TITLE, // 该配置会注入到 html 文件的模板语法中F
     }),
     // 加载 vue-loader 插件
     new VueLoaderPlugin(),
@@ -103,7 +96,7 @@ module.exports = {
             ignore: ['**/index.html', '**/.DS_Store'],
           },
           info: {
-            minimized: true, // 注意：minimize 应该是 minimized，根据CopyWebpackPlugin的文档进行修正
+            minimized: true,
           },
         },
       ],
@@ -122,44 +115,51 @@ module.exports = {
   module: {
     rules: [
       // 配置 js loader
+      // {
+      //   test: /\.js$/,
+      //   use: 'babel-loader',
+      //   exclude: /node_modules/,
+      // },
       {
         test: /\.js$/,
-        use: 'babel-loader',
+        use: [
+          {
+            loader: 'thread-loader', // 多线程处理
+            options: {
+              workers: 4, // 指定线程数，可根据项目规模调整
+            },
+          },
+          'babel-loader',
+        ],
         exclude: /node_modules/,
       },
+      // 配置 .vue 文件
       {
-        // 配置 .vue 文件
         test: /\.vue$/,
         use: 'vue-loader',
       },
+      // 样式处理
+      // {
+      //   oneOf: [],
+      // },
+      // 处理 css
       {
-        oneOf: [
-          // 处理 css 相关的内容
-          {
-            test: /\.css$/i,
-            exclude: [/\.module\.css$/], // 过滤掉 node_modules 以及以 .module.css 结尾的文件
-            use: setCssRules('css', isProd),
-          },
-          //  处理 .module.css 结尾的文件
-          // {
-          //   test: /\.module\.css$/,
-          //   exclude: /node_modules/,
-          //   use: setModuleCssRule('css', isProd),
-          // },
-          // 处理 scss 相关的内容
-          {
-            test: /\.s[ac]ss$/i,
-            // 过滤掉 node_modules 以及以 .module.scss 结尾的文件
-            // exclude: [/\.module\.s[ac]ss$/], // [/node_modules/]，不处理这个 node_modules，element-plus 样式显示不出来
-            use: setCssRules('scss', isProd),
-          },
-          // 处理 .module.scss、.module.sass、.module.css 结尾的文件
-          {
-            test: /\.module\.(sa|sc|c)ss$/,
-            exclude: /node_modules/,
-            use: setModuleCssRule('scss', isProd),
-          },
-        ],
+        test: /\.css$/i,
+        exclude: [/node_modules/, /\.module\.css$/], // 过滤 `node_modules`, `.module.css` 结尾的文件
+        use: setCssRules('css', isProd),
+      },
+      // 处理 scss、sass
+      {
+        test: /\.s[ac]ss$/i,
+        // 过滤掉 node_modules 以及以 .module.scss 结尾的文件
+        exclude: [/node_modules/, /\.module\.s[ac]ss$/], // `node_modules`
+        use: setCssRules('scss', isProd),
+      },
+      // 处理 css module: `.module.sass`、`.module.scss`、`.module.css` 结尾的文件
+      {
+        test: /\.module\.(sa|sc|c)ss$/i,
+        exclude: /node_modules/,
+        use: setModuleCssRule('scss', isProd),
       },
       // 处理图片
       {
@@ -196,19 +196,6 @@ module.exports = {
           filename: 'fonts/[name].[ext]',
         },
       },
-      // svg 类型的静态资源期望转为为 asset/resource 类型进行处理，覆盖了第一个规则中对 svg 的处理，确保 SVG 文件作为资源导出
-      // {
-      //   test: /\.(svg)(\?.*)?$/,
-      //   // 默认会将构建结果导出单独的配置文件
-      //   type: 'asset/resource',
-      //   exclude: [resolve(__dirname, 'src/assets/svg')], // 排除需要 sprite 处理的 SVG
-      //   generator: {
-      //     // 输出 svg 的目录
-      //     // outputPath: "images",
-      //     // 输出 svg 的名称
-      //     filename: 'svgs/[name].[contenthash:6].[ext]',
-      //   },
-      // },
       // 指定目录的 svg 转为组件
       {
         test: /\.svg$/,
