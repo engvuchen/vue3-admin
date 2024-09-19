@@ -4,9 +4,12 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 const webpack = require('webpack');
 const MinicssExtractPlugin = require('mini-css-extract-plugin');
+// const threadLoader = require('thread-loader');
 const setCssRules = require('./setCssRules');
 const setModuleCssRule = require('./setModuleCssRule');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+// const Smp = require('speed-measure-webpack-plugin');
+// const smp = new Smp(); // 即使不用，也会多十几秒。18s
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 // 读取 node_env 环境变量的值
@@ -25,7 +28,20 @@ envVars.forEach((envVar) => {
   }
 });
 
-module.exports = {
+// 预热后，不会自行停止
+// threadLoader.warmup(
+//   {
+//     workers: 4, // 指定使用的线程数
+//     poolTimeout: 0,
+//   },
+//   [
+//     'babel-loader', // 预热 babel-loader
+//     // 'vue-loader',   // 预热 vue-loader
+//     // 其他需要频繁使用的加载器
+//   ],
+// );
+
+let config = {
   // 配置入口
   entry: resolve(__dirname, '..', 'src', 'main.js'),
   // 配置打包出口
@@ -115,23 +131,22 @@ module.exports = {
   module: {
     rules: [
       // 配置 js loader
-      // {
-      //   test: /\.js$/,
-      //   use: 'babel-loader',
-      //   exclude: /node_modules/,
-      // },
       {
         test: /\.js$/,
+        exclude: /node_modules/,
         use: [
+          // 不使用 thread-loader，或开启全部 cpu-1 核心，基本都是 18s。开了 thread，还慢一些。workers = 4，反而到了 23s
+          // 不用 18794 18593 18991
           {
-            loader: 'thread-loader', // 多线程处理
+            // loader: 'thread-loader', // 19446 18561 19265
+            loader: resolve(__dirname, '../node_modules/thread-loader/dist/cjs.js'), // 18877 19154 19072
             options: {
-              workers: 4, // 指定线程数，可根据项目规模调整
+              // workers: 4, // 指定线程数，可根据项目规模调整 19346 19673
+              poolTimeout: 0,
             },
           },
           'babel-loader',
         ],
-        exclude: /node_modules/,
       },
       // 配置 .vue 文件
       {
@@ -212,3 +227,7 @@ module.exports = {
     ],
   },
 };
+
+module.exports = config;
+
+// module.exports = smp.wrap(config);
