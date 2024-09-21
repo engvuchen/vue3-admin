@@ -3,6 +3,9 @@ import App from './App.vue';
 
 const app = createApp(App);
 
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
+
 // 引入element-plus
 import ElementPlus from 'element-plus';
 import './assets/style/element-variables.scss';
@@ -26,7 +29,8 @@ import pinia from './pinia';
 import './permission';
 
 // 引入svg图标注册脚本
-// import 'virtual:svg-icons-register';
+// import 'virtual:svg-icons-register'; // vite
+import './icon.js'; // webpack5
 
 // 注册全局组件
 import * as Components from './global-components';

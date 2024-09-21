@@ -1,10 +1,9 @@
 // 公共的 webpack 配置
-const { resolve } = require('path');
+const { resolve, relative } = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 const webpack = require('webpack');
 const MinicssExtractPlugin = require('mini-css-extract-plugin');
-// const threadLoader = require('thread-loader');
 const setCssRules = require('./setCssRules');
 const setModuleCssRule = require('./setModuleCssRule');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -28,18 +27,7 @@ envVars.forEach((envVar) => {
   }
 });
 
-// 预热后，不会自行停止
-// threadLoader.warmup(
-//   {
-//     workers: 4, // 指定使用的线程数
-//     poolTimeout: 0,
-//   },
-//   [
-//     'babel-loader', // 预热 babel-loader
-//     // 'vue-loader',   // 预热 vue-loader
-//     // 其他需要频繁使用的加载器
-//   ],
-// );
+console.log(33, process.cwd());
 
 let config = {
   // 配置入口
@@ -81,7 +69,6 @@ let config = {
   // 配置 plugins
   plugins: [
     new HtmlWebpackPlugin({
-      // template: resolve(__dirname, '..', 'public', 'index.html'),
       template: resolve(__dirname, '..', 'index.html'), // 指定 html 模板的路径
       title: process.env.VUE_APP_TITLE, // 该配置会注入到 html 文件的模板语法中F
     }),
@@ -136,16 +123,29 @@ let config = {
         exclude: /node_modules/,
         use: [
           // 不使用 thread-loader，或开启全部 cpu-1 核心，基本都是 18s。开了 thread，还慢一些。workers = 4，反而到了 23s
-          // 不用 18794 18593 18991
+          // 不用: 18794 18593 18991
+
+          // {
+          //   // loader: 'thread-loader', // 19446 18561 19265
+          //   loader: resolve(__dirname, '../node_modules/thread-loader/dist/cjs.js'), // 18877 19154 19072
+          //   options: {
+          //     // workers: 4, // 指定线程数，可根据项目规模调整 19346 19673
+          //     poolTimeout: 0,
+          //   },
+          // },
+
+          // 'babel-loader',
+          // 用 swc-loader 替换 babel-loader
           {
-            // loader: 'thread-loader', // 19446 18561 19265
-            loader: resolve(__dirname, '../node_modules/thread-loader/dist/cjs.js'), // 18877 19154 19072
+            loader: 'swc-loader', // 18270 18585 18965
             options: {
-              // workers: 4, // 指定线程数，可根据项目规模调整 19346 19673
-              poolTimeout: 0,
+              // https://swc.rs/docs/configuration/swcrc#compilation
+              jsc: {
+                // target: 'es5', // 转译为 ES5。默认
+                externalHelpers: true, // 启用外部 helpers (即使用 @swc/helpers)
+              },
             },
           },
-          'babel-loader',
         ],
       },
       // 配置 .vue 文件
@@ -153,10 +153,6 @@ let config = {
         test: /\.vue$/,
         use: 'vue-loader',
       },
-      // 样式处理
-      // {
-      //   oneOf: [],
-      // },
       // 处理 css
       {
         test: /\.css$/i,
@@ -182,7 +178,7 @@ let config = {
         // webpack5 新特性，不再需要使用loader去进行处理
         // assets 是 webpack5 通用的资源处理类型
         // 默认情况下 8kb 以下的资源会被转化为 base64 编码
-        exclude: [resolve(__dirname, 'src/assets/svg')], // 排除要用 sprite 处理的 svg 文件
+        exclude: [resolve(process.cwd(), 'src/assets/svg')], // 排除要用 sprite 处理的 svg 文件
         type: 'asset',
         parser: {
           dataUrlCondition: {
@@ -191,8 +187,7 @@ let config = {
           },
         },
         generator: {
-          // outputPath: "images", // 输出图片的目录
-          filename: 'images/[name].[ext]', // 输出图片的名称
+          filename: 'images/[name].[ext]', // 输出图片的名称，自动创建 images 文件夹
         },
       },
       // 处理字体
@@ -207,19 +202,29 @@ let config = {
           },
         },
         generator: {
-          // 输出图片的名称
-          filename: 'fonts/[name].[ext]',
+          filename: 'fonts/[name].[ext]', // 输出图片的名称
         },
       },
       // 指定目录的 svg 转为组件
       {
         test: /\.svg$/,
-        include: [resolve(__dirname, 'src/assets/svg')], // 仅处理此目录下的SVG文件
+        include: [resolve(process.cwd(), 'src/assets/svg')], // 仅处理此目录下的SVG文件
         use: [
           {
             loader: 'svg-sprite-loader',
             options: {
-              symbolId: 'icon-[name]', // 自定义symbolId格式
+              // symbolId: '[folder]-[name]', // 自定义symbolId格式
+              symbolId: (filePath) => {
+                const relativePath = relative(resolve(process.cwd(), 'src/assets/svg'), filePath);
+
+                // 移除第一层目录
+                const result = relativePath
+                  .replace(/[.]+[\\/]/, '')
+                  .replace(/[\\/]+/g, '-')
+                  .replace('.svg', '');
+
+                return result; // 返回处理后的 symbolId
+              },
             },
           },
         ],
