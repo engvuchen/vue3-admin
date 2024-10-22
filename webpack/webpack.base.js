@@ -7,6 +7,8 @@ const MinicssExtractPlugin = require('mini-css-extract-plugin');
 const setCssRules = require('./setCssRules');
 const setModuleCssRule = require('./setModuleCssRule');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+// const HappyPack = require('happypack');
+
 // const Smp = require('speed-measure-webpack-plugin');
 // const smp = new Smp(); // 即使不用，也会多十几秒。18s
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -26,8 +28,6 @@ envVars.forEach((envVar) => {
     });
   }
 });
-
-console.log(33, process.cwd());
 
 let config = {
   // 配置入口
@@ -121,10 +121,10 @@ let config = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
+        // use: 'happypack/loader?id=js', // babel8 + happypack threads=4 22710 22976
         use: [
           // 不使用 thread-loader，或开启全部 cpu-1 核心，基本都是 18s。开了 thread，还慢一些。workers = 4，反而到了 23s
           // 不用: 18794 18593 18991
-
           // {
           //   // loader: 'thread-loader', // 19446 18561 19265
           //   loader: resolve(__dirname, '../node_modules/thread-loader/dist/cjs.js'), // 18877 19154 19072
@@ -133,11 +133,9 @@ let config = {
           //     poolTimeout: 0,
           //   },
           // },
-
-          // 'babel-loader',
           // 用 swc-loader 替换 babel-loader
           {
-            loader: 'swc-loader', // 18270 18585 18965
+            loader: 'swc-loader', // 18270 18585 18965，差不了很多
             options: {
               // https://swc.rs/docs/configuration/swcrc#compilation
               jsc: {

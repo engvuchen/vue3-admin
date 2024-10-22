@@ -2,11 +2,11 @@ module.exports = {
   presets: [
     [
       '@babel/preset-env',
-      // babel-preset 按需导入垫片
-      // {
-      //   useBuiltIns: 'usage',
-      //   corejs: 3,
-      // },
+      {
+        targets: {
+          browsers: ['last 2 versions', 'not dead'],
+        },
+      },
     ],
   ],
   plugins: [

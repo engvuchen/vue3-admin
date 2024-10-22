@@ -10,6 +10,7 @@ export const apiGetRoleList = (data) => {
     url: '/role/list',
     method: 'get',
     params: data,
+    cacheTime: 10000,
   });
 };
 
