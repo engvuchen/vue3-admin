@@ -148,18 +148,18 @@ service.interceptors.response.use(
 
     let response = error?.response;
 
-    if (error.name === 'CanceledError') {
-      // let { cache, ignore } = cacheMap.get(getRequestKey(error.config)).cache;
-      // if (!ignore && cache) {
-      //   return Promise.resolve(cache);
-      // }
-      cacheMap.get(getRequestKey(response.config)).fullfilled = true;
-      return Promise.resolve({
-        code: -1,
-      });
+    let requestKey = getRequestKey(response.config);
+    let cache = cacheMap.get();
+    cache.fullfilled = true;
+    // 请求完成，删除非缓存请求
+    if (!cache.data) {
+      delete cacheMap[requestKey];
     }
 
-    if (!response?.config?.silent && response?.status) tips.error(`${response?.config?.url}: ${response?.status}`);
+    // 非中止、沉默的请求，提示错误信息
+    if (error.name !== 'CanceledError' && !response?.config?.silent && response?.status) {
+      tips.error(`${response?.config?.url}: ${response?.status}`);
+    }
 
     // console.dir(error) // 可在此进行错误上报
     // tips.closeAll();
@@ -215,17 +215,26 @@ function request(config) {
 
   // 处理缓存
   const requestKey = getRequestKey(config);
-  const { cache, expired, controller: storeController } = cacheMap.get(requestKey) || {};
-  if (cache) {
-    // 如果有缓存数据并且未过期
-    if (expired > Date.now()) return Promise.resolve(cache); // todo 网络看不到
-    delete cacheMap[requestKey]; // 缓存过期，移除
+  const { data, expired, controller: storeController } = cacheMap.get(requestKey) || {};
+  if (data) {
+    // 有缓存数据且未过期，直接返回
+    if (expired > Date.now()) return Promise.resolve(data); // todo 网络看不到
+    // 缓存过期，移除
+    delete cacheMap[requestKey];
   }
 
   const controller = new AbortController();
   config.signal = controller.signal;
 
-  let promise = service(config); // 会先走完 前、后 2 个钩子
+  let promise = service(config); // 先触发前、后 2 个钩子
+
+  /**
+   * A、B 串行
+   * 1. A 完成后，B 才发起；- A已创建缓存。缓存有数据。- B 不发起请求
+   * 2. A 未完成，B 就发起；- A已创建缓存。缓存无数据，B 等待 A 完成 - B 不发起请求
+   *
+   * A、B 并行：都会有请求，都会设置缓存 - 无解
+   */
 
   if (!storeController) {
     cacheMap.set(requestKey, {
@@ -233,7 +242,7 @@ function request(config) {
       // ---
       ...(config.cacheTime
         ? {
-            cache: promise, // ⬜ 这里可以是 promise
+            data: promise, // ⬜ 这里可以是 promise
             expired: Date.now() + config.cacheTime,
             fullfilled: false,
           }
