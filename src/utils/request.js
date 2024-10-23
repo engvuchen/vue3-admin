@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { ElMessage } from 'element-plus';
 import router from '@/router';
 import { useApp } from '@/pinia/modules/app';
 import { useMenus } from '@/pinia/modules/menu';
@@ -26,11 +25,12 @@ const getRequestKey = (config) => {
   return HexMD5.MD5([method, url, JSON.stringify(params), data].join('&')).toString(HexMD5.enc.Hex);
 };
 // 中断请求
-function stop(controller, config, errmsg) {
-  if (errmsg) tips.error(errmsg);
-  controller.abort();
-  return { ...config, signal: controller.signal }; // 需 return config，否则会报各种属性访问错误
-}
+// function stop(controller, config, errmsg) {
+//   if (errmsg) tips.error(errmsg);
+//   if (config.url) console.log('req url error', url);
+//   controller.abort();
+//   return { ...config, signal: controller.signal }; // 需 return config，否则会报各种属性访问错误
+// }
 // 基本数据、对象、数组，去掉其中的 undefined、null, ''
 function walkData(data) {
   let isArray = Array.isArray(data);
@@ -67,61 +67,55 @@ const service = axios.create({
 // 拦截请求
 service.interceptors.request.use(
   (config) => {
-    const controller = new AbortController();
+    // const controller = new AbortController();
 
-    const { url, cacheTime, data } = config;
-    if (!url) return stop(controller, config, `缺少 url`);
-    if (data) walkData(data);
+    // const { url, cacheTime, data } = config;
+    // if (!url) return stop(controller, config, `缺少 url`);
+    // if (data) walkData(data);
 
-    // 需要 token，进行校验
-    if (!config.withoutToken) {
-      const { authorization } = useApp();
-      if (authorization) {
-        config.headers.Authorization = authorization;
-      } else {
-        return stop(controller, config, '缺少 authorization');
-      }
-    }
+    // // 需要 token，进行校验
+    // if (!config.withoutToken) {
+    //   const { authorization } = useApp();
+    //   if (!authorization) return stop(controller, config, '缺少 authorization');
+    //   config.headers.Authorization = authorization;
+    // }
+    // // 非白名单接口，验证接口权限
+    // let fullUrl = config.baseURL + url;
+    // if (!cgiWhiteList.includes(fullUrl)) {
+    //   /**
+    //    * 验证权限。路由跳转时，才进行 menus、cgi 的生成；
+    //    * 1. 登陆之后跳 - 可以
+    //    * 2. 页面直接刷新 - 也会发生路由导航，menus、cgi 也会生成
+    //    */
+    //   let { cgis } = useMenus();
+    //   if (!cgis.includes(fullUrl)) return stop(controller, config, `接口缺少权限：${fullUrl}`);
+    // }
 
-    let fullUrl = config.baseURL + url;
-    // 白名单接口，不验证接口权限
-    if (cgiWhiteList.includes(fullUrl)) return config;
+    // // 处理缓存
+    // if (cacheTime) {
+    //   const requestKey = getRequestKey(config);
+    //   // 如果有缓存数据并且未过期
+    //   const { cache, expired, controller: storeController } = cacheMap.get(requestKey) || { cache: 0 };
 
-    /**
-     * 验证权限。路由跳转时，才进行 menus、cgi 的生成；
-     * 1. 登陆之后跳 - 可以
-     * 2. 页面直接刷新 - 也会发生路由导航，cgis 也会生成
-     */
-    let { cgis } = useMenus();
-    if (!cgis.includes(fullUrl)) {
-      return stop(controller, config, `接口缺少权限：${fullUrl}`);
-    }
+    //   if (cache === 0) {
+    //     cacheMap.set(requestKey, {
+    //       cache: undefined,
+    //       expired: Date.now() + cacheTime,
+    //       controller,
+    //     });
+    //   } else if (cache === undefined) {
+    //     // 已有请求中的数据 todo
+    //     return stop(storeController, config, '');
+    //   } else {
+    //     if (Date.now() - expired < cacheTime) {
+    //       console.log('有缓存', cacheTime);
 
-    // 处理缓存
-    if (cacheTime) {
-      const requestKey = getRequestKey(config);
-      // 如果有缓存数据并且未过期
-      const { cache, timestamp, controller: storeController } = cacheMap.get(requestKey) || { cache: 0 };
-
-      if (cache === 0) {
-        cacheMap.set(requestKey, {
-          cache: undefined,
-          timestamp: Date.now() + cacheTime,
-          controller,
-        });
-      } else if (cache === undefined) {
-        // 已有请求中的数据 todo
-        return stop(storeController, config, '');
-      } else {
-        if (Date.now() - timestamp < cacheTime) {
-          console.log('有缓存', cacheTime);
-
-          return stop(storeController, config, ''); // 缓存，存在，预期是取消吗？return config 才能走到 response
-        } else {
-          cacheMap.delete(requestKey); // 缓存过期，移除
-        }
-      }
-    }
+    //       return stop(storeController, config, ''); // 缓存，存在，预期是取消吗？return config 才能走到 response
+    //     } else {
+    //       delete cacheMap[requestKey]; // 缓存过期，移除
+    //     }
+    //   }
+    // }
 
     return config;
   },
@@ -135,63 +129,121 @@ service.interceptors.response.use(
   (response) => {
     let isSilent = response?.config?.silent;
     let code = response?.data?.code;
-    if (!isSilent && code !== 0) ElMessage.error(errmap[code] || response?.data?.msg || '未知错误');
+    if (!isSilent && code !== 0) tips.error(errmap[code] || response?.data?.msg || '未知错误');
 
     // token 缺失、过期、不能找到用户，返回登陆页
     if (code === errmap.TOKEN_ERR) {
       const redirect = encodeURIComponent(window.location.href);
       router.push(`/login?redirect=${redirect}`);
-      useApp().clearToken();
+      useApp().clearToken(); // ⬜ 守卫移除请求
     }
 
-    console.log('response.config.cacheTime', response.config.cacheTime, cacheMap);
-
-    if (response.config.cacheTime) {
-      cacheMap.get(getRequestKey(response.config)).cache = response.data;
-    }
+    cacheMap.get(getRequestKey(response.config)).fullfilled = true;
 
     return response.data;
   },
   // 网络错误 status=500/400，或请求被取消
   (error) => {
-    // console.log('service', service); 这个不是接口
     console.log('network error', error);
 
     let response = error?.response;
 
     if (error.name === 'CanceledError') {
-      let { cache, ignore } = cacheMap.get(getRequestKey(error.config)).cache;
-      if (!ignore && cache) {
-        return Promise.resolve(cache);
-      }
+      // let { cache, ignore } = cacheMap.get(getRequestKey(error.config)).cache;
+      // if (!ignore && cache) {
+      //   return Promise.resolve(cache);
+      // }
+      cacheMap.get(getRequestKey(response.config)).fullfilled = true;
+      return Promise.resolve({
+        code: -1,
+      });
     }
 
-    if (!response?.config?.silent && response?.status) ElMessage.error(`${response?.config?.url}: ${response?.status}`);
+    if (!response?.config?.silent && response?.status) tips.error(`${response?.config?.url}: ${response?.status}`);
 
     // console.dir(error) // 可在此进行错误上报
-    // ElMessage.closeAll();
+    // tips.closeAll();
 
     return Promise.resolve({
       code: -1,
-      error,
     });
   },
 );
 
-function request(options) {
-  let promise = service(options); // 走完 前、后 2 个钩子，才到这里的处理
+function stop(config, errmsg) {
+  if (errmsg) tips.error(errmsg);
+  if (config.url) console.log('req url error', config.url);
+  return Promise.resolve({
+    code: -1,
+    errmsg,
+  }); // 需 return config，否则会报各种属性访问错误
+}
+function validity(config) {
+  const { url, data } = config;
+  if (!url) return '缺少 url';
+  if (data) walkData(data);
 
-  const { cacheTime } = options;
-  if (cacheTime) {
+  // 需要 token，进行校验
+  if (!config.withoutToken) {
+    const { authorization } = useApp();
+    if (!authorization) return '缺少 authorization';
+    config.headers.Authorization = authorization;
+  }
+  // 非白名单接口，验证接口权限
+  let fullUrl = config.baseURL + url;
+  if (!cgiWhiteList.includes(fullUrl)) {
+    /**
+     * 验证权限。路由跳转时，才进行 menus、cgi 的生成；
+     * 1. 登陆之后跳 - 可以
+     * 2. 页面直接刷新 - 也会发生路由导航，menus、cgi 也会生成
+     */
+    let { cgis } = useMenus();
+    if (!cgis.includes(fullUrl)) return stop(config, `接口缺少权限：${fullUrl}`);
+  }
+
+  return false;
+}
+
+function request(config) {
+  /**
+   * 这里做请求拦截
+   * 1. 看不到被取消的请求
+   */
+
+  let errmsg = validity(config);
+  if (errmsg) return stop(config, errmsg);
+
+  // 处理缓存
+  const requestKey = getRequestKey(config);
+  const { cache, expired, controller: storeController } = cacheMap.get(requestKey) || {};
+  if (cache) {
     // 如果有缓存数据并且未过期
-    const { cache } = cacheMap.get(getRequestKey(options)) || { cache: 0 };
-    if (cache === undefined) {
-      // 已有请求中的数据
-      return promise.then((data) => data);
-    }
+    if (expired > Date.now()) return Promise.resolve(cache); // todo 网络看不到
+    delete cacheMap[requestKey]; // 缓存过期，移除
+  }
+
+  const controller = new AbortController();
+  config.signal = controller.signal;
+
+  let promise = service(config); // 会先走完 前、后 2 个钩子
+
+  if (!storeController) {
+    cacheMap.set(requestKey, {
+      controller, // 切换页面，用来取消的
+      // ---
+      ...(config.cacheTime
+        ? {
+            cache: promise, // ⬜ 这里可以是 promise
+            expired: Date.now() + config.cacheTime,
+            fullfilled: false,
+          }
+        : {}),
+    });
   }
 
   return promise;
 }
 
 export default request;
+
+export { cacheMap };
