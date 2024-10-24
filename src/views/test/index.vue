@@ -225,13 +225,11 @@ function handleSelectionChange(arr) {
   // state.selectedItems = arr;
 }
 // 请求函数
-function getList(params) {
-  apiTest();
+async function getList(params) {
+  let res = await apiTest();
+  if (res.code !== 0) return;
 
-  return {
-    data: [],
-    total: 0,
-  };
+  return res;
 }
 </script>
 

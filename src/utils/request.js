@@ -6,7 +6,10 @@ import errmap from '@/common/errcode';
 import tips from '@/utils/tips';
 import { HexMD5 } from '@/utils/hash';
 
+// 路由守卫 跳转时放弃未完成的请求
 router.beforeEach((to, from) => {
+  console.log('🔎 ~ Object.values ~ cacheMap:', cacheMap);
+
   Object.values(cacheMap).forEach((curr) => {
     if (!curr.fullfilled) curr.controller.abort();
   });
@@ -32,24 +35,10 @@ const getRequestKey = (config) => {
 
   return HexMD5.MD5([method, url, JSON.stringify(params), data].join('&')).toString(HexMD5.enc.Hex);
 };
-// 中断请求
-// function stop(controller, config, errmsg) {
-//   if (errmsg) tips.error(errmsg);
-//   if (config.url) console.log('req url error', url);
-//   controller.abort();
-//   return { ...config, signal: controller.signal }; // 需 return config，否则会报各种属性访问错误
-// }
 // 基本数据、对象、数组，去掉其中的 undefined、null, ''
 function walkData(data) {
-  let isArray = Array.isArray(data);
-
-  // 先删掉数组中不需要的项
-  if (isArray) {
-    let delIndex = data.findIndex((curr) => curr === undefined || curr === null);
-    while (delIndex !== -1) {
-      data.splice(delIndex, 1);
-      delIndex = data.findIndex((curr) => curr === undefined || curr === null);
-    }
+  if (Array.isArray(data)) {
+    data = data.filter((curr) => ![undefined, null, ''].includes(curr));
   }
 
   Object.keys(data).forEach((key, index) => {
@@ -59,9 +48,7 @@ function walkData(data) {
       delete data[key];
     }
 
-    if (val !== null && typeof val === 'object') {
-      walkData(val);
-    }
+    if (typeof val === 'object') walkData(val);
   });
 
   return data;
@@ -70,66 +57,14 @@ function walkData(data) {
 const service = axios.create();
 // 拦截请求
 service.interceptors.request.use(
-  (config) => {
-    // const controller = new AbortController();
-
-    // const { url, cacheTime, data } = config;
-    // if (!url) return stop(controller, config, `缺少 url`);
-    // if (data) walkData(data);
-
-    // // 需要 token，进行校验
-    // if (!config.withoutToken) {
-    //   const { authorization } = useApp();
-    //   if (!authorization) return stop(controller, config, '缺少 authorization');
-    //   config.headers.Authorization = authorization;
-    // }
-    // // 非白名单接口，验证接口权限
-    // let fullUrl = config.baseURL + url;
-    // if (!cgiWhiteList.includes(fullUrl)) {
-    //   /**
-    //    * 验证权限。路由跳转时，才进行 menus、cgi 的生成；
-    //    * 1. 登陆之后跳 - 可以
-    //    * 2. 页面直接刷新 - 也会发生路由导航，menus、cgi 也会生成
-    //    */
-    //   let { cgis } = useMenus();
-    //   if (!cgis.includes(fullUrl)) return stop(controller, config, `接口缺少权限：${fullUrl}`);
-    // }
-
-    // // 处理缓存
-    // if (cacheTime) {
-    //   const requestKey = getRequestKey(config);
-    //   // 如果有缓存数据并且未过期
-    //   const { cache, expired, controller: storeController } = cacheMap.get(requestKey) || { cache: 0 };
-
-    //   if (cache === 0) {
-    //     cacheMap.set(requestKey, {
-    //       cache: undefined,
-    //       expired: Date.now() + cacheTime,
-    //       controller,
-    //     });
-    //   } else if (cache === undefined) {
-    //     // 已有请求中的数据 todo
-    //     return stop(storeController, config, '');
-    //   } else {
-    //     if (Date.now() - expired < cacheTime) {
-    //       console.log('有缓存', cacheTime);
-
-    //       return stop(storeController, config, ''); // 缓存，存在，预期是取消吗？return config 才能走到 response
-    //     } else {
-    //       delete cacheMap[requestKey]; // 缓存过期，移除
-    //     }
-    //   }
-    // }
-
-    return config;
-  },
+  (config) => config,
   (error) => {
     return Promise.reject(error);
   },
 );
 // 拦截响应
 service.interceptors.response.use(
-  // 业务错误。status=200
+  // 正常响应，包括业务“错误”。status=200
   (response) => {
     let isSilent = response?.config?.silent;
     let code = response?.data?.code;
@@ -139,10 +74,16 @@ service.interceptors.response.use(
     if (code === errmap.TOKEN_ERR) {
       const redirect = encodeURIComponent(window.location.href);
       router.push(`/login?redirect=${redirect}`);
-      useApp().clearToken(); // ⬜ 守卫移除请求
+      useApp().clearToken();
     }
 
-    cacheMap[getRequestKey(response.config)].fullfilled = true;
+    let requestKey = getRequestKey(response.config);
+    let cache = cacheMap[requestKey];
+    cache.fullfilled = true;
+    if (!cache.data) {
+      delete cacheMap[requestKey];
+      console.log('🔎 ~ cacheMap[requestKey]:', cacheMap[requestKey]);
+    } // 请求完成，删除非缓存请求
 
     return response.data;
   },
@@ -150,19 +91,17 @@ service.interceptors.response.use(
   (error) => {
     console.log('network error', error);
 
-    let response = error?.response;
-
-    let requestKey = getRequestKey(response.config);
+    let requestKey = getRequestKey(error.config);
     let cache = cacheMap[requestKey];
     cache.fullfilled = true;
-    // 请求完成，删除非缓存请求
     if (!cache.data) {
       delete cacheMap[requestKey];
-    }
+      console.log('🔎 ~ cacheMap[requestKey]:', cacheMap[requestKey]);
+    } // 请求完成，删除非缓存请求
 
     // 非中止、沉默的请求，提示错误信息
-    if (error.name !== 'CanceledError' && !response?.config?.silent && response?.status) {
-      tips.error(`${response?.config?.url}: ${response?.status}`);
+    if (error.name !== 'CanceledError' && !error.config.silent && error.response.status) {
+      tips.error(`${error.config?.url}: ${error.response.status}`);
     }
 
     // console.dir(error) // 可在此进行错误上报
@@ -177,6 +116,7 @@ service.interceptors.response.use(
 function stop(config, errmsg) {
   if (errmsg) tips.error(errmsg);
   if (config.url) console.log('req url error', config.url);
+
   return Promise.resolve({
     code: -1,
     errmsg,
@@ -202,7 +142,7 @@ function validity(config) {
      * 2. 页面直接刷新 - 也会发生路由导航，menus、cgi 也会生成
      */
     let { cgis } = useMenus();
-    if (!cgis.includes(fullUrl)) return stop(config, `接口缺少权限：${fullUrl}`);
+    if (!cgis.includes(fullUrl)) return `接口缺少权限：${fullUrl}`;
   }
 
   return false;
@@ -257,7 +197,7 @@ function request(config) {
       // ---
       ...(config.cacheTime
         ? {
-            data: promise, // ⬜ 这里可以是 promise
+            data: promise,
             expired: Date.now() + config.cacheTime,
             fullfilled: false,
           }
