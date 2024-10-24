@@ -20,7 +20,7 @@ const devConfig = {
     port: Number(process.env.VUE_APP_PORT),
     // 启动完成之后自动打开
     // open: JSON.parse(process.env.VUE_APP_OPEN),
-    // open: '//admin.engvu.tech',
+    open: 'http://admin.engvu.tech',
     // historyApiFallback: true, // 访问资源 404 之后 自动导航到 index.html
     // client: {
     //   webSocketURL: 'ws://admin.engvu.tech:3000/ws', // 替换为正确的 WebSocket 地址

@@ -6,10 +6,18 @@ import errmap from '@/common/errcode';
 import tips from '@/utils/tips';
 import { HexMD5 } from '@/utils/hash';
 
+router.beforeEach((to, from) => {
+  Object.values(cacheMap).forEach((curr) => {
+    if (!curr.fullfilled) curr.controller.abort();
+  });
+  return true;
+});
+
+// 请求缓存
+const cacheMap = {};
 // CGI 白名单，不校验权限
 const cgiWhiteList = ['/api/user/login', '/api/user/register', '/api/user/info', '/api/user/upd', '/api/resource/self'];
 
-const cacheMap = {}; // 存储正在进行的请求
 // 生成请求的唯一标识符
 const getRequestKey = (config) => {
   let { method, url, params, data } = config;
@@ -59,11 +67,7 @@ function walkData(data) {
   return data;
 }
 
-const service = axios.create({
-  baseURL: '/api',
-  timeout: 5000,
-  // withCredentials: true, // 跨域请求发送 cookie；纯后端验证不需要，通过 authorization 头发送 token
-});
+const service = axios.create();
 // 拦截请求
 service.interceptors.request.use(
   (config) => {
@@ -138,7 +142,7 @@ service.interceptors.response.use(
       useApp().clearToken(); // ⬜ 守卫移除请求
     }
 
-    cacheMap.get(getRequestKey(response.config)).fullfilled = true;
+    cacheMap[getRequestKey(response.config)].fullfilled = true;
 
     return response.data;
   },
@@ -149,7 +153,7 @@ service.interceptors.response.use(
     let response = error?.response;
 
     let requestKey = getRequestKey(response.config);
-    let cache = cacheMap.get();
+    let cache = cacheMap[requestKey];
     cache.fullfilled = true;
     // 请求完成，删除非缓存请求
     if (!cache.data) {
@@ -204,18 +208,21 @@ function validity(config) {
   return false;
 }
 
+const base = {
+  baseURL: '/api',
+  timeout: 5000,
+  headers: {},
+  // withCredentials: true, // 跨域请求发送 cookie；纯后端验证不需要，通过 authorization 头发送 token
+};
 function request(config) {
-  /**
-   * 这里做请求拦截
-   * 1. 看不到被取消的请求
-   */
+  Object.assign(config, base);
 
   let errmsg = validity(config);
   if (errmsg) return stop(config, errmsg);
 
   // 处理缓存
   const requestKey = getRequestKey(config);
-  const { data, expired, controller: storeController } = cacheMap.get(requestKey) || {};
+  const { data, expired, controller: storeController } = cacheMap[requestKey] || {};
   if (data) {
     // 有缓存数据且未过期，直接返回
     if (expired > Date.now()) return Promise.resolve(data); // todo 网络看不到
@@ -226,7 +233,15 @@ function request(config) {
   const controller = new AbortController();
   config.signal = controller.signal;
 
-  let promise = service(config); // 先触发前、后 2 个钩子
+  console.log(555, {
+    ...base,
+    ...config,
+  });
+
+  let promise = service({
+    ...base,
+    ...config,
+  }); // 先触发前、后 2 个钩子。这个 config 会覆盖掉 axios create 传入的 config
 
   /**
    * A、B 串行
@@ -237,7 +252,7 @@ function request(config) {
    */
 
   if (!storeController) {
-    cacheMap.set(requestKey, {
+    cacheMap[requestKey] = {
       controller, // 切换页面，用来取消的
       // ---
       ...(config.cacheTime
@@ -247,11 +262,40 @@ function request(config) {
             fullfilled: false,
           }
         : {}),
-    });
+    };
   }
 
   return promise;
 }
+
+// const http = {
+//   get: (url, axiosConfig, customConfig) => {
+//     // url data custom
+
+//     return request({
+//       ...base,
+//       method: 'get',
+//       baseURL: '/api',
+//       url,
+//       headers: {},
+//       param: axiosConfig.param,
+//       ...customConfig,
+//     });
+//   },
+//   post: (url, axiosConfig, customConfig) => {
+//     console.log('🔎 ~ url, axiosConfig, customConfig:', url, axiosConfig, customConfig);
+//     // url data custom
+
+//     return request({
+//       ...base,
+//       method: 'post',
+//       headers: {},
+//       url,
+//       data: axiosConfig,
+//       ...customConfig,
+//     });
+//   },
+// };
 
 export default request;
 
