@@ -155,12 +155,6 @@ async function initRoleItems(name = '', { page, limit } = { page: 0, limit: 20 }
   let res = await apiGetRoleList({ name, page, limit }); // [ { _id, name, access, cgi } ]
   if (res.code !== 0) return;
   let items = res.data.list.map((curr) => ({ label: curr.name, value: curr._id }));
-
-  setTimeout(() => {
-    console.log(44);
-    apiGetRoleList({ name, page, limit });
-  }, 1000);
-
   return items;
 }
 

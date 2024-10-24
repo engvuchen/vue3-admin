@@ -11,6 +11,7 @@ export const apiGetUserList = (data) => {
     method: 'get',
     url: '/user/list',
     params: data,
+    cacheTime: 20000, // 接口cache测试
   });
 };
 
