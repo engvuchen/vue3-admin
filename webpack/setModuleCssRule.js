@@ -2,8 +2,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 function setModuleCssRule(type, isProd) {
   let loaders = [
-    isProd ? MiniCssExtractPlugin.loader : 'style-loader', // 生产环境提取 CSS，开发环境内联 CSS。vue-style-loader 适应 vue 的样式热重载
-    // isProd ? MiniCssExtractPlugin.loader : 'vue-style-loader',
+    isProd ? MiniCssExtractPlugin.loader : 'vue-style-loader', // 生产环境提取 CSS，开发环境内联 CSS。vue-style-loader 适应 vue 的样式热重载
     {
       loader: 'css-loader',
       options: {
@@ -13,7 +12,17 @@ function setModuleCssRule(type, isProd) {
         },
       },
     },
-    'postcss-loader', // 用于处理 CSS，例如通过 autoprefixer 添加浏览器前缀
+    {
+      loader: 'postcss-loader',
+      options: {
+        postcssOptions: {
+          plugins: [
+            ['postcss-preset-env', { stage: 1, autoprefixer: { grid: true }, features: { 'nesting-rules': true } }],
+            ...(isProd ? ['cssnano'] : []),
+          ],
+        },
+      },
+    },
   ];
 
   // 处理 Sass 文件

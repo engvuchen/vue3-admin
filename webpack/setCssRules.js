@@ -9,7 +9,17 @@ function setCssRules(type, isProd) {
         importLoaders: 1, // 使 @import 的 CSS 也经过 postcss-loader 等处理
       },
     },
-    'postcss-loader', // 添加 autoprefixer 或其他 PostCSS 插件
+    {
+      loader: 'postcss-loader',
+      options: {
+        postcssOptions: {
+          plugins: [
+            ['postcss-preset-env', { stage: 1, autoprefixer: { grid: true }, features: { 'nesting-rules': true } }],
+            ...(isProd ? ['cssnano'] : []),
+          ],
+        },
+      },
+    },
   ];
 
   // 额外处理 Sass 文件

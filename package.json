@@ -21,6 +21,7 @@
     "@babel/eslint-parser": "^7.25.9",
     "axios": "^1.6.8",
     "core-js": "^3.38.1",
+    "cssnano": "^7.0.6",
     "element-plus": "^2.7.2",
     "pinia": "^2.0.14",
     "vue": "^3.4.21",

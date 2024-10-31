@@ -3,6 +3,7 @@
 
 // const StatsPlugin = require('stats-webpack-plugin');
 
+const TerserPlugin = require('terser-webpack-plugin');
 const baseConfig = require('./webpack.base.js');
 const { merge } = require('webpack-merge');
 
@@ -45,7 +46,12 @@ const prodConfig = {
   // },
 
   optimization: {
-    minimize: true, // 压缩代码
+    // minimize: true, // 压缩代码 prod 默认值
+    minimizer: [
+      new TerserPlugin({
+        extractComments: false,
+      }),
+    ],
   },
 
   plugins: [
