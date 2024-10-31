@@ -23,7 +23,11 @@
     "core-js": "^3.38.1",
     "cssnano": "^7.0.6",
     "element-plus": "^2.7.2",
+    "monaco-editor": "^0.52.0",
+    "monaco-editor-webpack-plugin": "^7.1.0",
     "pinia": "^2.0.14",
+    "postcss-reporter": "^7.1.0",
+    "postcss-warn-cleaner": "^0.1.9",
     "vue": "^3.4.21",
     "vue-router": "^4.0.5"
   },

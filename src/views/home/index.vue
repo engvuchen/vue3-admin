@@ -1,27 +1,15 @@
-<template>home</template>
+<template>
+  <div id="editor" style="height: 100px; border: 1px solid #eee"></div>
+  home
+</template>
 <script setup lang="js">
-// import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
-
-// import { apiGetUserInfo } from '@/api/user';
-
-/**
- * 全局：
-1. `beforeEach`
-2. `afterEach`
-3. `beforeResolve`
-
-组件：
-1. `beforeRouteLeave`
-2. `beforeRouteUpate`
-3. `beforeRouteEnter`
-路由配置：
-1. beforeEnter
- */
-
-// onBeforeRouteLeave((to, from, next) => {
-//   console.log('🔎 ~ ~ onBeforeRouteLeave:');
-// });
-// onBeforeRouteUpdate((to, from, next) => {
-//   console.log('🔎 ~ ~ onBeforeRouteUpdate:');
-// });
+import { onMounted } from 'vue';
+import * as monaco from 'monaco-editor';
+onMounted(() => {
+  // 正常使用右键菜单的部分功能；JSON高亮；查找；样式正常
+  monaco.editor.create(document.getElementById('editor'), {
+    value: '{ "name": "test" }',
+    language: 'json',
+  });
+});
 </script>

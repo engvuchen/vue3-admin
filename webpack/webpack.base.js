@@ -7,6 +7,8 @@ const MinicssExtractPlugin = require('mini-css-extract-plugin');
 const setCssRules = require('./setCssRules');
 const setModuleCssRule = require('./setModuleCssRule');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+
 // const HappyPack = require('happypack');
 
 // const Smp = require('speed-measure-webpack-plugin');
@@ -104,6 +106,10 @@ let config = {
         },
       ],
     }),
+    new MonacoWebpackPlugin({
+      languages: ['json'],
+      features: ['diffEditor', 'find'],
+    }),
     // new BundleAnalyzerPlugin({
     //   analyzerMode: 'server',
     //   analyzerHost: '127.0.0.1',
@@ -154,7 +160,7 @@ let config = {
       // 处理 css
       {
         test: /\.css$/i,
-        exclude: [/node_modules/, /\.module\.css$/], // 过滤 `node_modules`, `.module.css` 结尾的文件
+        exclude: [/\.module\.css$/], // 过滤 `node_modules`, `.module.css` 结尾的文件 /node_modules/
         use: setCssRules('css', isProd),
       },
       // 处理 scss、sass
