@@ -13,10 +13,7 @@ function setCssRules(type, isProd) {
       loader: 'postcss-loader',
       options: {
         postcssOptions: {
-          plugins: [
-            ['postcss-preset-env', { stage: 1, autoprefixer: { grid: true }, features: { 'nesting-rules': true } }],
-            ...(isProd ? ['cssnano'] : []),
-          ],
+          plugins: [['postcss-preset-env', { stage: 2, autoprefixer: {} }]], // ...(isProd ? ['cssnano'] : [])
         },
       },
     },

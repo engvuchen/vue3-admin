@@ -8,6 +8,7 @@ function setModuleCssRule(type, isProd) {
       options: {
         importLoaders: 1, // 确保 @import 的文件也经过 postcss-loader 处理
         modules: {
+          namedExport: false,
           localIdentName: isProd ? '[contenthash:6]' : '[path][name]__[local]', // 生产环境使用哈希类名，开发环境使用可读性强的类名
         },
       },
@@ -16,10 +17,7 @@ function setModuleCssRule(type, isProd) {
       loader: 'postcss-loader',
       options: {
         postcssOptions: {
-          plugins: [
-            ['postcss-preset-env', { stage: 1, autoprefixer: { grid: true }, features: { 'nesting-rules': true } }],
-            ...(isProd ? ['cssnano'] : []),
-          ],
+          plugins: [['postcss-preset-env', { stage: 2, autoprefixer: {} }], ...(isProd ? ['cssnano'] : [])],
         },
       },
     },

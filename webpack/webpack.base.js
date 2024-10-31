@@ -82,10 +82,10 @@ let config = {
       'process.env': {
         VUE_APP_API_URI: JSON.stringify(process.env.VUE_APP_API_URI),
       },
-      // 决定 vue3 是否启用 options api
-      __VUE_OPTIONS_API__: true,
-      // Vue Devtools 在生产环境中不可用
-      __VUE_PROD_DEVTOOLS__: false,
+      // // 决定 vue3 是否启用 options api
+      // __VUE_OPTIONS_API__: true,
+      // // Vue Devtools 在生产环境中不可用
+      // __VUE_PROD_DEVTOOLS__: false,
     }),
     new MinicssExtractPlugin({
       filename: 'css/[name].[contenthash:6].css',
@@ -200,13 +200,13 @@ let config = {
         // 默认情况下 8kb 以下的资源会被转化为 base64 编码
         type: 'asset',
         parser: {
-          dataUrlCondition: {
-            // 自定义 10 kb 以下的资源会被转化为 base 64 位编码
-            maxSize: 10 * 1024,
-          },
+          // dataUrlCondition: {
+          //   // 自定义 10 kb 以下的资源会被转化为 base 64 位编码
+          //   maxSize: 10 * 1024,
+          // },
         },
         generator: {
-          filename: 'fonts/[name].[ext]', // 输出图片的名称
+          filename: 'fonts/[name].[ext]',
         },
       },
       // 指定目录的 svg 转为组件

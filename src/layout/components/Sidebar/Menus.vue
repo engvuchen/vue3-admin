@@ -22,7 +22,9 @@ import { storeToRefs } from 'pinia';
 import Submenu from './Submenu.vue';
 import { useMenus } from '@/pinia/modules/menu';
 
-import * as config from './config/menu.module.scss'; // namedExport=true，空对象
+import config from './config/menu.module.scss';
+
+console.log('config', config);
 
 defineProps({
   collapse: {
