@@ -17,7 +17,10 @@ function setModuleCssRule(type, isProd) {
       loader: 'postcss-loader',
       options: {
         postcssOptions: {
-          plugins: [['postcss-preset-env', { stage: 2, autoprefixer: {} }], ...(isProd ? ['cssnano'] : [])],
+          plugins: [
+            ['postcss-preset-env', { stage: 2, autoprefixer: {} }],
+            // ...(isProd ? ['cssnano'] : [])
+          ],
         },
       },
     },

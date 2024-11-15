@@ -44,6 +44,7 @@
     "cross-env": "^7.0.3",
     "css-loader": "^7.1.2",
     "dotenv": "^16.4.5",
+    "esbuild-loader": "^4.2.2",
     "eslint": "^8.35.0",
     "eslint-config-alloy": "^4.9.0",
     "eslint-plugin-vue": "^9.9.0",
