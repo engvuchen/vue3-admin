@@ -39,8 +39,15 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { apiTest } from '@/api/user';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'; // 这种导入可以正确分包；import * as monaco from 'monaco-editor';
-import 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js'; // 从 node_modules\monaco-editor\esm\vs\editor\editor.all.js 取出
+// import * as monaco from 'monaco-editor'; // 可被插件正确分包
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'; // 按需导入
+// /codicon/codicon.css
+// import './codicon/codicon.css';
+// import './codicon/codicon-modifiers.css';
+// node_modules\monaco-editor\esm\vs\base\browser\ui\codicons\codiconStyles.js
+// node_modules\monaco-editor\esm\vs\base\browser\ui\codicons\codicon\codicon.css
+import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css';
+import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon-modifiers.css';
 
 // 表格列配置，大部分属性跟el-table-column配置一样
 const columns = [

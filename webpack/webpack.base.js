@@ -40,6 +40,7 @@ let config = {
     filename: 'js/[name].[contenthash:6].js', // 使用文件指纹
     clean: true, // 从 webpack5 开始，clean=true,每一次构建会自动清理输出目录
     publicPath: '/', // 打包后访问的资源前缀
+    // publicPath: '', // 打包后访问的资源前缀. '/' 是根目录的意思. 如果是上传到 CDN 的话, 这里是 CDN 地址
   },
   // 配置路径别名
   resolve: {
@@ -55,6 +56,12 @@ let config = {
     splitChunks: {
       chunks: 'all', // 任意模块都可以拆分F
       cacheGroups: {
+        'monaco-editor': {
+          name: 'monaco-editor',
+          test: /[\\/]node_modules[\\/]monaco-editor/,
+          priority: 10,
+          reuseExistingChunk: true, // 不需要重复拆开 chunk
+        },
         // node_modules 独立拆成另一个包
         vendors: {
           name: 'vendors',
@@ -206,7 +213,7 @@ let config = {
           // },
         },
         generator: {
-          filename: 'fonts/[name].[ext]',
+          filename: 'fonts/[name][ext]',
         },
       },
       // 指定目录的 svg 转为组件

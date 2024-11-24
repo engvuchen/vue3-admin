@@ -1,11 +1,29 @@
+// const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 function setCssRules(type, isProd) {
   let loaders = [
-    isProd ? MiniCssExtractPlugin.loader : 'vue-style-loader', // 生产环境使用 MiniCssExtractPlugin，开发环境使用 style-loader
+    isProd
+      ? {
+          loader: MiniCssExtractPlugin.loader,
+          options: {
+            // D:\02-my-code\vue3-admin\webpack\setCssRules.js
+
+            publicPath: '/02-my-code/vue3-admin/dist',
+            // publicPath: 'auto', // 配置字体和图片文件的公共路径. auto '' 都一样不对
+            // publicPath: (resourcePath, context) => {
+            //   // publicPath 是资源相对于上下文的相对路径
+            //   // 例如：对于 ./css/admin/main.css publicPath 将会是 ../../
+            //   // 而对于 ./css/main.css publicPath 将会是 ../
+            //   return path.relative(path.dirname(resourcePath), context) + '/';
+            // },
+          },
+        }
+      : 'vue-style-loader', // 生产环境使用 MiniCssExtractPlugin，开发环境使用 style-loader
     {
       loader: 'css-loader',
       options: {
+        url: true,
         importLoaders: 1, // 使 @import 的 CSS 也经过 postcss-loader 等处理
       },
     },
