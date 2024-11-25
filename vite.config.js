@@ -1,18 +1,35 @@
 import path from 'path';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import legacy from '@vitejs/plugin-legacy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 // import viteCompression from 'vite-plugin-compression';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // https://vitejs.dev/config/
 export default (env) => {
   return defineConfig({
     plugins: [
+      nodeResolve({
+        modulePaths: [
+          path.resolve(process.cwd(), './node_modules'),
+          path.resolve(process.cwd(), './src/components/biz/components'),
+          path.resolve(process.cwd(), './src'),
+        ],
+      }),
+      nodePolyfills({
+        include: ['buffer'],
+      }),
       vue(),
       // https://github.com/vbenjs/vite-plugin-svg-icons/blob/main/README.zh_CN.md
       createSvgIconsPlugin({
         iconDirs: [path.resolve(__dirname, 'src/assets/svg')], // 指定需要缓存的图标文件夹
         symbolId: 'icon-[dir]-[name]', // 指定symbolId格式
+      }),
+      // 生成浏览器兼容文件
+      legacy({
+        targets: ['defaults', 'not IE 11'],
       }),
       // viteCompression({
       //   verbose: true, // 是否在控制台输出压缩结果
@@ -48,16 +65,23 @@ export default (env) => {
       // },
     },
     build: {
-      esbuild: {
-        pure: ['console.log'], // 删除 console.log
-        drop: ['debugger'], // 删除 debugger
+      commonjsOptions: {
+        include: /node_modules|src/,
       },
       reportCompressedSize: false, // 启用/禁用 gzip 压缩大小报告。压缩大型输出文件可能会很慢，因此禁用该功能可能会提高大型项目的构建性能。
       rollupOptions: {
         output: {
-          manualChunks: {
-            // 拆分单独模块
-            'element-plus': ['element-plus'],
+          // manualChunks: {
+          //   // 拆分单独模块
+          //   'element-plus': ['element-plus'],
+          // },
+          manualChunks(id) {
+            // todo 设置分包，所有 legacy 都没了
+
+            // 根据模块路径手动分割
+            if (id.includes('node_modules/element-plus')) {
+              return 'element-plus';
+            }
           },
         },
       },
