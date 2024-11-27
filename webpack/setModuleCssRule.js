@@ -7,8 +7,8 @@ function setModuleCssRule(type, isProd) {
       ? {
           loader: MiniCssExtractPlugin.loader,
           options: {
+            publicPath: '/',
             // publicPath: './', // 指向系统根目录, 当然不对;而且是个 file 链接
-            publicPath: '/02-my-code/vue3-admin/dist', // 线上编译,也不是把东西放在根目录
             // publicPath: 'auto', // 配置字体和图片文件的公共路径
             // publicPath: (resourcePath, context) => {
             //   // publicPath 是资源相对于上下文的相对路径

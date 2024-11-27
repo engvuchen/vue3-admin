@@ -7,9 +7,7 @@ function setCssRules(type, isProd) {
       ? {
           loader: MiniCssExtractPlugin.loader,
           options: {
-            // D:\02-my-code\vue3-admin\webpack\setCssRules.js
-
-            publicPath: '/02-my-code/vue3-admin/dist',
+            publicPath: '/',
             // publicPath: 'auto', // 配置字体和图片文件的公共路径. auto '' 都一样不对
             // publicPath: (resourcePath, context) => {
             //   // publicPath 是资源相对于上下文的相对路径
