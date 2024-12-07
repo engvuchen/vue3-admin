@@ -7,7 +7,7 @@ const MinicssExtractPlugin = require('mini-css-extract-plugin');
 const setCssRules = require('./setCssRules');
 const setModuleCssRule = require('./setModuleCssRule');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+// const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 // const HappyPack = require('happypack');
 
@@ -113,10 +113,10 @@ let config = {
         },
       ],
     }),
-    new MonacoWebpackPlugin({
-      languages: ['json'],
-      features: ['diffEditor', 'find'],
-    }),
+    // new MonacoWebpackPlugin({
+    //   languages: ['json'],
+    //   features: ['diffEditor', 'find'],
+    // }),
     // new BundleAnalyzerPlugin({
     //   analyzerMode: 'server',
     //   analyzerHost: '127.0.0.1',
