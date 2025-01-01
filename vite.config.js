@@ -3,6 +3,8 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
+// import vueSwc from './vite-swc';
+
 // import viteCompression from 'vite-plugin-compression';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
@@ -21,6 +23,7 @@ export default (env) => {
       nodePolyfills({
         include: ['buffer'],
       }),
+      // vueSwc(),
       vue(),
       // https://github.com/vbenjs/vite-plugin-svg-icons/blob/main/README.zh_CN.md
       createSvgIconsPlugin({

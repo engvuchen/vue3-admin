@@ -19,6 +19,7 @@
   "dependencies": {
     "@rollup/plugin-node-resolve": "^15.3.0",
     "@vitejs/plugin-legacy": "^5.4.3",
+    "@swc/core": "^1.10.0",
     "axios": "^1.6.8",
     "element-plus": "^2.7.2",
     "pinia": "^2.0.14",
