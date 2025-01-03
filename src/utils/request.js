@@ -29,10 +29,11 @@ router.beforeEach((to, from) => {
 const getRequestKey = (config) => {
   let { method, url, params, data } = config;
 
-  // 响应后拦截，data 根据 contentType 发生变化：
-  // json -> json字符串
-  // formdata -> 保持不变
-
+  /**
+   * 响应后拦截，data 根据 contentType 发生变化：
+   * json -> json字符串。这里的处理是还原 JSON
+   * formdata -> 保持不变
+   */
   if (Object.prototype.toString.call(data).slice(8, -1) === 'Object') {
     data = JSON.stringify(data);
   }
@@ -114,15 +115,13 @@ service.interceptors.response.use(
       tips.error(`${error.config?.url}: ${error.response.status}`);
     }
 
-    // console.dir(error) // 可在此进行错误上报
-    // tips.closeAll();
-
     return Promise.resolve({
       code: -1,
     });
   },
 );
 
+/** 显示报错信息、返回 -1 的 Promise.resolve */
 function stop(config, errmsg) {
   if (errmsg) tips.error(errmsg);
   if (config.url) console.log('req url error', config.url);
@@ -193,7 +192,7 @@ function request(config) {
    * 1. A 完成后，B 才发起；- A已创建缓存。缓存有数据。- B 不发起请求
    * 2. A 未完成，B 就发起；- A已创建缓存。缓存无数据，B 等待 A 完成 - B 不发起请求
    *
-   * A、B 并行：都会有请求，都会设置缓存 - 无解
+   * A、B 并行：都会有请求，缓存未设置。但JS是单线程的，实践中没发现有同时并行的请求；
    */
 
   // 创建缓存
