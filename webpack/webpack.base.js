@@ -7,7 +7,8 @@ const MinicssExtractPlugin = require('mini-css-extract-plugin');
 const setCssRules = require('./setCssRules');
 const setModuleCssRule = require('./setModuleCssRule');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-// const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+
+// const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin'); // 初始包不能用插件，会打包出 worker 文件
 
 // const HappyPack = require('happypack');
 
@@ -56,12 +57,18 @@ let config = {
     splitChunks: {
       chunks: 'all', // 任意模块都可以拆分F
       cacheGroups: {
-        'monaco-editor': {
-          name: 'monaco-editor',
-          test: /[\\/]node_modules[\\/]monaco-editor/,
-          priority: 10,
-          reuseExistingChunk: true, // 不需要重复拆开 chunk
-        },
+        // 'monaco-editor': {
+        //   name: 'monaco-editor',
+        //   test: /[\\/]node_modules[\\/]monaco-editor/,
+        //   priority: 10,
+        //   // chunks: 'all',
+        //   reuseExistingChunk: true, // 不需要重复拆开 chunk
+        // },
+        // workers: {
+        //   test: /\.worker\.js$/,
+        //   name: 'monaco-workers',
+        //   chunks: 'all',
+        // },
         // node_modules 独立拆成另一个包
         vendors: {
           name: 'vendors',

@@ -40,14 +40,14 @@
 import { ref, onMounted } from 'vue';
 import { apiTest } from '@/api/user';
 // import * as monaco from 'monaco-editor'; // 可被插件正确分包
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'; // 按需导入
+// import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'; // 按需导入
 // /codicon/codicon.css
 // import './codicon/codicon.css';
 // import './codicon/codicon-modifiers.css';
 // node_modules\monaco-editor\esm\vs\base\browser\ui\codicons\codiconStyles.js
 // node_modules\monaco-editor\esm\vs\base\browser\ui\codicons\codicon\codicon.css
-import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css';
-import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon-modifiers.css';
+// import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css';
+// import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon-modifiers.css';
 
 // 表格列配置，大部分属性跟el-table-column配置一样
 const columns = [
@@ -243,7 +243,7 @@ async function getList(params) {
 
 onMounted(() => {
   // 正常使用右键菜单的部分功能；JSON高亮；查找；样式正常
-  monaco.editor.create(document.getElementById('editor'), {
+  window.monaco.editor.create(document.getElementById('editor'), {
     value: '{ "name": "test" }',
     language: 'json',
   });
