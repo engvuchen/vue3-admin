@@ -51,7 +51,7 @@ const prodConfig = {
       new EsbuildPlugin({
         // 13742 - 24% 提升
         target: ['es2015'], // 'safari12'
-        css: true,
+        css: true, // css 压缩，不需要 cssnaco
       }),
     ],
   },
