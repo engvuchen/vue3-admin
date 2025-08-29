@@ -13,7 +13,9 @@ export function initCodeEditor() {
         import(
           /* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/contrib/find/browser/findController.js'
         ),
-        import(/* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js'),
+        import(
+          /* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js'
+        ),
         // 折叠代码
         import(
           /* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js'
@@ -65,19 +67,23 @@ export function loadCodeEditor(elId, code, options = {}) {
  * @param {*} options 其余配置
  */
 export function loadDiffEditor(elId, originalCode, modifiedCode, options = {}) {
-  !options.language && (options.language = 'json');
-  // 左右对比模式，inline，默认是前者
-  !options.renderSideBySide && (options.renderSideBySide = true);
+  let editorOptions = Object.assign(
+    {
+      language: 'json',
+      renderSideBySide: true, // true: 左右对比 false: 内联对比
+      splitView: true,
+    },
+    options,
+  );
+  console.log('❗️ ~ loadDiffEditor ~ editorOptions:', editorOptions);
 
   return new Promise((resolved) => {
     initCodeEditor().then(() => {
-      const editor = window.monaco.editor.createDiffEditor(document.getElementById(elId), {
-        ...options,
-      });
+      const editor = window.monaco.editor.createDiffEditor(document.getElementById(elId), options);
 
       editor.setModel({
-        original: window.monaco.editor.createModel(originalCode, options.language),
-        modified: window.monaco.editor.createModel(modifiedCode, options.language),
+        original: window.monaco.editor.createModel(originalCode, editorOptions.language),
+        modified: window.monaco.editor.createModel(modifiedCode, editorOptions.language),
       });
 
       resolved(editor);

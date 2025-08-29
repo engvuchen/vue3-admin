@@ -12,13 +12,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { computed, watch, onMounted, onUnmounted } from 'vue';
 import { loadCodeEditor } from './index.js';
-
-/**
- * <editor id="editor" v-model="editorValue" :config=""></editor>
- * const config = ref({ disabled: true })
- */
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -32,40 +27,36 @@ const props = defineProps({
     default: () => ({}),
   },
 });
-const options = computed(() => {
-  return Object.assign(
-    {
-      width: 645,
-      height: 400,
-      disabled: false,
-      language: 'json',
-    },
-    props.config,
-  );
-});
 
+// props.config -> options / editorOptions
+const options = computed(() => {
+  return {
+    width: 645,
+    height: 400,
+    readOnly: false,
+    language: 'json',
+    ...props.config,
+  };
+});
 const editorOptions = computed(() => {
+  // eslint-disable-next-line no-unused-vars
   const { width, height, ...restOptions } = options.value;
   return restOptions;
 });
 
 /**
- * 1. 用户输入 -> valueChange -> update modelValue
- * 2. modelValue.value === 'xxx' -> valueChange -> update modelValue
+ * 1. 用户输入 -> 组件 valueChange -> 触发 change：update modelValue（触发 2）
+ * 2. modelValue.value === 'xxx' -> 组件 valueChange -> update modelValue（2 者值一致，不变更）
  */
-
 watch(
   () => props.modelValue,
-  (newValue, oldValue) => {
-    console.log('🔎 ~ newValue:', newValue);
+  (newValue) => {
     updateEditor(props.id, newValue);
   },
 );
 watch(
-  editorOptions,
+  () => editorOptions.value,
   (newOptions) => {
-    console.log('newOptions', newOptions);
-
     updateEditor(props.id, getEditorValue(), newOptions);
   },
   {
@@ -75,27 +66,18 @@ watch(
 
 const emit = defineEmits(['update:modelValue', 'change']);
 
-const editor = null;
-
+let editor = null;
 onMounted(async () => {
   editor = await initEditor(props.id, props.modelValue, editorOptions.value);
   onEditorValueChange();
 });
 onUnmounted(() => {
   editor?.dispose?.();
-  removeStyle();
 });
 
-/**
- * 初始化普通编辑器；
- * 防呆设计，先卸载后注册
- * @returns { getValue, setValue }
- */
-async function initEditor(eleId = '', value = '', options = { readOnly: false, language: 'protobuf' }) {
-  appendStyle();
+async function initEditor(eleId = '', value = '', options = { readOnly: false, language: 'json' }) {
   return await loadCodeEditor(eleId, value, options);
 }
-/** 更新普通编辑器的值、选项 */
 async function updateEditor(eleId = '', newValue, options) {
   if (!editor) {
     console.error(`[Not Found] Try initEditor('${eleId}')`);
@@ -103,9 +85,8 @@ async function updateEditor(eleId = '', newValue, options) {
   }
 
   const current = editor.getValue();
-
   if (current !== newValue) {
-    editor.setValue(newValue);
+    editor.setValue(newValue); // todo
   }
   if (options) editor.updateOptions(options);
   if (options && options.language) {
@@ -122,7 +103,6 @@ function onEditorValueChange() {
     }),
   );
 }
-/** 获取普通编辑器的值 */
 function getEditorValue() {
   if (!editor) return '';
   return editor.getValue();
@@ -130,59 +110,16 @@ function getEditorValue() {
 function valueChange() {
   const newValue = getEditorValue();
 
-  console.log('🔎 ~ valueChange ~ newValue !== props.modelValue:', newValue, props.modelValue);
-
-  if (newValue !== props.modelValue) {
-    emit('change', newValue);
-    emit('update:modelValue', newValue);
-  }
+  emit('change', newValue);
+  emit('update:modelValue', newValue);
 }
 
-const style = ref(null);
-function appendStyle() {
-  if (style.value) return;
-
-  const styleEl = document.createElement('style');
-  styleEl.id = 'monaco-editor-mixin-style';
-  styleEl.textContent = `.editor {
-    .button {
-        padding: 0 !important;
-        min-width: auto !important;
-        border: none;
-    }
-    .input {
-        border: none;
-        padding: 2px 4px;
-        font-size: 13px;
-    }
-    textarea {
-        padding: 0;
-        overflow: hidden;
-    }
-    .mirror {
-        position: absolute;
-        display: inline-block;
-        width: 100%;
-        top: 0;
-        left: 0;
-        box-sizing: border-box;
-        white-space: pre-wrap;
-        visibility: hidden;
-        word-wrap: break-word;
-    }
-}`;
-  document.head.appendChild(styleEl);
-  style.value = styleEl;
-}
-function removeStyle() {
-  if (style.value) style.value.remove();
-}
 function debounce(fn, delay = 200) {
   let timer;
   return function (...args) {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
-      fn.apply(this, args);
+      fn(...args);
     }, delay);
   };
 }

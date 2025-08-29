@@ -1,40 +1,52 @@
 <template>
   <!-- <div id="editor" style="height: 100px; border: 1px solid #eee"></div> -->
   home111
-  <div style="margin-bottom: 20px;">
-    <el-button @click="editorVisible = !editorVisible">切换显示/隐藏</el-button>
-    <el-button @click="editorConfig.readOnly = !editorConfig.readOnly">切换禁用/可用</el-button>
-    <el-button @click="editorValue = JSON.stringify({ name: 'update' })">更新普通编辑器</el-button>
-    <el-button @click="console.log('editorValue', editorValue)">获取普通编辑器的值</el-button>
-    <el-button @click="switchLanguage">切换语言（lua/json）</el-button>
+  <div style="margin-bottom: 40px">
+    <div style="margin-bottom: 20px">
+      <el-button @click="editorVisible = !editorVisible">切换显示/隐藏</el-button>
+      <el-button @click="editorConfig.readOnly = !editorConfig.readOnly">切换禁用/可用</el-button>
+      <el-button @click="editorValue = JSON.stringify({ name: 'update' })">更新普通编辑器</el-button>
+      <el-button @click="console.log('editorValue', editorValue)">获取普通编辑器的值</el-button>
+      <el-button @click="switchLanguage">切换语言（lua/json）</el-button>
+    </div>
+    <Editor
+      id="jsonEditor"
+      v-if="editorVisible"
+      v-model="editorValue"
+      :config="editorConfig"
+      @change="onValueChange"
+    ></Editor>
   </div>
-  <Editor
-    id="jsonEditor"
-    v-if="editorVisible"
-    v-model="editorValue"
-    :config="editorConfig"
-    @change="onValueChange"
-  ></Editor>
+  <div style="margin-bottom: 40px">
+    <div style="margin-bottom: 20px">
+      <el-button @click="diffEditorVisible = !diffEditorVisible">切换显示/隐藏</el-button>
+      <el-button @click="diffEditorConfig.readOnly = !diffEditorConfig.readOnly">切换禁用/可用</el-button>
+      <el-button @click="diffEditorValue = [JSON.stringify({ name: 'oxxxx' }), JSON.stringify({ name: 'rrr' })]"
+        >更新普通编辑器</el-button
+      >
+      <el-button @click="console.log('diffEditorValue', toRaw(diffEditorValue))">获取普通编辑器的值</el-button>
+      <el-button @click="switchDiffLanguage">切换语言（lua/json）</el-button>
+    </div>
+    <DiffEditor
+      id="diffEditor"
+      v-if="diffEditorVisible"
+      v-model="diffEditorValue"
+      :config="diffEditorConfig"
+      @change="onDiffValueChange"
+    ></DiffEditor>
+  </div>
 </template>
 <script setup lang="js">
-import { ref, onMounted } from 'vue';
+import { ref, toRaw } from 'vue';
 import Editor from '@/components/Editor/index.vue';
+import DiffEditor from '@/components/Editor/diff.vue';
 
 const editorVisible = ref(true);
-
 const editorValue = ref(JSON.stringify({ name: 'zqian' }));
 const editorConfig = ref({
   readOnly: false,
   language: 'json',
 });
-
-// import { loadCodeEditor } from '@/utils/editor/index';
-
-// # 完全导入
-// import * as monaco from 'monaco-editor'; // 可被插件正确分包
-// import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-// import 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js'; // 从 node_modules\monaco-editor\esm\vs\editor\editor.all.js 取出
-
 function switchLanguage() {
   editorConfig.value.language = editorConfig.value.language === 'json' ? 'protobuf' : 'json';
 
@@ -46,26 +58,38 @@ function switchLanguage() {
 }`;
   }
 }
-
-function onValueChange(data) {
-  console.log('❗️ ~ parent ~ data:', data);
+function onValueChange() {
+  console.log('normal onValueChange', editorValue.value);
 }
 
-onMounted(() => {
-  // 正常使用右键菜单的部分功能；JSON高亮；查找；样式正常
-  // monaco.editor.create(document.getElementById('editor'), {
-  //   value: '{ "name": "test" }',
-  //   language: 'json',
-  // });
-  // loadCodeEditor(
-  //   'editor',
-  //   JSON.stringify({
-  //     value: '13',
-  //     age: 333,
-  //   }),
-  //   {
-  //     language: 'json',
-  //   },
-  // );
+const diffEditorVisible = ref(false);
+const diffEditorValue = ref([JSON.stringify({ name: 'origin' }), JSON.stringify({ name: 'new' })]);
+const diffEditorConfig = ref({
+  width: 1000,
+  readOnly: false,
+  language: 'json',
 });
+function switchDiffLanguage() {
+  diffEditorConfig.value.language = diffEditorConfig.value.language === 'json' ? 'protobuf' : 'json';
+
+  if (diffEditorConfig.value.language === 'json') {
+    diffEditorValue.value = [
+      JSON.stringify({ name: 'switch language json' }),
+      JSON.stringify({ name: 'switch language protobuf' }),
+    ];
+  } else {
+    diffEditorValue.value = [
+      `message Test1 {
+    optional string name1 = 1;
+}`,
+      `message Test2 {
+    optional string name2 = 1;
+}`,
+    ];
+  }
+}
+
+function onDiffValueChange(data) {
+  console.log('❗️ ~ parent ~ data:', data);
+}
 </script>
