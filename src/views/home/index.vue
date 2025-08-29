@@ -1,7 +1,7 @@
 <template>
   <!-- <div id="editor" style="height: 100px; border: 1px solid #eee"></div> -->
   home111
-  <div>
+  <div style="margin-bottom: 20px;">
     <el-button @click="editorVisible = !editorVisible">切换显示/隐藏</el-button>
     <el-button @click="editorConfig.readOnly = !editorConfig.readOnly">切换禁用/可用</el-button>
     <el-button @click="editorValue = JSON.stringify({ name: 'update' })">更新普通编辑器</el-button>
@@ -21,7 +21,6 @@ import { ref, onMounted } from 'vue';
 import Editor from '@/components/Editor/index.vue';
 
 const editorVisible = ref(true);
-// const editorReadOnly = ref(false);
 
 const editorValue = ref(JSON.stringify({ name: 'zqian' }));
 const editorConfig = ref({
@@ -39,8 +38,6 @@ const editorConfig = ref({
 function switchLanguage() {
   editorConfig.value.language = editorConfig.value.language === 'json' ? 'protobuf' : 'json';
 
-  console.log('❗️ ~ switchLanguage ~ editorConfig.value.language:', editorConfig.value.language);
-
   if (editorConfig.value.language === 'json') {
     editorValue.value = JSON.stringify({ name: 'language json' });
   } else {
@@ -51,7 +48,7 @@ function switchLanguage() {
 }
 
 function onValueChange(data) {
-  console.log('❗️ ~ onValueChange ~ data:', data);
+  console.log('❗️ ~ parent ~ data:', data);
 }
 
 onMounted(() => {
