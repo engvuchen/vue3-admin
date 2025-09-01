@@ -2,37 +2,28 @@
 let isCodeEditorLoaded = false;
 
 /** 初始化代码编辑器 */
-export function initCodeEditor() {
-  return new Promise(async (resolved) => {
-    if (!isCodeEditorLoaded) {
-      // note: vite 编辑器核心代码/语言配置同时加载，语言配置会报 monaco 不存在
-      let [monaco] = await Promise.all([
-        import(/* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/editor.api.js'),
-        // import(/* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/browser/coreCommands.js'),
-        // 查找代码
-        import(
-          /* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/contrib/find/browser/findController.js'
-        ),
-        import(
-          /* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js'
-        ),
-        // 折叠代码
-        import(
-          /* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js'
-        ),
-      ]);
-      window.monaco = monaco;
+export async function initCodeEditor() {
+  if (isCodeEditorLoaded) return;
 
-      await Promise.all([
-        import(/* webpackChunkName: "monaco-editor" */ './monaco-language-protobuf.js'), // 支持protobuf语法高亮
-        import(/* webpackChunkName: "monaco-editor" */ './monaco-language-json.js'), // 支持json语法高亮
-      ]);
-      isCodeEditorLoaded = true;
-      resolved();
-    } else {
-      resolved();
-    }
-  });
+  // note: vite 编辑器核心代码/语言配置同时加载，语言配置会报 monaco 不存在
+  let [monaco] = await Promise.all([
+    import(/* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/editor.api.js'),
+    // import(/* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/browser/coreCommands.js'),
+    // 查找代码
+    import(
+      /* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/contrib/find/browser/findController.js'
+    ),
+    import(/* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js'),
+    // 折叠代码
+    import(/* webpackChunkName: "monaco-editor" */ 'monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js'),
+  ]);
+  window.monaco = monaco;
+
+  await Promise.all([
+    import(/* webpackChunkName: "monaco-editor" */ './monaco-language-protobuf.js'), // 支持protobuf语法高亮
+    import(/* webpackChunkName: "monaco-editor" */ './monaco-language-json.js'), // 支持json语法高亮
+  ]);
+  isCodeEditorLoaded = true;
 }
 
 /**
@@ -41,22 +32,19 @@ export function initCodeEditor() {
  * @param {*} code 代码内容
  * @param {*} options 其余配置
  */
-export function loadCodeEditor(elId, code, options = {}) {
+export async function loadCodeEditor(elId, code, options = {}) {
   !options.language && (options.language = 'json');
 
-  return new Promise((resolved) => {
-    initCodeEditor().then(() => {
-      const editor = window.monaco.editor.create(document.getElementById(elId), {
-        ...options,
-      });
+  await initCodeEditor();
 
-      window.monaco.editor.setModelLanguage(editor.getModel(), options.language);
-      editor.setValue(code);
-      options.readOnly !== true && editor.focus();
-
-      resolved(editor);
-    });
+  const editor = window.monaco.editor.create(document.getElementById(elId), {
+    ...options,
   });
+  window.monaco.editor.setModelLanguage(editor.getModel(), options.language);
+  editor.setValue(code);
+  options.readOnly !== true && editor.focus();
+
+  return editor;
 }
 
 /**
@@ -66,27 +54,20 @@ export function loadCodeEditor(elId, code, options = {}) {
  * @param {*} modifiedCode 修改的内容
  * @param {*} options 其余配置
  */
-export function loadDiffEditor(elId, originalCode, modifiedCode, options = {}) {
-  let editorOptions = Object.assign(
-    {
-      language: 'json',
-      renderSideBySide: true, // true: 左右对比 false: 内联对比
-      splitView: true,
-    },
-    options,
-  );
-  console.log('❗️ ~ loadDiffEditor ~ editorOptions:', editorOptions);
+export async function loadDiffEditor(elId, originalCode, modifiedCode, options = {}) {
+  let editorOptions = {
+    language: 'json',
+    renderSideBySide: true, // true: 左右对比 false: 内联对比
+    splitView: true,
+    ...options,
+  };
 
-  return new Promise((resolved) => {
-    initCodeEditor().then(() => {
-      const editor = window.monaco.editor.createDiffEditor(document.getElementById(elId), options);
+  await initCodeEditor();
 
-      editor.setModel({
-        original: window.monaco.editor.createModel(originalCode, editorOptions.language),
-        modified: window.monaco.editor.createModel(modifiedCode, editorOptions.language),
-      });
-
-      resolved(editor);
-    });
+  const editor = window.monaco.editor.createDiffEditor(document.getElementById(elId), options);
+  editor.setModel({
+    original: window.monaco.editor.createModel(originalCode, editorOptions.language),
+    modified: window.monaco.editor.createModel(modifiedCode, editorOptions.language),
   });
+  return editor;
 }

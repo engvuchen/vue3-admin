@@ -44,7 +44,7 @@ const editorOptions = computed(() => {
 
 /**
  * 1. 用户输入(最新) -> onEditorValueChange - update modelValue -> watch modelValue （modelValue 和 editorValue 比较，防止 update 闪烁）
- * 2. modelValue.value === 'xxx'（最新） -> watch modelValue - updateEditor（同步到 editor 了） -> onEditorValueChange - update modelValue -> (阻断，modelValue 和 editoValue 比较)
+ * 2. modelValue.value = ['old', 'new']（最新） -> watch modelValue - updateEditor（同步到 editor 了） -> onEditorValueChange (阻断, modelValue 和 editoValue 比较) update modelValue
  */
 watch(
   () => props.modelValue,
@@ -81,7 +81,7 @@ onUnmounted(() => {
 async function initDiffEditor(eleId = '', value = [], options = { readOnly: false, language: 'json' }) {
   return await loadDiffEditor(eleId, value[0], value[1], options);
 }
-async function updateDiffEditor(eleId = '', value = [], options = { readOnly: false, language: 'json' }) {
+async function updateDiffEditor(eleId = '', value = [], options) {
   if (!editor) {
     console.error(`[Not Found] Try this.initDiffEditor('${eleId}')`);
     return;
@@ -99,11 +99,12 @@ async function updateDiffEditor(eleId = '', value = [], options = { readOnly: fa
   if (options) {
     editor.getOriginalEditor().updateOptions(options);
     editor.getModifiedEditor().updateOptions(options);
-  }
-  if (options.language) {
-    const model = editor.getModel();
-    window.monaco.editor.setModelLanguage(model.original, options.language);
-    window.monaco.editor.setModelLanguage(model.modified, options.language);
+
+    if (options.language) {
+      const model = editor.getModel();
+      window.monaco.editor.setModelLanguage(model.original, options.language);
+      window.monaco.editor.setModelLanguage(model.modified, options.language);
+    }
   }
 }
 
@@ -116,10 +117,10 @@ function getDiffEditorValue() {
   return [editor.getOriginalEditor().getValue(), editor.getModifiedEditor().getValue()];
 }
 function onEditorValueChange() {
-  if (!diffModalValueAndEditorValue()) return;
-
   let values = getDiffEditorValue();
   emit('change', values);
+
+  if (!diffModalValueAndEditorValue()) return;
   emit('update:modelValue', values);
 }
 function diffModalValueAndEditorValue() {

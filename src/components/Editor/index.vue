@@ -46,7 +46,7 @@ const editorOptions = computed(() => {
 
 /**
  * 1. 用户输入 -> onEditorValueChange - update modelValue -> watch modelValue （阻断，防止 update 闪烁） updateEditor
- * 2. modelValue.value === 'xxx' -> watch modelValue - updateEditor -> onEditorValueChange - update modelValue -> 普通值，modelValue 未变
+ * 2. modelValue.value = 'xxx' -> watch modelValue - updateEditor -> onEditorValueChange - update modelValue 普通值，modelValue 未变，不阻断
  */
 watch(
   () => props.modelValue,
@@ -89,9 +89,12 @@ async function updateEditor(eleId = '', newValue, options) {
   if (current !== newValue) {
     editor.setValue(newValue);
   }
-  if (options) editor.updateOptions(options);
-  if (options && options.language) {
-    window.monaco.editor.setModelLanguage(editor.getModel(), options.language);
+  if (options) {
+    editor.updateOptions(options);
+
+    if (options.language) {
+      window.monaco.editor.setModelLanguage(editor.getModel(), options.language);
+    }
   }
 }
 
