@@ -45,12 +45,13 @@ const editorOptions = computed(() => {
 });
 
 /**
- * 1. 用户输入 -> 组件 valueChange -> 触发 change：update modelValue（触发 2）
- * 2. modelValue.value === 'xxx' -> 组件 valueChange -> update modelValue（2 者值一致，不变更）
+ * 1. 用户输入 -> onEditorValueChange - update modelValue -> watch modelValue （阻断，防止 update 闪烁） updateEditor
+ * 2. modelValue.value === 'xxx' -> watch modelValue - updateEditor -> onEditorValueChange - update modelValue -> 普通值，modelValue 未变
  */
 watch(
   () => props.modelValue,
   (newValue) => {
+    if (!diffModalValueAndEditorValue()) return;
     updateEditor(props.id, newValue);
   },
 );
@@ -69,7 +70,7 @@ const emit = defineEmits(['update:modelValue', 'change']);
 let editor = null;
 onMounted(async () => {
   editor = await initEditor(props.id, props.modelValue, editorOptions.value);
-  onEditorValueChange();
+  editor.onDidChangeModelContent(debounce(onEditorValueChange));
 });
 onUnmounted(() => {
   editor?.dispose?.();
@@ -86,7 +87,7 @@ async function updateEditor(eleId = '', newValue, options) {
 
   const current = editor.getValue();
   if (current !== newValue) {
-    editor.setValue(newValue); // todo
+    editor.setValue(newValue);
   }
   if (options) editor.updateOptions(options);
   if (options && options.language) {
@@ -94,24 +95,19 @@ async function updateEditor(eleId = '', newValue, options) {
   }
 }
 
-function onEditorValueChange() {
-  if (!editor) return;
-
-  editor.onDidChangeModelContent(
-    debounce(() => {
-      valueChange();
-    }),
-  );
-}
 function getEditorValue() {
   if (!editor) return '';
   return editor.getValue();
 }
-function valueChange() {
+function onEditorValueChange() {
   const newValue = getEditorValue();
 
   emit('change', newValue);
   emit('update:modelValue', newValue);
+}
+function diffModalValueAndEditorValue() {
+  if (props.modelValue === getEditorValue()) return false;
+  return true;
 }
 
 function debounce(fn, delay = 200) {

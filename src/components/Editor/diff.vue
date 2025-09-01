@@ -43,15 +43,14 @@ const editorOptions = computed(() => {
 });
 
 /**
- * 1. 用户输入 -> valueChange -> update modelValue（触发 2）
- * 2. modelValue.value === 'xxx' -> watch modelValue（阻断 1->2 防止编辑器闪烁） -> updateEditor -> valueChange -> update modelValue （2者一致，阻断）
+ * 1. 用户输入(最新) -> onEditorValueChange - update modelValue -> watch modelValue （modelValue 和 editorValue 比较，防止 update 闪烁）
+ * 2. modelValue.value === 'xxx'（最新） -> watch modelValue - updateEditor（同步到 editor 了） -> onEditorValueChange - update modelValue -> (阻断，modelValue 和 editoValue 比较)
  */
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (JSON.stringify(newValue) !== JSON.stringify(getDiffEditorValue())) {
-      updateDiffEditor(props.id, newValue);
-    }
+    if (!diffModalValueAndEditorValue(newValue)) return;
+    updateDiffEditor(props.id, newValue);
   },
   {
     deep: true,
@@ -72,7 +71,8 @@ const emit = defineEmits(['update:modelValue', 'change']);
 let editor = null;
 onMounted(async () => {
   editor = await initDiffEditor(props.id, props.modelValue, editorOptions.value);
-  onEditorValueChange();
+  editor.getOriginalEditor().onDidChangeModelContent(debounce(onEditorValueChange));
+  editor.getModifiedEditor().onDidChangeModelContent(debounce(onEditorValueChange));
 });
 onUnmounted(() => {
   editor?.dispose?.();
@@ -107,12 +107,6 @@ async function updateDiffEditor(eleId = '', value = [], options = { readOnly: fa
   }
 }
 
-function onEditorValueChange() {
-  if (!editor) return;
-
-  editor.getOriginalEditor().onDidChangeModelContent(debounce(valueChange.bind(null, 0)));
-  editor.getModifiedEditor().onDidChangeModelContent(debounce(valueChange.bind(null, 1)));
-}
 function getDiffEditorValue() {
   if (!editor) {
     console.error(`[Not Found] Try this.initDiffEditor('${props.id}')`);
@@ -121,14 +115,19 @@ function getDiffEditorValue() {
 
   return [editor.getOriginalEditor().getValue(), editor.getModifiedEditor().getValue()];
 }
-function valueChange(index) {
-  let values = getDiffEditorValue();
-  const newValue = values[index];
+function onEditorValueChange() {
+  if (!diffModalValueAndEditorValue()) return;
 
-  if (newValue !== props.modelValue[index]) {
-    emit('change', values);
-    emit('update:modelValue', values);
+  let values = getDiffEditorValue();
+  emit('change', values);
+  emit('update:modelValue', values);
+}
+function diffModalValueAndEditorValue() {
+  let editorValues = getDiffEditorValue();
+  if (props.modelValue[0] === editorValues[0] && props.modelValue[1] === editorValues[1]) {
+    return false;
   }
+  return true;
 }
 function debounce(fn, delay = 200) {
   let timer;

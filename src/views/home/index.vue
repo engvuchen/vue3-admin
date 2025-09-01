@@ -7,7 +7,7 @@
       <el-button @click="editorConfig.readOnly = !editorConfig.readOnly">切换禁用/可用</el-button>
       <el-button @click="editorValue = JSON.stringify({ name: 'update' })">更新普通编辑器</el-button>
       <el-button @click="console.log('editorValue', editorValue)">获取普通编辑器的值</el-button>
-      <el-button @click="switchLanguage">切换语言（lua/json）</el-button>
+      <el-button @click="switchLanguage">切换语言（proto/json）</el-button>
     </div>
     <Editor
       id="jsonEditor"
@@ -25,7 +25,7 @@
         >更新普通编辑器</el-button
       >
       <el-button @click="console.log('diffEditorValue', toRaw(diffEditorValue))">获取普通编辑器的值</el-button>
-      <el-button @click="switchDiffLanguage">切换语言（lua/json）</el-button>
+      <el-button @click="switchDiffLanguage">切换语言（proto/json）</el-button>
     </div>
     <DiffEditor
       id="diffEditor"
@@ -48,13 +48,13 @@ const editorConfig = ref({
   language: 'json',
 });
 function switchLanguage() {
-  editorConfig.value.language = editorConfig.value.language === 'json' ? 'protobuf' : 'json';
+  editorConfig.value.language = editorConfig.value.language === 'json' ? 'proto' : 'json';
 
   if (editorConfig.value.language === 'json') {
     editorValue.value = JSON.stringify({ name: 'language json' });
   } else {
     editorValue.value = `message Test {
-    optional string name = 1;
+    optional string name = 1; // proto
 }`;
   }
 }
@@ -70,20 +70,20 @@ const diffEditorConfig = ref({
   language: 'json',
 });
 function switchDiffLanguage() {
-  diffEditorConfig.value.language = diffEditorConfig.value.language === 'json' ? 'protobuf' : 'json';
+  diffEditorConfig.value.language = diffEditorConfig.value.language === 'json' ? 'proto' : 'json';
 
   if (diffEditorConfig.value.language === 'json') {
     diffEditorValue.value = [
-      JSON.stringify({ name: 'switch language json' }),
-      JSON.stringify({ name: 'switch language protobuf' }),
+      JSON.stringify({ name: 'switch language diff1' }),
+      JSON.stringify({ name: 'switch language diff2' }),
     ];
   } else {
     diffEditorValue.value = [
       `message Test1 {
-    optional string name1 = 1;
+    optional string name1 = 1; // proto
 }`,
       `message Test2 {
-    optional string name2 = 1;
+    optional string name2 = 1; // proto
 }`,
     ];
   }
