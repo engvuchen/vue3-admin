@@ -6,8 +6,7 @@
     "url": "https://github.com/engvuchen"
   },
   "scripts": {
-    "dev": "webpack -c webpack/webpack.dev.js --node-env development",
-    "serve": "webpack-dev-server -c webpack/webpack.dev.js --node-env development",
+    "dev": "webpack-dev-server -c webpack/webpack.dev.js --node-env development",
     "build": "webpack -c webpack/webpack.prod.js --node-env production",
     "preview": "serve -s dist -l 4000",
     "lint": "npx lint-staged",
