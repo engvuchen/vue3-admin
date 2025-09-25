@@ -41,7 +41,7 @@ export const useMenus = defineStore('menu', () => {
         // children: [], // children 存在，即被解析为存在嵌套，干扰正常解析
       };
       if (children?.length) {
-        menu.children = transformRouteToMenuItem(children, menu.url);
+        menu.children = transformRouteToMenuItem(children);
       }
 
       menus.push(menu);
@@ -85,14 +85,16 @@ export const useMenus = defineStore('menu', () => {
     // 获取远程路由、cgi
     let resources = [];
     let cgis = [];
-    data.list[0].resource.forEach((curr) => {
-      resources.push(...curr.access);
-      cgis.push(...curr.cgi);
-    });
+    if (data.list && data.list.length > 0) {
+      data.list[0].resource.forEach((curr) => {
+        resources.push(...curr.access);
+        cgis.push(...curr.cgi);
+      });
+    }
     let remoteResources = Array.from(new Set(resources));
     let remoteCgis = Array.from(new Set(cgis));
 
-    const accessibleRoutes = getAccessibleRoutes(asyncRoutes, remoteResources);
+    const accessibleRoutes = getAccessibleRoutes(asyncRoutes, remoteResources); // remoteResources ['/user/resource', '/user/list']
     accessibleRoutes.forEach((route) => router.addRoute(route));
 
     const menus = transformRouteToMenuItem([...fixedRoutes, ...accessibleRoutes]);
@@ -105,6 +107,7 @@ export const useMenus = defineStore('menu', () => {
     menus,
     cgis,
     setMenus,
+    setCgis,
     generateMenusAndCgis,
   };
 });

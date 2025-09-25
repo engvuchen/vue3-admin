@@ -1,7 +1,7 @@
 <template>
   <div class="user">
     <pro-table ref="table" :title="$t('user/list.title')" :request="getList" :columns="columns" :search="searchConfig">
-      <!-- 工具栏 -->
+      <!-- 查询栏 -->
       <template #toolbar>
         <!-- <el-button icon="Plus" @click="onShowAddForm">
           {{ $t('user/list.add') }}
@@ -10,6 +10,8 @@
           {{ $t('user/list.refresh') }}
         </el-button>
       </template>
+
+      <!-- 以下是表格列 -->
       <!-- 状态显示，需要 columns.tdSlot = 'status' -->
       <template #avatar="{ row }">
         <el-avatar size="small" fit="cover" :src="row.avatar" />
@@ -98,7 +100,7 @@ const columns = [
     label: 'user/list.role_id',
     prop: 'role_id',
     sortable: true,
-    tdSlot: 'role',
+    tdSlot: 'role', // 会渲染对应名称的插槽
   },
   {
     label: 'user/list.avatar',
