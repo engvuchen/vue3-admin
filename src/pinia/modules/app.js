@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia';
 import { getItem, setItem, removeItem } from '@/utils/storage';
-// import { AesEncryption } from '@/utils/encrypt';
-// import { toRaw } from 'vue';
 
 import { useAccount } from './account';
 import { useTags } from './tags';
@@ -10,6 +8,10 @@ import { useMenus } from './menu';
 export const TOKEN = 'VEA-TOKEN';
 const COLLAPSE = 'VEA-COLLAPSE';
 
+/**
+ * 全局的属性：网页标题、token存储、侧栏折叠、设备类型
+ * state { title, authorization, sidebar, device }
+ */
 export const useApp = defineStore('app', {
   state: () => ({
     title: 'Vue3 Element Admin',

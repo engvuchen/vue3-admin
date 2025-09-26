@@ -1,6 +1,7 @@
 <template>
   <svg class="icon" aria-hidden="true">
-    <use :xlink:href="symbolId" />
+    <!-- <use :xlinkHref="symbolId" :href="symbolId" /> -->
+    <use :href="symbolId" />
   </svg>
 </template>
 
@@ -14,7 +15,7 @@ const props = defineProps({
   },
 });
 
-const symbolId = computed(() => `#icon-${props.name}`);
+const symbolId = computed(() => `#${props.name}`);
 </script>
 
 <style lang="scss" scoped>

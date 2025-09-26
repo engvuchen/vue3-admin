@@ -1,4 +1,7 @@
 <template>
+  <!-- <el-button @click="jump(1)">跳转1</el-button>
+  <el-button @click="jump(2)">跳转2</el-button> -->
+
   <div class="resource">
     <!-- 表格 -->
     <pro-table
@@ -78,6 +81,13 @@ import { apiGetResourceList, apiResourceModify, apiResourceDel } from '@/api/res
 import tips from '@/utils/tips';
 import { validMultiLineTxt } from '@/utils/validate';
 
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+
+// let router = useRouter();
+// function jump(id) {
+//   router.push(`/user/resource?id=${id}`); // 仅仅是参数变了，再次回到本页触发 onBeforeRouteUpdate
+// }
+
 // 表格
 const searchConfig = ref({
   labelWidth: '80px',
@@ -140,6 +150,9 @@ const table = ref(null);
 const refresh = () => {
   table.value.refresh();
 };
+
+Promise.all([apiGetResourceList(), apiGetResourceList()]);
+
 const getList = async (params) => {
   const { data } = await apiGetResourceList(params);
   return {
@@ -294,6 +307,15 @@ const onSubmit = async (data) => {
 const onCancel = () => {
   dialogVisible.value = false;
 };
+
+onBeforeRouteLeave((to, from, next) => {
+  console.log('onBeforeRouteLeave');
+  next();
+});
+onBeforeRouteUpdate((to, from, next) => {
+  console.log('onBeforeRouteUpdate');
+  next();
+});
 </script>
 
 <style lang="scss" scoped>

@@ -11,7 +11,7 @@ export const useAccount = defineStore('account', {
     clearUserinfo() {
       this.userinfo = null;
     },
-    // 获取用户信息。不存在/update=true，重新获取，已存在直接返回
+    // 获取用户信息。不存在 /update=true，重新获取，已存在直接返回
     async getUserInfo(update = false) {
       if (this.userinfo && !update) return this.userinfo;
 

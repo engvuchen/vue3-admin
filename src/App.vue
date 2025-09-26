@@ -1,6 +1,10 @@
 <template>
   <el-config-provider :locale="locales[lang]">
-    <router-view />
+    <router-view v-slot="{ Component }">
+      <transition name="scale">
+        <component :is="Component" />
+      </transition>
+    </router-view>
   </el-config-provider>
 </template>
 
@@ -29,5 +33,27 @@ body,
   * {
     outline: none;
   }
+}
+
+.scale-slide-enter-active,
+.scale-slide-leave-active {
+  position: absolute;
+  transition: all 0.85s ease;
+}
+
+.scale-slide-enter-from {
+  left: -100%;
+}
+
+.scale-slide-enter-to {
+  left: 0%;
+}
+
+.scale-slide-leave-from {
+  transform: scale(1);
+}
+
+.scale-slide-leave-to {
+  transform: scale(0.8);
 }
 </style>

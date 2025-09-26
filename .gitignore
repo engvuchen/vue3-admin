@@ -3,6 +3,7 @@ node_modules
 .DS_Store
 dist
 dist-ssr
+.temp_cache
 
 # local env files
 .env.local

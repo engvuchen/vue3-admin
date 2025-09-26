@@ -20,8 +20,11 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import Submenu from './Submenu.vue';
-import config from './config/menu.module.scss';
 import { useMenus } from '@/pinia/modules/menu';
+
+import config from './config/menu.module.scss';
+
+console.log('config', config);
 
 defineProps({
   collapse: {

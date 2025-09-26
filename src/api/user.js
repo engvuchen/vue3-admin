@@ -7,8 +7,11 @@ import request from '@/utils/request';
  * @res [{ id, username, avatar }]
  */
 export const apiGetUserList = (data) => {
-  return request.get('/user/list', {
-    params: data, // 和选项式相同，数据都拼接到请求链接上，
+  return request({
+    method: 'get',
+    url: '/user/list',
+    params: data,
+    cacheTime: 20000, // 接口cache测试
   });
 };
 
@@ -19,7 +22,9 @@ export const apiGetUserList = (data) => {
  * @res { id, username }
  */
 export const apiGetUserInfo = (data) => {
-  return request.get('/user/info', {
+  return request({
+    method: 'get',
+    url: '/user/info',
     params: data,
   });
 };
@@ -30,7 +35,10 @@ export const apiGetUserInfo = (data) => {
  * @desc 修改用户信息（username、password、avatar，任一存在即可）。需 token。
  */
 export const apiUserUpd = (data) => {
-  return request.post('/user/upd', data); // 和选项式不同，简易式直接展开到 data 到 请求体 https://axios-http.com/docs/post_example
+  return request({
+    url: '/user/upd',
+    data,
+  }); // 可改造为简易式 https://axios-http.com/docs/post_example
 };
 
 /**
@@ -40,7 +48,13 @@ export const apiUserUpd = (data) => {
  * @access public
  */
 export const apiUserRegister = (data) => {
-  return request.post('/user/register', data);
+  // 相当于 request.post('/user/register', data, { withoutToken: true })
+  return request({
+    method: 'post',
+    url: '/user/register',
+    data,
+    withoutToken: true,
+  });
 };
 
 /**
@@ -51,7 +65,12 @@ export const apiUserRegister = (data) => {
  * 用户登录校验成功，返回 token（token存储了用户信息）
  */
 export const apiUserLogin = (data) => {
-  return request.post('/user/login', data);
+  return request({
+    method: 'post',
+    url: '/user/login',
+    data,
+    withoutToken: true,
+  });
 };
 
 /**
@@ -60,7 +79,11 @@ export const apiUserLogin = (data) => {
  * @desc 删除用户
  */
 export const apiUserDel = (data) => {
-  return request.post('/user/del', data);
+  return request({
+    method: 'post',
+    url: '/user/del',
+    data,
+  });
 };
 
 /**
@@ -68,5 +91,9 @@ export const apiUserDel = (data) => {
  * @desc 非真实接口，测权限用
  */
 export const apiTest = (data) => {
-  return request.post('/user/test', data);
+  return request({
+    method: 'post',
+    url: '/user/test',
+    data,
+  });
 };

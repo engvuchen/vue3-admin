@@ -231,7 +231,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  // 表头配置
+  // table-columns 配置
   columns: {
     type: Array,
     default: () => [],
@@ -247,7 +247,7 @@ const props = defineProps({
     default: () => {},
   },
 });
-const emit = defineEmits(['submit', 'cancel']);
+const emit = defineEmits(['submit', 'cancel', 'selectionChange']);
 
 let loading = ref(false);
 let tableData = ref([]);
@@ -383,6 +383,8 @@ const filterHandler = (value, row, column) => {
   const property = column['property'];
   return row[property] === value;
 };
+
+// 格式化日期格式化 MMMM
 const formatDate = (date, format) => {
   let obj = {
     'M+': date.getMonth() + 1,

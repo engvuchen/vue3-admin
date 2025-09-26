@@ -16,7 +16,7 @@ export default (env) => {
       nodeResolve({
         modulePaths: [
           path.resolve(process.cwd(), './node_modules'),
-          path.resolve(process.cwd(), './src/components/biz/components'),
+          // path.resolve(process.cwd(), './src/components/biz/components'),
           path.resolve(process.cwd(), './src'),
         ],
       }),
@@ -57,7 +57,7 @@ export default (env) => {
       },
     },
     server: {
-      port: 3001,
+      // port: 517,
       open: 'http://admin.engvu.tech', // boolean || string, true => 默认 localhost
       // proxy: {
       //   '/api': {

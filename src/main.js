@@ -26,7 +26,8 @@ import pinia from './pinia';
 import './permission';
 
 // 引入svg图标注册脚本
-import 'virtual:svg-icons-register';
+import 'virtual:svg-icons-register'; // vite
+// import './icon.js'; // webpack5
 
 // 注册全局组件
 import * as Components from './global-components';
@@ -42,4 +43,5 @@ Object.values(Directives).forEach((fn) => fn(app));
 import useErrorHandler from './error-log';
 useErrorHandler(app);
 
+// ElementPlus 是全量引入的
 app.use(i18n).use(ElementPlus).use(pinia).use(router).mount('#app');

@@ -6,7 +6,7 @@
     "url": "https://github.com/engvuchen"
   },
   "scripts": {
-    "start": "vite",
+    "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
     "lint": "npx lint-staged",
@@ -18,10 +18,11 @@
   ],
   "dependencies": {
     "@rollup/plugin-node-resolve": "^15.3.0",
-    "@vitejs/plugin-legacy": "^5.4.3",
     "@swc/core": "^1.10.0",
+    "@vitejs/plugin-legacy": "^5.4.3",
     "axios": "^1.6.8",
     "element-plus": "^2.7.2",
+    "monaco-editor": "^0.53.0",
     "pinia": "^2.0.14",
     "terser": "^5.36.0",
     "vite-plugin-node-polyfills": "^0.22.0",
