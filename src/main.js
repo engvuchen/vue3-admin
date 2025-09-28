@@ -3,18 +3,11 @@ import App from './App.vue';
 
 const app = createApp(App);
 
-// 引入element-plus
-import ElementPlus from 'element-plus';
-import './assets/style/element-variables.scss';
-
 // 国际化
 import i18n from '@/i18n';
 
-// 全局注册element-plus/icons-vue
-import * as ICONS from '@element-plus/icons-vue';
-Object.entries(ICONS).forEach(([key, component]) => {
-  app.component(key, component);
-});
+// Element Plus 图标按需导入（通过 unplugin-vue-components 自动处理）
+// 不再需要手动注册图标
 
 // 引入路由
 import router from './router';
@@ -25,7 +18,7 @@ import pinia from './pinia';
 // 权限控制
 import './permission';
 
-// 引入svg图标注册脚本
+// 自定义图标：引入svg图标注册脚本
 import 'virtual:svg-icons-register'; // vite
 // import './icon.js'; // webpack5
 
@@ -35,6 +28,13 @@ Object.entries(Components).forEach(([key, component]) => {
   app.component(key, component);
 });
 
+// 全局注册 ele 图标
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  console.log('注册图标:', key, component);
+  app.component(key, component);
+}
+
 // 注册自定义指令
 import * as Directives from '@/directive';
 Object.values(Directives).forEach((fn) => fn(app));
@@ -43,5 +43,5 @@ Object.values(Directives).forEach((fn) => fn(app));
 import useErrorHandler from './error-log';
 useErrorHandler(app);
 
-// ElementPlus 是全量引入的
-app.use(i18n).use(ElementPlus).use(pinia).use(router).mount('#app');
+// 按需导入，不再需要全量引入 ElementPlus 和 TDesign
+app.use(i18n).use(pinia).use(router).mount('#app');

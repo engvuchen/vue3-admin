@@ -45,7 +45,13 @@ export const useScrollbar = (tagsItem, scrollContainer) => {
       // $wrap.offsetWidth + 溢出可视区域宽度 = $wrap.scrollWidth
       doScroll($wrap.scrollWidth - $wrap.offsetWidth);
     } else {
-      const el = currentTag.$el.nextElementSibling; // ？todo 为什么是下一个节点
+      const el = currentTag.$el?.nextElementSibling; // 添加可选链操作符防止报错
+
+      // 添加安全检查
+      if (!el) {
+        console.warn('useScrollbar: nextElementSibling is null, skipping scroll');
+        return;
+      }
 
       /**
        * el.offsetLeft 是当前元素左边界距离最近的具有定位（position不是static）的父元素的左边界的距离。
@@ -56,7 +62,13 @@ export const useScrollbar = (tagsItem, scrollContainer) => {
       // 下一个节点是否移出容器可视宽度 ? 滚动条滚动 : 滚动条不滚动
       // el.offsetLeft - el.offsetWidth（看成是前一个节点就行了），刚好是前一个节点的 offsetLeft。todo 这里的 3 种情况可以优化成一种情况
 
-      el.offsetLeft + el.offsetWidth > $wrap.offsetWidth ? doScroll(el.offsetLeft - el.offsetWidth) : doScroll(0);
+      try {
+        el.offsetLeft + el.offsetWidth > $wrap.offsetWidth ? doScroll(el.offsetLeft - el.offsetWidth) : doScroll(0);
+      } catch (error) {
+        console.error('useScrollbar: Error during scroll calculation:', error);
+        // 降级处理：滚动到开头
+        doScroll(0);
+      }
     }
   };
 

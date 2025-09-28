@@ -10,13 +10,16 @@
   >
     <!-- 工具栏 -->
     <template #toolbar>
-      <el-button type="primary" icon="Delete" @click="batchDelete">
+      <el-button type="primary" @click="batchDelete">
+        <Delete style="width: 16px; height: 16px" />
         {{ $t('test/list.batchDelete') }}
       </el-button>
-      <el-button type="primary" icon="Plus" @click="$router.push('/test/add')">
+      <el-button type="primary" @click="$router.push('/test/add')">
+        <Plus style="width: 16px; height: 16px" />
         {{ $t('test/list.add') }}
       </el-button>
-      <el-button type="primary" icon="Refresh" @click="refresh">
+      <el-button type="primary" @click="refresh">
+        <Refresh style="width: 16px; height: 16px" />
         {{ $t('test/list.refresh') }}
       </el-button>
     </template>
@@ -255,3 +258,15 @@ export default {
   name: 'test-list', // 该 name 须跟路由配置的 name 一致，不一致或不设置 name，则不缓存
 };
 </script>
+
+<style lang="scss" scoped>
+// 确保按钮中的图标正确显示
+.el-button {
+  svg {
+    width: 16px !important;
+    height: 16px !important;
+    vertical-align: middle;
+    fill: currentColor;
+  }
+}
+</style>

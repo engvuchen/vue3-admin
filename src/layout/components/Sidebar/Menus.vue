@@ -47,24 +47,24 @@ const variables = computed(() => config);
 .el-menu-item,
 .el-sub-menu__title {
   &:hover {
-    background-color: $menuHover !important;
+    background-color: var(--menu-hover) !important;
   }
 }
 
 .el-sub-menu {
   .el-menu-item,
   .el-sub-menu .el-sub-menu__title {
-    background-color: $subMenuBg !important;
+    background-color: var(--sub-menu-bg) !important;
 
     &:hover {
-      background-color: $subMenuHover !important;
+      background-color: var(--sub-menu-hover) !important;
     }
   }
 }
 .el-menu-item.is-active {
-  background-color: $menuActiveBg !important;
+  background-color: var(--menu-active-bg) !important;
   &:hover {
-    background-color: $menuActiveBg !important;
+    background-color: var(--menu-active-bg) !important;
   }
 }
 
@@ -72,31 +72,31 @@ const variables = computed(() => config);
   .el-menu-item.is-active,
   .el-sub-menu.is-active > .el-sub-menu__title {
     position: relative;
-    background-color: $collapseMenuActiveBg !important;
-    color: $collapseMenuActiveColor !important;
+    background-color: var(--collapse-menu-active-bg) !important;
+    color: var(--collapse-menu-active-color) !important;
 
     &::before {
       content: '';
       position: absolute;
       left: 0;
       top: 0;
-      width: $collapseMenuActiveBorderWidth;
+      width: var(--collapse-menu-active-border-width);
       height: 100%;
-      background-color: $collapseMenuActiveBorderColor;
+      background-color: var(--collapse-menu-active-border-color);
     }
   }
 }
 
 .el-sub-menu__title i {
-  color: $arrowColor;
+  color: var(--arrow-color);
 }
 
 // 水平菜单
 .el-menu--horizontal {
   .el-menu-item,
   .el-sub-menu .el-sub-menu__title {
-    height: $horizontalMenuHeight !important;
-    line-height: $horizontalMenuHeight !important;
+    height: var(--horizontal-menu-height) !important;
+    line-height: var(--horizontal-menu-height) !important;
     border-bottom: none;
   }
 
@@ -113,7 +113,7 @@ const variables = computed(() => config);
   flex: 1;
   overflow-x: hidden;
   overflow-y: auto;
-  height: $horizontalMenuHeight !important;
+  height: var(--horizontal-menu-height) !important;
 
   .menu {
     border: none;

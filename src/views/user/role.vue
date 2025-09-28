@@ -4,10 +4,12 @@
     <pro-table ref="table" :title="$t('user/role.title')" :request="getList" :columns="columns" :search="searchConfig">
       <!-- 工具栏 -->
       <template #toolbar>
-        <el-button icon="Plus" @click="onShowAddForm">
+        <el-button @click="onShowAddForm">
+          <Plus style="width: 16px; height: 16px" />
           {{ $t('user/role.add') }}
         </el-button>
-        <el-button icon="Refresh" @click="refresh">
+        <el-button @click="refresh">
+          <Refresh />
           {{ $t('user/role.refresh') }}
         </el-button>
       </template>
@@ -25,7 +27,9 @@
       <!-- 单元格操作列 -->
       <template #operate="scope">
         <!-- 编辑 -->
-        <el-button plain circle :icon="Edit" type="default" @click="onShowUpdForm(scope.row)"></el-button>
+        <el-button plain circle type="default" @click="onShowUpdForm(scope.row)">
+          <Edit style="width: 16px; height: 16px" />
+        </el-button>
         <!-- 删除 -->
         <el-popconfirm
           width="240"
@@ -36,7 +40,9 @@
           @confirm="onRemove(scope.row)"
         >
           <template #reference>
-            <el-button plain circle :icon="Delete" type="danger"></el-button>
+            <el-button plain circle type="danger">
+              <Delete style="width: 16px; height: 16px" />
+            </el-button>
           </template>
         </el-popconfirm>
       </template>
@@ -51,7 +57,6 @@
 
 <script setup>
 import { ref, toRaw, nextTick } from 'vue';
-import { Delete, Edit } from '@element-plus/icons-vue';
 import { apiGetRoleList, apiRoleModify, apiRoleDel } from '@/api/role';
 import { apiGetResourceList } from '@/api/resource';
 import { apiGetRoleResourceList, apiRoleResourceModify } from '@/api/role_resource';
@@ -262,6 +267,16 @@ const onCancel = () => {
     .el-textarea__inner {
       min-width: 280px;
       min-height: 150px !important; // textarea 的调整除了样式，还有配置 style 属性。没有 style，样式的宽度可以溢出
+    }
+  }
+
+  // 确保按钮中的图标正确显示
+  .el-button {
+    svg {
+      width: 16px !important;
+      height: 16px !important;
+      vertical-align: middle;
+      fill: currentColor;
     }
   }
 }

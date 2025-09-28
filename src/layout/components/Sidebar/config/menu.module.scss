@@ -1,5 +1,5 @@
 :export {
-  menuBg: $menuBg;
-  menuTextColor: $menuTextColor;
-  menuActiveTextColor: $menuActiveTextColor;
+  menuBg: var(--menu-bg);
+  menuTextColor: var(--menu-text-color);
+  menuActiveTextColor: var(--menu-active-text-color);
 }

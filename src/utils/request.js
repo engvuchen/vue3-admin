@@ -45,7 +45,7 @@ const getRequestKey = (config) => {
 
   return [method, url, JSON.stringify(params)].join('&');
 };
-// 基本数据、对象、数组，去掉其中的 undefined、null, ''
+/** 去掉数据的 undefined、null, '' */
 function walkData(data) {
   if (Array.isArray(data)) {
     data = data.filter((curr) => ![undefined, null, ''].includes(curr));
@@ -137,8 +137,10 @@ function stop(config, errmsg) {
  *
  */
 function validity(config) {
-  const { url, data } = config;
+  const { url, params, data } = config;
   if (!url) return '缺少 url';
+
+  if (params) walkData(params);
   if (data) walkData(data);
 
   // 需要 token，进行校验

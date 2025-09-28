@@ -7,7 +7,7 @@ export default [
   {
     path: '/user',
     component: Layout, // 路由都在这个 Layout 组件下
-    icon: 'user',
+    icon: 'User',
     name: 'user',
     meta: {
       title: 'route.access_manage',

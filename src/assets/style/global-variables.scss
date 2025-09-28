@@ -1,5 +1,6 @@
 // 该文件中的变量是全局变量，在css文件和vue组件中可以直接使用
 
+// SCSS 变量定义
 $mainColor: #409eff; // 网站主题色
 
 // 侧边栏
@@ -16,3 +17,23 @@ $collapseMenuActiveBorderColor: $mainColor; // 菜单宽度折叠后，已选中
 $collapseMenuActiveBorderWidth: 2px; // 菜单宽度折叠后，已选中菜单的边框宽度
 $arrowColor: #909399; // 展开/收起箭头颜色
 $horizontalMenuHeight: 40px; // 菜单栏水平排列时候的高度
+
+// CSS 变量方式（推荐）
+:root {
+  --main-color: #{$mainColor}; // 将 SCSS 变量转换为 CSS 变量
+  
+  // 菜单相关 CSS 变量
+  --menu-bg: #{$menuBg};
+  --menu-text-color: #{$menuTextColor};
+  --menu-active-text-color: #{$menuActiveTextColor};
+  --menu-active-bg: #{$menuActiveBg};
+  --menu-hover: #{$menuHover};
+  --sub-menu-bg: #{$subMenuBg};
+  --sub-menu-hover: #{$subMenuHover};
+  --collapse-menu-active-bg: #{$collapseMenuActiveBg};
+  --collapse-menu-active-color: #{$collapseMenuActiveColor};
+  --collapse-menu-active-border-color: #{$collapseMenuActiveBorderColor};
+  --collapse-menu-active-border-width: #{$collapseMenuActiveBorderWidth};
+  --arrow-color: #{$arrowColor};
+  --horizontal-menu-height: #{$horizontalMenuHeight};
+}

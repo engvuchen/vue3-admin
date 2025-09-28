@@ -136,10 +136,12 @@
         ></el-input>
       </el-form-item>
       <el-form-item class="search-btn">
-        <el-button type="primary" icon="Search" @click="handleSearch">
+        <el-button type="primary" @click="handleSearch">
+          <Search />
           {{ $t('public.search') }}
         </el-button>
-        <el-button @click="handleReset" icon="RefreshRight">
+        <el-button @click="handleReset">
+          <RefreshRight />
           {{ $t('public.reset') }}
         </el-button>
       </el-form-item>

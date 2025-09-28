@@ -17,7 +17,8 @@
         <el-button plain type="default" icon="Plus" @click="onShowAddForm">
           {{ $t('user/resource.add') }}
         </el-button>
-        <el-button plain type="default" icon="Refresh" @click="refresh">
+        <el-button plain type="default" @click="refresh">
+          <Refresh style="width: 16px; height: 16px" />
           {{ $t('user/resource.refresh') }}
         </el-button>
       </template>
@@ -49,7 +50,9 @@
       <template #operate="scope">
         <!-- 编辑 -->
         <!-- {{ $t('public.edit') }} -->
-        <el-button plain circle :icon="Edit" type="default" @click="onShowUpdForm(scope.row)"></el-button>
+        <el-button plain circle type="default" @click="onShowUpdForm(scope.row)">
+          <Edit style="width: 16px; height: 16px" />
+        </el-button>
         <!-- 删除 -->
         <el-popconfirm
           width="240"
@@ -61,7 +64,9 @@
         >
           <template #reference>
             <!-- {{ $t('public.delete') }} -->
-            <el-button plain circle :icon="Delete" type="danger"></el-button>
+            <el-button plain circle type="danger">
+              <Delete style="width: 16px; height: 16px" />
+            </el-button>
           </template>
         </el-popconfirm>
       </template>
@@ -76,7 +81,6 @@
 
 <script setup>
 import { ref, toRaw, nextTick } from 'vue';
-import { Delete, Edit } from '@element-plus/icons-vue';
 import { apiGetResourceList, apiResourceModify, apiResourceDel } from '@/api/resource';
 import tips from '@/utils/tips';
 import { validMultiLineTxt } from '@/utils/validate';

@@ -10,7 +10,7 @@ export default [
     meta: {
       title: 'self.title',
     },
-    icon: 'setting', // 自定义 icon 或是 element 支持的 icon。按实现，甚至可以是 el-select
+    icon: 'Setting', // 自定义 icon 或是 element 支持的 icon。按实现，甚至可以是 el-select,
     children: [
       {
         path: '',

@@ -121,7 +121,7 @@ const submit = (type) => {
       return;
     }
 
-    ctx.$message.success({
+    ElMessage.success({
       message: '成功',
       duration: 1000,
     });

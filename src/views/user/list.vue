@@ -6,7 +6,8 @@
         <!-- <el-button icon="Plus" @click="onShowAddForm">
           {{ $t('user/list.add') }}
         </el-button> -->
-        <el-button icon="Refresh" @click="refresh">
+        <el-button @click="refresh">
+          <Refresh />
           {{ $t('user/list.refresh') }}
         </el-button>
       </template>
@@ -29,8 +30,9 @@
       </template>
       <!-- 单元格操作列 -->
       <template #operate="scope">
-        <!-- 编辑 -->
-        <el-button plain circle :icon="Edit" type="default" @click="onShowUpdForm(scope.row)"></el-button>
+        <el-button plain circle type="default" @click="onShowUpdForm(scope.row)">
+          <Edit style="width: 16px; height: 16px" />
+        </el-button>
         <!-- 删除 -->
         <el-popconfirm
           width="240"
@@ -41,7 +43,9 @@
           @confirm="onRemove(scope.row)"
         >
           <template #reference>
-            <el-button plain circle :icon="Delete" type="danger"></el-button>
+            <el-button plain circle type="danger">
+              <Delete style="width: 16px; height: 16px" />
+            </el-button>
           </template>
         </el-popconfirm>
       </template>
@@ -60,7 +64,6 @@
  */
 
 import { ref, toRaw, nextTick } from 'vue';
-import { Delete, Edit } from '@element-plus/icons-vue';
 import { apiGetUserList, apiUserUpd, apiUserDel } from '@/api/user';
 import { apiGetRoleList } from '@/api/role';
 import { apiGetUserRoleList, apiUserRoleModify } from '@/api/user_role';

@@ -1,6 +1,6 @@
 <template>
   <svg-icon v-if="isCustomSvg" :name="icon" class="icon" />
-  <component v-else-if="!!icon" :is="icon" class="icon" />
+  <component v-else-if="icon" :is="icon" class="icon" />
   <span>{{ $t(title) }}</span>
 </template>
 

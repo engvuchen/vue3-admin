@@ -26,7 +26,7 @@ const closeSidebar = () => {
 <style lang="scss" scoped>
 .left {
   width: 210px;
-  background: $menuBg;
+  background: var(--menu-bg);
   transition: all 0.3s;
   overflow: hidden;
   display: flex;
