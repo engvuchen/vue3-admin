@@ -88,7 +88,8 @@ export default (env) => {
       preprocessorOptions: {
         scss: {
           // additionalData: '@import "./src/assets/style/global-variables.scss";',
-          additionalData: `@use "./src/assets/style/global-variables.scss" as *;`, // 每个样式表前都插入这一句 https://cn.vitejs.dev/config/shared-options.html#css-preprocessoroptions-extension-additionaldata
+          additionalData: `@use "@/assets/style/global-variables.scss" as *;`, // 每个样式表前都插入这些语句 https://cn.vitejs.dev/config/shared-options.html#css-preprocessoroptions-extension-additionaldata
+          api: 'modern-compiler', // 使用现代 Sass API 以避免弃用警告
         },
       },
     },
