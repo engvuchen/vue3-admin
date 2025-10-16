@@ -15,7 +15,14 @@ export const useMenus = defineStore('menu', () => {
    */
   const getAccessibleRoutes = (targetRoutes = [], ajaxRoutes = [], result = []) => {
     targetRoutes.forEach((curr) => {
-      // 远程配置 找不到和当前 相等 或 当前是配置的父级 => 不相等 或 不是父集
+      /**
+       * 通过的情况：
+       * 1. 远程路径 匹配自身
+       * 2. 远程路径的 父级路径
+       *
+       * 是为了方便配置的，例如：远程仅有 /test/add
+       * /test、/test/add 都能被添加到新路由
+       */
       if (!ajaxRoutes.find((item) => item.startsWith(curr.path))) return;
 
       let { children = [], ...rest } = curr;
@@ -96,6 +103,8 @@ export const useMenus = defineStore('menu', () => {
 
     const accessibleRoutes = getAccessibleRoutes(asyncRoutes, remoteResources); // remoteResources ['/user/resource', '/user/list']
     accessibleRoutes.forEach((route) => router.addRoute(route));
+
+    console.log('accessibleRoutes', accessibleRoutes);
 
     const menus = transformRouteToMenuItem([...fixedRoutes, ...accessibleRoutes]);
 

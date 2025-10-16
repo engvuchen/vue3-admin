@@ -35,11 +35,30 @@
       @change="onDiffValueChange"
     ></DiffEditor>
   </div>
+  <div style="margin-bottom: 40px">
+    <div style="margin-bottom: 20px">
+      <h3>Element Plus Tooltip + Textarea 示例</h3>
+    </div>
+    <el-tooltip :content="textareaValue" placement="top" v-if="tooltipShow">
+      <el-input
+        v-model="textareaValue"
+        type="textarea"
+        :autosize="true"
+        placeholder="请输入内容，鼠标悬停查看 tooltip"
+        style="width: 300px"
+      />
+    </el-tooltip>
+  </div>
 </template>
 <script setup lang="js">
 import { ref, toRaw } from 'vue';
 import Editor from '@/components/Editor/index.vue';
 import DiffEditor from '@/components/Editor/diff.vue';
+
+const tooltipShow = ref(true);
+setTimeout(() => {
+  tooltipShow.value = false;
+}, 10000);
 
 const editorVisible = ref(true);
 const editorValue = ref(JSON.stringify({ name: 'zqian' }));
@@ -69,6 +88,9 @@ const diffEditorConfig = ref({
   readOnly: false,
   language: 'json',
 });
+
+// Element Plus Tooltip + Textarea 示例
+const textareaValue = ref('');
 function switchDiffLanguage() {
   diffEditorConfig.value.language = diffEditorConfig.value.language === 'json' ? 'proto' : 'json';
 

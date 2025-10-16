@@ -31,7 +31,6 @@ Object.entries(Components).forEach(([key, component]) => {
 // 全局注册 ele 图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  console.log('注册图标:', key, component);
   app.component(key, component);
 }
 

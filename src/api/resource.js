@@ -10,7 +10,7 @@ export const apiGetResourceList = (data) => {
     url: '/resource/list',
     method: 'get',
     params: data,
-    cacheTime: 30000,
+    // cacheTime: 30000,
   });
 };
 

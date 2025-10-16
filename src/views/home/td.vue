@@ -22,7 +22,7 @@
     </t-card>
 
     <!-- 操作区域 -->
-    <t-card class="action-card" :bordered="false">
+    <t-card class="action-card" :bordered="false" style="display: flex; justify-content: flex-end">
       <t-space>
         <t-button theme="primary" @click="handleAdd">
           <template #icon>
@@ -123,330 +123,298 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { apiGetRoleList, apiRoleModify, apiRoleDel } from '@/api/role';
 import { apiGetResourceList } from '@/api/resource';
 import { apiGetRoleResourceList, apiRoleResourceModify } from '@/api/role_resource';
 
-export default {
-  name: 'RoleManagement',
-  setup() {
-    // 响应式数据
-    const loading = ref(false);
-    const dialogVisible = ref(false);
-    const dialogTitle = ref('');
-    const isEdit = ref(false);
-    const resourceLoading = ref(false);
+// 响应式数据
+const loading = ref(false);
+const dialogVisible = ref(false);
+const dialogTitle = ref('');
+const isEdit = ref(false);
+const resourceLoading = ref(false);
 
-    // 搜索表单
-    const searchForm = reactive({
-      name: '',
-    });
+// 搜索表单
+const searchForm = reactive({
+  name: '',
+});
 
-    // 表格数据
-    const tableData = ref([]);
-    const resourceMap = ref({});
-    const resourceOptions = ref([]);
+// 表格数据
+const tableData = ref([]);
+const resourceMap = ref({});
+const resourceOptions = ref([]);
 
-    // 分页配置
-    const pagination = reactive({
-      current: 1,
-      pageSize: 10,
-      total: 0,
-      showJumper: true,
-      showSizer: true,
-      pageSizeOptions: [10, 20, 50, 100],
-    });
+// 分页配置
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showJumper: true,
+  showSizer: true,
+  pageSizeOptions: [10, 20, 50, 100],
+});
 
-    // 表单数据
-    const formData = reactive({
-      id: '',
-      name: '',
-      resource_id: [],
-    });
+// 表单数据
+const formData = reactive({
+  id: '',
+  name: '',
+  resource_id: [],
+});
 
-    // 表单验证规则
-    const formRules = {
-      name: [
-        { required: true, message: '请输入角色名称', trigger: 'blur' },
-        { min: 2, max: 50, message: '角色名称长度在 2 到 50 个字符', trigger: 'blur' },
-      ],
-      resource_id: [{ required: true, message: '请选择资源权限', trigger: 'change' }],
-    };
-
-    // 表格列配置
-    const columns = [
-      {
-        colKey: 'index',
-        title: '序号',
-        width: 80,
-        cell: (h, { rowIndex }) => {
-          return (pagination.current - 1) * pagination.pageSize + rowIndex + 1;
-        },
-      },
-      {
-        colKey: 'name',
-        title: '角色名称',
-        width: 150,
-        ellipsis: true,
-      },
-      {
-        colKey: 'resource_id',
-        title: '资源权限',
-        minWidth: 200,
-        cell: 'resource',
-      },
-      {
-        colKey: 'operation',
-        title: '操作',
-        width: 150,
-        cell: 'operation',
-        fixed: 'right',
-      },
-    ];
-
-    // 计算属性
-    const getResourceName = (resourceId) => {
-      return resourceMap.value[resourceId] || resourceId;
-    };
-
-    // 方法
-    const loadRoleList = async () => {
-      try {
-        loading.value = true;
-        const params = {
-          name: searchForm.name,
-          page: pagination.current - 1,
-          limit: pagination.pageSize,
-        };
-
-        const res = await apiGetRoleList(params);
-
-        if (res.code !== 0) {
-          MessagePlugin.error('获取角色列表失败');
-          return;
-        }
-
-        let list = res.data.list || [];
-
-        // 获取角色资源关联
-        if (list.length > 0) {
-          const roleResourceRes = await apiGetRoleResourceList({
-            role_id: list.map((item) => item._id),
-          });
-
-          if (roleResourceRes.code === 0) {
-            const role2resource = roleResourceRes.data.list.reduce((map, curr) => {
-              map[curr.role_id] = curr.resource_id;
-              return map;
-            }, {});
-
-            list.forEach((item) => {
-              item.resource_id = role2resource[item._id] || [];
-            });
-          }
-        }
-
-        tableData.value = list;
-        pagination.total = res.data.total || 0;
-      } catch (error) {
-        console.error('加载角色列表失败:', error);
-        MessagePlugin.error('加载角色列表失败');
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    const loadResourceList = async (name = '') => {
-      try {
-        resourceLoading.value = true;
-        const res = await apiGetResourceList({
-          name,
-          page: 0,
-          limit: 1000,
-        });
-
-        if (res.code === 0) {
-          const items = res.data.list.map((item) => ({
-            label: item.name,
-            value: item._id,
-          }));
-
-          resourceOptions.value = items;
-
-          // 更新资源映射
-          resourceMap.value = items.reduce((map, item) => {
-            map[item.value] = item.label;
-            return map;
-          }, {});
-        }
-      } catch (error) {
-        console.error('加载资源列表失败:', error);
-      } finally {
-        resourceLoading.value = false;
-      }
-    };
-
-    const handleSearch = () => {
-      pagination.current = 1;
-      loadRoleList();
-    };
-
-    const handleReset = () => {
-      searchForm.name = '';
-      pagination.current = 1;
-      loadRoleList();
-    };
-
-    const handleRefresh = () => {
-      loadRoleList();
-    };
-
-    const handlePageChange = (pageInfo) => {
-      pagination.current = pageInfo.current;
-      loadRoleList();
-    };
-
-    const handlePageSizeChange = (pageInfo) => {
-      pagination.current = 1;
-      pagination.pageSize = pageInfo.pageSize;
-      loadRoleList();
-    };
-
-    const handleAdd = () => {
-      dialogTitle.value = '新建角色';
-      isEdit.value = false;
-      dialogVisible.value = true;
-
-      // 重置表单
-      Object.assign(formData, {
-        id: '',
-        name: '',
-        resource_id: [],
-      });
-    };
-
-    const handleEdit = (row) => {
-      dialogTitle.value = '编辑角色';
-      isEdit.value = true;
-      dialogVisible.value = true;
-
-      // 填充表单数据
-      Object.assign(formData, {
-        id: row._id,
-        name: row.name,
-        resource_id: row.resource_id || [],
-      });
-    };
-
-    const handleDelete = async (row) => {
-      try {
-        const res = await apiRoleDel({ id: row._id });
-        if (res.code === 0) {
-          MessagePlugin.success('删除成功');
-          loadRoleList();
-        } else {
-          MessagePlugin.error('删除失败');
-        }
-      } catch (error) {
-        console.error('删除角色失败:', error);
-        MessagePlugin.error('删除失败');
-      }
-    };
-
-    const handleSubmit = async () => {
-      try {
-        // 表单验证
-        const formRef = document.querySelector('.t-dialog .t-form');
-        if (!formRef) return;
-
-        // 提交数据
-        const postData = {
-          ...(formData.id ? { id: formData.id } : {}),
-          name: formData.name,
-          resource_id: formData.resource_id,
-        };
-
-        const res = await apiRoleModify(postData);
-        if (res.code !== 0) {
-          MessagePlugin.error('保存失败');
-          return;
-        }
-
-        // 更新角色资源关联
-        const roleResourceRes = await apiRoleResourceModify({
-          role_id: res.data.id,
-          resource_id: postData.resource_id,
-        });
-
-        if (roleResourceRes.code !== 0) {
-          MessagePlugin.error('更新权限失败');
-          return;
-        }
-
-        MessagePlugin.success(isEdit.value ? '更新成功' : '创建成功');
-        dialogVisible.value = false;
-        loadRoleList();
-      } catch (error) {
-        console.error('保存角色失败:', error);
-        MessagePlugin.error('保存失败');
-      }
-    };
-
-    const handleCancel = () => {
-      dialogVisible.value = false;
-    };
-
-    const handleResourceSearch = (value) => {
-      loadResourceList(value);
-    };
-
-    const handleResourceFocus = () => {
-      if (resourceOptions.value.length === 0) {
-        loadResourceList();
-      }
-    };
-
-    // 生命周期
-    onMounted(() => {
-      loadRoleList();
-      loadResourceList();
-    });
-
-    return {
-      loading,
-      dialogVisible,
-      dialogTitle,
-      resourceLoading,
-      searchForm,
-      tableData,
-      resourceMap,
-      resourceOptions,
-      pagination,
-      formData,
-      formRules,
-      columns,
-      getResourceName,
-      handleSearch,
-      handleReset,
-      handleRefresh,
-      handlePageChange,
-      handlePageSizeChange,
-      handleAdd,
-      handleEdit,
-      handleDelete,
-      handleSubmit,
-      handleCancel,
-      handleResourceSearch,
-      handleResourceFocus,
-    };
-  },
+// 表单验证规则
+const formRules = {
+  name: [
+    { required: true, message: '请输入角色名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '角色名称长度在 2 到 50 个字符', trigger: 'blur' },
+  ],
+  resource_id: [{ required: true, message: '请选择资源权限', trigger: 'change' }],
 };
+
+// 表格列配置
+const columns = [
+  {
+    colKey: 'index',
+    title: '序号',
+    width: 80,
+    cell: (h, { rowIndex }) => {
+      return (pagination.current - 1) * pagination.pageSize + rowIndex + 1;
+    },
+  },
+  {
+    colKey: 'name',
+    title: '角色名称',
+    width: 200, // 设置固定宽度
+    ellipsis: true,
+  },
+  {
+    colKey: 'resource_id',
+    title: '资源权限',
+    width: 200, // 设置固定宽度
+    cell: 'resource',
+  },
+  {
+    colKey: 'operation',
+    title: '操作',
+    cell: 'operation',
+    // fixed: 'right',
+    className: 'opts',
+    width: 80,
+  },
+];
+
+// 计算属性
+const getResourceName = (resourceId) => {
+  return resourceMap.value[resourceId] || resourceId;
+};
+
+// 方法
+const loadRoleList = async () => {
+  try {
+    loading.value = true;
+    const params = {
+      name: searchForm.name,
+      page: pagination.current - 1,
+      limit: pagination.pageSize,
+    };
+
+    const res = await apiGetRoleList(params);
+
+    if (res.code !== 0) {
+      MessagePlugin.error('获取角色列表失败');
+      return;
+    }
+
+    let list = res.data.list || [];
+
+    // 获取角色资源关联
+    if (list.length > 0) {
+      const roleResourceRes = await apiGetRoleResourceList({
+        role_id: list.map((item) => item._id),
+      });
+
+      if (roleResourceRes.code === 0) {
+        const role2resource = roleResourceRes.data.list.reduce((map, curr) => {
+          map[curr.role_id] = curr.resource_id;
+          return map;
+        }, {});
+
+        list.forEach((item) => {
+          item.resource_id = role2resource[item._id] || [];
+        });
+      }
+    }
+
+    tableData.value = list;
+    pagination.total = res.data.total || 0;
+  } catch (error) {
+    console.error('加载角色列表失败:', error);
+    MessagePlugin.error('加载角色列表失败');
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loadResourceList = async (name = '') => {
+  try {
+    resourceLoading.value = true;
+    const res = await apiGetResourceList({
+      name,
+      page: 0,
+      limit: 1000,
+    });
+
+    if (res.code === 0) {
+      const items = res.data.list.map((item) => ({
+        label: item.name,
+        value: item._id,
+      }));
+
+      resourceOptions.value = items;
+
+      // 更新资源映射
+      resourceMap.value = items.reduce((map, item) => {
+        map[item.value] = item.label;
+        return map;
+      }, {});
+    }
+  } catch (error) {
+    console.error('加载资源列表失败:', error);
+  } finally {
+    resourceLoading.value = false;
+  }
+};
+
+const handleSearch = () => {
+  pagination.current = 1;
+  loadRoleList();
+};
+
+const handleReset = () => {
+  searchForm.name = '';
+  pagination.current = 1;
+  loadRoleList();
+};
+
+const handleRefresh = () => {
+  loadRoleList();
+};
+
+const handlePageChange = (pageInfo) => {
+  pagination.current = pageInfo.current;
+  loadRoleList();
+};
+
+const handlePageSizeChange = (pageInfo) => {
+  pagination.current = 1;
+  pagination.pageSize = pageInfo.pageSize;
+  loadRoleList();
+};
+
+const handleAdd = () => {
+  dialogTitle.value = '新建角色';
+  isEdit.value = false;
+  dialogVisible.value = true;
+
+  // 重置表单
+  Object.assign(formData, {
+    id: '',
+    name: '',
+    resource_id: [],
+  });
+};
+
+const handleEdit = (row) => {
+  dialogTitle.value = '编辑角色';
+  isEdit.value = true;
+  dialogVisible.value = true;
+
+  // 填充表单数据
+  Object.assign(formData, {
+    id: row._id,
+    name: row.name,
+    resource_id: row.resource_id || [],
+  });
+};
+
+const handleDelete = async (row) => {
+  try {
+    const res = await apiRoleDel({ id: row._id });
+    if (res.code === 0) {
+      MessagePlugin.success('删除成功');
+      loadRoleList();
+    } else {
+      MessagePlugin.error('删除失败');
+    }
+  } catch (error) {
+    console.error('删除角色失败:', error);
+    MessagePlugin.error('删除失败');
+  }
+};
+
+const handleSubmit = async () => {
+  try {
+    // 表单验证
+    const formRef = document.querySelector('.t-dialog .t-form');
+    if (!formRef) return;
+
+    // 提交数据
+    const postData = {
+      ...(formData.id ? { id: formData.id } : {}),
+      name: formData.name,
+      resource_id: formData.resource_id,
+    };
+
+    const res = await apiRoleModify(postData);
+    if (res.code !== 0) {
+      MessagePlugin.error('保存失败');
+      return;
+    }
+
+    // 更新角色资源关联
+    const roleResourceRes = await apiRoleResourceModify({
+      role_id: res.data.id,
+      resource_id: postData.resource_id,
+    });
+
+    if (roleResourceRes.code !== 0) {
+      MessagePlugin.error('更新权限失败');
+      return;
+    }
+
+    MessagePlugin.success(isEdit.value ? '更新成功' : '创建成功');
+    dialogVisible.value = false;
+    loadRoleList();
+  } catch (error) {
+    console.error('保存角色失败:', error);
+    MessagePlugin.error('保存失败');
+  }
+};
+
+const handleCancel = () => {
+  dialogVisible.value = false;
+};
+
+const handleResourceSearch = (value) => {
+  loadResourceList(value);
+};
+
+const handleResourceFocus = () => {
+  if (resourceOptions.value.length === 0) {
+    loadResourceList();
+  }
+};
+
+// 生命周期
+onMounted(() => {
+  loadRoleList();
+  loadResourceList();
+});
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .role-management {
   background: #f5f5f5;
   min-height: 100vh;
@@ -455,19 +423,19 @@ export default {
 .page-header {
   margin-bottom: 20px;
   text-align: center;
-}
 
-.page-header h1 {
-  margin: 0 0 8px 0;
-  color: #333;
-  font-size: 24px;
-  font-weight: 600;
-}
+  h1 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+  }
 
-.page-header p {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
+  p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+  }
 }
 
 .search-card,
@@ -476,37 +444,17 @@ export default {
   margin-bottom: 16px;
 }
 
-.search-card :deep(.t-card__body) {
-  padding: 20px;
-}
-
-.action-card :deep(.t-card__body) {
-  padding: 16px 20px;
-}
-
-.table-card :deep(.t-card__body) {
-  padding: 0;
+/** 没有 `:deep`，结果 .opts[data-v-xx]，只能在顶层使用；用了 deep，data-vxx opts */
+:deep(.opts) {
+  width: 5rem;
+  min-width: 5rem;
+  text-align: center;
+  white-space: pre-line;
 }
 
 .form-tip {
   margin-top: 4px;
   font-size: 12px;
   color: #999;
-}
-
-:deep(.t-table) {
-  border-radius: 0;
-}
-
-:deep(.t-table__header) {
-  background: #fafafa;
-}
-
-:deep(.t-dialog__body) {
-  padding: 20px;
-}
-
-:deep(.t-form) {
-  margin-top: 0;
 }
 </style>

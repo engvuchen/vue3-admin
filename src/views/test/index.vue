@@ -1,5 +1,5 @@
 <template>
-  <div id="editor" style="height: 100px; border: 1px solid #eee"></div>
+  <!-- <div id="editor" style="height: 100px; border: 1px solid #eee"></div> -->
   <pro-table
     ref="table"
     :title="$t('test/list.title')"
@@ -246,10 +246,10 @@ async function getList(params) {
 
 onMounted(() => {
   // 正常使用右键菜单的部分功能；JSON高亮；查找；样式正常
-  window.monaco.editor.create(document.getElementById('editor'), {
-    value: '{ "name": "test" }',
-    language: 'json',
-  });
+  // window.monaco.editor.create(document.getElementById('editor'), {
+  //   value: '{ "name": "test" }',
+  //   language: 'json',
+  // });
 });
 </script>
 
