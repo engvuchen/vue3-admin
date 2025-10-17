@@ -479,9 +479,12 @@ const basicFormConfig = {
 
 // 高级表单配置（包含联动和装饰）
 const advancedFormConfig = {
-  layout: 'vertical',
+  layout: 'horizontal',
   labelWidth: '120px',
-  fieldSpacing: 32,
+  fieldSpacing: {
+    horizontal: 16,  // 水平间距
+    vertical: 24     // 垂直间距
+  },
   fields: [
     {
       key: 'userType',

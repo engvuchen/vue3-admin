@@ -6,9 +6,8 @@
       :layout="config.layout || 'vertical'"
       :label-width="config.labelWidth"
       :rules="formRules"
-      @submit="handleSubmit"
     >
-      <t-row :gutter="[0, fieldSpacingValue]">
+      <t-row :gutter="fieldSpacing">
         <t-col v-for="field in visibleFields" :key="field.key" :span="field.span || 24" :offset="field.offset || 0">
           <!-- 上置装饰 -->
           <component
@@ -78,13 +77,13 @@
       </t-row>
 
       <!-- 表单操作按钮 -->
-      <t-form-item v-if="config.showSubmit !== false || config.showReset !== false">
+      <t-form-item v-if="config.showSubmit || config.showReset">
         <t-space>
-          <t-button v-if="config.showSubmit !== false" theme="primary" type="submit">
-            {{ config.submitText || '提交' }}
-          </t-button>
-          <t-button v-if="config.showReset !== false" theme="default" variant="base" @click="handleReset">
+          <t-button v-if="config.showReset" theme="default" @click="handleReset">
             {{ config.resetText || '重置' }}
+          </t-button>
+          <t-button v-if="config.showSubmit" theme="primary" @click="handleSubmit">
+            {{ config.submitText || '提交' }}
           </t-button>
         </t-space>
       </t-form-item>
@@ -192,9 +191,14 @@ const visibleFields = computed(() => {
 });
 
 // 计算表单项间距
-const fieldSpacingValue = computed(() => {
-  const spacing = props.config.fieldSpacing ?? 24; // 默认24px
-  return typeof spacing === 'number' ? spacing : parseInt(spacing, 10) || 24;
+const fieldSpacing = computed(() => {
+  const config = props.config;
+  const spacing = config.fieldSpacing || {};
+  
+  return [
+    parseInt(spacing.horizontal) || 0,  // 水平间距
+    parseInt(spacing.vertical) || 24    // 垂直间距
+  ];
 });
 
 // 生成表单校验规则
@@ -532,8 +536,9 @@ const handleLinkage = async (changedKey, changedValue) => {
 
 // 表单提交
 const handleSubmit = async (e) => {
-  if (e.validateResult === true) {
-    emit('submit', { ...formData });
+  let res = await form.value.validate(); // 校验通过是 true，返回出错的规则对象，例如 { name: [ { result: false, message: 'xxx' } ] }
+  if (res === true) {
+    emit('submit', { ...formData }); // 只有 formData 是被代理的，展开之后没有响应性了
   }
 };
 

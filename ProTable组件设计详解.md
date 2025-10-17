@@ -1,5 +1,21 @@
 # ProTable 组件设计详解
 
+ProTable 主要是对 查询表单 + table 进行优化；
+
+1. 有查询表单；
+2. 表格右上角的操作按钮
+3. el-table 表格配置; el-pagination 是独立的；
+2. 表单有日期的处理方式；trueNames: startDate、endDate
+
+关键：
+1. 除了查询配置、表格配置，额外传入了很多插槽；
+2. 通过表格配置项中的 tdSlot 指定
+
+td ProForm 再分派出一个 SearchForm；
+1. 处理 查询、重置 按钮；
+2. 传入接口；
+
+
 ## 概述
 
 ProTable 是一个基于 Vue 3 + Element Plus 的通用表格组件，采用配置化驱动和插槽扩展的设计理念，旨在简化中后台管理系统中表格页面的开发工作。

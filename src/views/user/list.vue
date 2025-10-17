@@ -30,6 +30,7 @@
       </template>
       <!-- 单元格操作列 -->
       <template #operate="scope">
+        <!-- 编辑 -->
         <el-button plain circle type="default" @click="onShowUpdForm(scope.row)">
           <Edit style="width: 16px; height: 16px" />
         </el-button>

@@ -10,6 +10,7 @@ const NestPage2 = () => import('@/views/test/nest/Page2.vue');
 const Iscache = () => import('@/views/test/Cache.vue');
 const Nocache = () => import('@/views/test/Nocache.vue');
 const ErrorLog = () => import('@/views/test/error-log/index.vue');
+const TdProTableDemo = () => import('@/views/test/td-pro-table-demo.vue');
 
 export default [
   {
@@ -114,6 +115,14 @@ export default [
         component: ErrorLog,
         meta: {
           title: 'menu.test-error-log',
+        },
+      },
+      {
+        path: 'td-pro-table-demo',
+        name: 'test-td-pro-table-demo',
+        component: TdProTableDemo,
+        meta: {
+          title: 'TdProTable 演示',
         },
       },
     ],

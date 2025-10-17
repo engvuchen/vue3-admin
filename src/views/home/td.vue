@@ -312,7 +312,6 @@ const handlePageSizeChange = (pageInfo) => {
   pagination.pageSize = pageInfo.pageSize;
   loadRoleList();
 };
-
 const handleAdd = () => {
   dialogTitle.value = '新建角色';
   isEdit.value = false;
