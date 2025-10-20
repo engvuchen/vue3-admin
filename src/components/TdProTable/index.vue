@@ -59,9 +59,9 @@
         </template>
 
         <!-- 自定义列内容 todo1 这里有问题 -->
-        <template v-for="column in processedColumns" :key="column.colKey" #[`${column.colKey}`]="scope">
+        <!-- <template v-for="column in processedColumns" :key="column.colKey" #[`${column.colKey}`]="scope">
           <slot :name="column.colKey" v-bind="scope"></slot>
-        </template>
+        </template> -->
 
         <!-- 空状态插槽 -->
         <template #empty>
@@ -98,83 +98,8 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, watch, nextTick } from 'vue';
-import { Table as TTable, Pagination as TPagination } from 'tdesign-vue-next';
-import TdSearchForm from '../TdSearchForm/index.vue';
 
-const mockData = [
-  {
-    id: 1,
-    name: '张三',
-    email: 'zhangsan@example.com',
-    phone: '13800138001',
-    status: 1,
-    createTime: '2024-01-01 10:00:00',
-  },
-  {
-    id: 2,
-    name: '李四',
-    email: 'lisi@example.com',
-    phone: '13800138002',
-    status: 0,
-    createTime: '2024-01-02 10:00:00',
-  },
-  {
-    id: 3,
-    name: '王五',
-    email: 'wangwu@example.com',
-    phone: '13800138003',
-    status: 1,
-    createTime: '2024-01-03 10:00:00',
-  },
-  {
-    id: 4,
-    name: '赵六',
-    email: 'zhaoliu@example.com',
-    phone: '13800138004',
-    status: 1,
-    createTime: '2024-01-04 10:00:00',
-  },
-  {
-    id: 5,
-    name: '钱七',
-    email: 'qianqi@example.com',
-    phone: '13800138005',
-    status: 0,
-    createTime: '2024-01-05 10:00:00',
-  },
-];
-const mockColumns = [
-  {
-    align: 'left',
-    colKey: 'id',
-    title: 'ID',
-    width: 80,
-  },
-  {
-    align: 'left',
-    colKey: 'name',
-    title: '姓名',
-    width: 120,
-  },
-  {
-    align: 'left',
-    colKey: 'email',
-    title: '邮箱',
-    minWidth: 200,
-  },
-  {
-    align: 'left',
-    colKey: 'phone',
-    title: '电话',
-    width: 150,
-  },
-  {
-    align: 'left',
-    colKey: 'createTime',
-    title: '创建时间',
-    width: 180,
-  },
-];
+import TdSearchForm from '../TdSearchForm/index.vue';
 
 const props = defineProps({
   // 请求数据的方法
@@ -654,11 +579,6 @@ watch(
       align-items: center;
       gap: 8px;
     }
-  }
-
-  .table-container {
-    // padding: 20px;
-    // background: #fff;
   }
 
   .empty-state {

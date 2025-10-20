@@ -1,6 +1,8 @@
 import path from 'path';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+
 // import legacy from '@vitejs/plugin-legacy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 
@@ -32,6 +34,7 @@ export default (env) => {
       //   include: ['buffer'],
       // }),
       vue(),
+      vueJsx(),
 
       // 按需导入配置
       AutoImport({

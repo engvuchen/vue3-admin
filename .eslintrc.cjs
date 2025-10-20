@@ -1,11 +1,17 @@
 module.exports = {
-  extends: ['alloy'],
+  extends: ['alloy', './.eslintrc-auto-import.json'],
   parser: 'vue-eslint-parser',
   parserOptions: {
+    ecmaFeatures: { jsx: true },
     parser: {
       js: '@babel/eslint-parser',
       jsx: '@babel/eslint-parser',
       // Leave the template parser unspecified, so that it could be determined by `<script lang="...">`
+    },
+    requireConfigFile: false,
+    babelOptions: {
+      presets: [],
+      plugins: ['@vue/babel-plugin-jsx'],
     },
   },
   env: {
@@ -26,7 +32,6 @@ module.exports = {
     ElMessageBox: 'readonly',
     ElNotification: 'readonly',
     ElLoading: 'readonly',
-    ElMessageBox: 'readonly',
     ElAlert: 'readonly',
     ElButton: 'readonly',
     ElInput: 'readonly',
@@ -86,5 +91,7 @@ module.exports = {
     // 自定义你的规则
     'max-params': ['error', 4], // 将允许的最大参数个数增加到 4
     'no-param-reassign': 'off', // 允许对函数参数进行重新赋值
+    // 'react/jsx-uses-react': 'off',
+    // 'react/react-in-jsx-scope': 'off',
   },
 };

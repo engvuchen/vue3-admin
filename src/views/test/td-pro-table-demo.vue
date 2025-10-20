@@ -28,7 +28,7 @@
         :pagination="advancedPaginationConfig"
         :empty="{
           description: '暂无用户数据',
-          icon: 'user'
+          icon: 'user',
         }"
         :request-delay="300"
         title="高级用户列表"
@@ -60,8 +60,8 @@
 
         <template #action="{ row }">
           <t-space>
-            <t-button theme="primary" variant="text" @click="handleEdit(row)"> 编辑 </t-button>
-            <t-button theme="danger" variant="text" @click="handleDelete(row)"> 删除 </t-button>
+            <t-button theme="primary" @click="handleEdit(row)"> 编辑 </t-button>
+            <t-button theme="danger" @click="handleDelete(row)"> 删除 </t-button>
           </t-space>
         </template>
       </td-pro-table>
@@ -69,7 +69,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="jsx">
 import { Button as TButton, Tag as TTag, Space as TSpace, Icon as TIcon } from 'tdesign-vue-next';
 import TdProTable from '@/components/TdProTable/index.vue';
 
@@ -131,6 +131,9 @@ const advancedColumns = [
     colKey: 'status',
     title: '状态',
     width: 100,
+    cell: (h, { row }) => {
+      return <t-tag theme={row.status === 1 ? 'success' : 'default'}>{row.status === 1 ? '启用' : '禁用'}</t-tag>;
+    },
   },
   {
     colKey: 'createTime',
@@ -142,6 +145,18 @@ const advancedColumns = [
     title: '操作',
     width: 150,
     fixed: 'right',
+    cell: (h, { row }) => {
+      return (
+        <t-space>
+          <t-button theme="primary" variant="text" onClick={() => handleEdit(row)}>
+            编辑
+          </t-button>
+          <t-button theme="danger" variant="text" onClick={() => handleDelete(row)}>
+            删除
+          </t-button>
+        </t-space>
+      );
+    },
   },
 ];
 
@@ -319,7 +334,9 @@ const getTableData = async (params) => {
   console.log('请求参数:', params);
 
   // 模拟API请求延迟
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise((resolve) => {
+    setTimeout(resolve, 500);
+  });
 
   // 模拟搜索过滤
   let filteredData = [...mockData];
@@ -341,7 +358,7 @@ const getTableData = async (params) => {
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
   const data = filteredData.slice(start, end);
-  console.log("❗️ ~ getTableData ~ data:", data)
+  console.log('❗️ ~ getTableData ~ data:', data);
 
   return {
     data,
