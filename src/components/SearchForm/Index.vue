@@ -9,7 +9,7 @@
   />
 </template>
 <script>
-import PrimaryForm from '@/components/ProForm2/index.vue';
+import PrimaryForm from '@/components/TdProForm/index.vue';
 
 let props = defindProps({
   config: {

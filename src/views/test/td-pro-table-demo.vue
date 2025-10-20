@@ -1,9 +1,10 @@
 <template>
   <div class="td-pro-table-demo">
     <h2>TdProTable 组件演示</h2>
-    
+
     <!-- 基础表格 -->
-    <div class="demo-section">
+
+    <t-card :bordered="false" class="demo-section">
       <h3>基础表格</h3>
       <td-pro-table
         :request="getTableData"
@@ -15,20 +16,26 @@
         @reset="handleReset"
         @selectionChange="handleSelectionChange"
       />
-    </div>
+    </t-card>
 
-    <!-- 高级表格 -->
+    <!-- 高级表格（带自定义按钮） -->
     <div class="demo-section">
-      <h3>高级表格（带自定义按钮）</h3>
+      <h3>高级表格（带自定义按钮和优化分页）</h3>
       <td-pro-table
         :request="getTableData"
         :columns="advancedColumns"
         :search="advancedSearchConfig"
-        :pagination="paginationConfig"
+        :pagination="advancedPaginationConfig"
+        :empty="{
+          description: '暂无用户数据',
+          icon: 'user'
+        }"
+        :request-delay="300"
         title="高级用户列表"
         @submit="handleSearch"
         @reset="handleReset"
         @selectionChange="handleSelectionChange"
+        @error="handleError"
       >
         <template #toolbar>
           <t-button theme="primary" @click="handleAdd">
@@ -53,12 +60,8 @@
 
         <template #action="{ row }">
           <t-space>
-            <t-button theme="primary" variant="text" @click="handleEdit(row)">
-              编辑
-            </t-button>
-            <t-button theme="danger" variant="text" @click="handleDelete(row)">
-              删除
-            </t-button>
+            <t-button theme="primary" variant="text" @click="handleEdit(row)"> 编辑 </t-button>
+            <t-button theme="danger" variant="text" @click="handleDelete(row)"> 删除 </t-button>
           </t-space>
         </template>
       </td-pro-table>
@@ -67,7 +70,6 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
 import { Button as TButton, Tag as TTag, Space as TSpace, Icon as TIcon } from 'tdesign-vue-next';
 import TdProTable from '@/components/TdProTable/index.vue';
 
@@ -77,27 +79,27 @@ const selectedRows = ref([]);
 // 基础表格列配置
 const columns = [
   {
-    key: 'id',
+    colKey: 'id',
     title: 'ID',
     width: 80,
   },
   {
-    key: 'name',
+    colKey: 'name',
     title: '姓名',
     width: 120,
   },
   {
-    key: 'email',
+    colKey: 'email', // 'detail.email' 支持往里取值？
     title: '邮箱',
     minWidth: 200,
   },
   {
-    key: 'phone',
+    colKey: 'phone',
     title: '电话',
     width: 150,
   },
   {
-    key: 'createTime',
+    colKey: 'createTime',
     title: '创建时间',
     width: 180,
   },
@@ -106,41 +108,39 @@ const columns = [
 // 高级表格列配置
 const advancedColumns = [
   {
-    key: 'id',
+    colKey: 'id',
     title: 'ID',
     width: 80,
   },
   {
-    key: 'name',
+    colKey: 'name',
     title: '姓名',
     width: 120,
   },
   {
-    key: 'email',
+    colKey: 'email',
     title: '邮箱',
     minWidth: 200,
   },
   {
-    key: 'phone',
+    colKey: 'phone',
     title: '电话',
     width: 150,
   },
   {
-    key: 'status',
+    colKey: 'status',
     title: '状态',
     width: 100,
-    colKey: 'status',
   },
   {
-    key: 'createTime',
+    colKey: 'createTime',
     title: '创建时间',
     width: 180,
   },
   {
-    key: 'action',
+    colKey: 'action',
     title: '操作',
     width: 150,
-    colKey: 'action',
     fixed: 'right',
   },
 ];
@@ -181,6 +181,8 @@ const searchConfig = {
 
 // 高级搜索配置（带自定义按钮）
 const advancedSearchConfig = {
+  layout: 'inline',
+  labelWidth: 'auto',
   fields: [
     {
       key: 'name',
@@ -216,8 +218,6 @@ const advancedSearchConfig = {
       span: 6,
     },
   ],
-  layout: 'inline',
-  labelWidth: 'auto',
   customButtons: [
     {
       key: 'export',
@@ -238,6 +238,24 @@ const advancedSearchConfig = {
       },
     },
   ],
+};
+
+// 高级分页配置示例
+const advancedPaginationConfig = {
+  show: true,
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  pageSizeOptions: [5, 10, 20, 50, 100],
+  showTotal: true,
+  showJumper: true,
+  showSizer: true,
+  size: 'medium',
+  theme: 'default',
+  className: 'custom-pagination',
+  style: {
+    marginTop: '16px',
+  },
 };
 
 // 分页配置
@@ -299,37 +317,32 @@ const mockData = [
 // 获取表格数据
 const getTableData = async (params) => {
   console.log('请求参数:', params);
-  
+
   // 模拟API请求延迟
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
   // 模拟搜索过滤
   let filteredData = [...mockData];
-  
+
   if (params.name) {
-    filteredData = filteredData.filter(item => 
-      item.name.includes(params.name)
-    );
+    filteredData = filteredData.filter((item) => item.name.includes(params.name));
   }
-  
+
   if (params.email) {
-    filteredData = filteredData.filter(item => 
-      item.email.includes(params.email)
-    );
+    filteredData = filteredData.filter((item) => item.email.includes(params.email));
   }
-  
+
   if (params.status !== undefined && params.status !== '') {
-    filteredData = filteredData.filter(item => 
-      item.status === params.status
-    );
+    filteredData = filteredData.filter((item) => item.status === params.status);
   }
-  
+
   // 模拟分页
   const { page = 1, pageSize = 10 } = params;
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
   const data = filteredData.slice(start, end);
-  
+  console.log("❗️ ~ getTableData ~ data:", data)
+
   return {
     data,
     total: filteredData.length,
@@ -362,8 +375,9 @@ const handleDelete = (row) => {
   console.log('删除用户:', row);
 };
 
-const handleBatchDelete = () => {
-  console.log('批量删除:', selectedRows.value);
+const handleError = (error) => {
+  console.error('表格请求错误:', error);
+  // 这里可以显示错误提示
 };
 </script>
 

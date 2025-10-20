@@ -114,7 +114,7 @@ import {
   Tabs as TTabs,
   TabPanel as TTabPanel,
 } from 'tdesign-vue-next';
-import PrimaryForm from '@/components/ProForm2/index.vue';
+import PrimaryForm from '@/components/TdProForm/index.vue';
 
 // 表单引用
 const basicFormRef = ref();

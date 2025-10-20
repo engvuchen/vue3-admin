@@ -2,14 +2,14 @@
   <div class="td-pro-table">
     <!-- 搜索表单 -->
     <td-search-form
-      v-if="!!search"
+      v-if="search"
+      ref="searchFormRef"
       :config="searchConfig"
       :request="searchRequest"
       @submit="handleSearch"
       @reset="handleReset"
     />
 
-    <!-- 标题和工具栏 -->
     <div class="table-header" v-if="!hideTitleBar">
       <slot name="title">
         <span class="table-title">{{ title }}</span>
@@ -32,6 +32,8 @@
         :max-height="maxHeight"
         :height="height"
         :columns="processedColumns"
+        :empty="emptyConfig"
+        :pagination="paginationConfig"
         @select-change="handleSelectionChange"
         @row-click="handleRowClick"
         @row-dblclick="handleRowDblClick"
@@ -56,15 +58,25 @@
           <slot :name="`${column.colKey}-header`" v-bind="scope"></slot>
         </template>
 
-        <!-- 自定义列内容 -->
+        <!-- 自定义列内容 todo1 这里有问题 -->
         <template v-for="column in processedColumns" :key="column.colKey" #[`${column.colKey}`]="scope">
           <slot :name="column.colKey" v-bind="scope"></slot>
+        </template>
+
+        <!-- 空状态插槽 -->
+        <template #empty>
+          <slot name="empty">
+            <div class="empty-state">
+              <t-icon name="inbox" size="48px" />
+              <p>暂无数据</p>
+            </div>
+          </slot>
         </template>
       </t-table>
     </div>
 
     <!-- 分页 -->
-    <t-pagination
+    <!-- <t-pagination
       v-if="paginationConfig.show && total > 0"
       v-model:current="currentPage"
       v-model:page-size="pageSize"
@@ -80,14 +92,89 @@
       @change="handlePaginationChange"
       @page-size-change="handlePageSizeChange"
       @current-change="handleCurrentPageChange"
-    />
+    /> -->
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, toRaw, toRefs, watch } from 'vue';
+import { ref, computed, onBeforeMount, watch, nextTick } from 'vue';
 import { Table as TTable, Pagination as TPagination } from 'tdesign-vue-next';
 import TdSearchForm from '../TdSearchForm/index.vue';
+
+const mockData = [
+  {
+    id: 1,
+    name: '张三',
+    email: 'zhangsan@example.com',
+    phone: '13800138001',
+    status: 1,
+    createTime: '2024-01-01 10:00:00',
+  },
+  {
+    id: 2,
+    name: '李四',
+    email: 'lisi@example.com',
+    phone: '13800138002',
+    status: 0,
+    createTime: '2024-01-02 10:00:00',
+  },
+  {
+    id: 3,
+    name: '王五',
+    email: 'wangwu@example.com',
+    phone: '13800138003',
+    status: 1,
+    createTime: '2024-01-03 10:00:00',
+  },
+  {
+    id: 4,
+    name: '赵六',
+    email: 'zhaoliu@example.com',
+    phone: '13800138004',
+    status: 1,
+    createTime: '2024-01-04 10:00:00',
+  },
+  {
+    id: 5,
+    name: '钱七',
+    email: 'qianqi@example.com',
+    phone: '13800138005',
+    status: 0,
+    createTime: '2024-01-05 10:00:00',
+  },
+];
+const mockColumns = [
+  {
+    align: 'left',
+    colKey: 'id',
+    title: 'ID',
+    width: 80,
+  },
+  {
+    align: 'left',
+    colKey: 'name',
+    title: '姓名',
+    width: 120,
+  },
+  {
+    align: 'left',
+    colKey: 'email',
+    title: '邮箱',
+    minWidth: 200,
+  },
+  {
+    align: 'left',
+    colKey: 'phone',
+    title: '电话',
+    width: 150,
+  },
+  {
+    align: 'left',
+    colKey: 'createTime',
+    title: '创建时间',
+    width: 180,
+  },
+];
 
 const props = defineProps({
   // 请求数据的方法
@@ -123,7 +210,7 @@ const props = defineProps({
   // 行数据的Key
   rowKey: {
     type: [String, Function],
-    default: 'id',
+    default: 'index',
   },
   // 是否显示边框
   bordered: {
@@ -161,6 +248,21 @@ const props = defineProps({
     type: [Boolean, Object],
     default: () => ({}),
   },
+  // 空状态配置
+  empty: {
+    type: [String, Object],
+    default: '暂无数据',
+  },
+  // 是否自动请求数据
+  autoRequest: {
+    type: Boolean,
+    default: true,
+  },
+  // 请求防抖延迟（毫秒）
+  requestDelay: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const emit = defineEmits([
@@ -184,6 +286,8 @@ const emit = defineEmits([
   'scrollToBottomRight',
   'scrollToTopLeft',
   'scrollToTopRight',
+  'error',
+  'clearSelection',
 ]);
 
 // 响应式数据
@@ -192,24 +296,25 @@ const tableData = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
+const searchFormRef = ref(null);
+const searchParams = ref({});
 
 // 分页配置
 const paginationConfig = computed(() => {
-  const defaultConfig = {
-    show: true,
-    current: 1,
-    pageSize: 10,
-    total: 0,
-    pageSizeOptions: [5, 10, 20, 50, 100],
-    showTotal: true,
+  return {
+    current: currentPage.value,
+    pageSize: pageSize.value,
+    total: total.value,
     showJumper: true,
     showSizer: true,
+    showTotal: true,
+    pageSizeOptions: [5, 10, 20, 50, 100],
     size: 'medium',
     theme: 'default',
-    className: '',
-    style: {},
+    className: '', // todo1 这个为空字符串，异常
+    // style: {},
+    ...props.pagination,
   };
-  return { ...defaultConfig, ...props.pagination };
 });
 
 // 搜索配置
@@ -230,50 +335,102 @@ const searchConfig = computed(() => {
   };
 });
 
-// 处理列配置
+// 空状态配置
+const emptyConfig = computed(() => {
+  if (typeof props.empty === 'string') {
+    return props.empty;
+  }
+  return {
+    description: '暂无数据',
+    icon: 'inbox',
+    ...props.empty,
+  };
+});
+
+// 防抖请求
+let requestTimer = null;
+const debouncedRequest = (params = {}) => {
+  if (requestTimer) {
+    clearTimeout(requestTimer);
+  }
+
+  if (props.requestDelay > 0) {
+    requestTimer = setTimeout(() => {
+      getTableData(params);
+    }, props.requestDelay);
+  } else {
+    getTableData(params);
+  }
+};
 const processedColumns = computed(() => {
-  return props.columns.map((column) => ({
-    colKey: column.key || column.dataIndex || column.prop,
-    title: column.title || column.label,
-    width: column.width,
-    minWidth: column.minWidth,
-    maxWidth: column.maxWidth,
-    fixed: column.fixed,
+  let res = props.columns.map((column) => ({
+    // colKey: column.colKey,
+    // title: column.title,
+    // width: column.width,
+    // minWidth: column.minWidth,
+    // maxWidth: column.maxWidth,
+    // fixed: column.fixed,
     align: column.align || 'left',
-    ellipsis: column.ellipsis,
-    sortType: column.sortType,
-    sorter: column.sorter,
-    filter: column.filter,
-    resizable: column.resizable,
+    // ellipsis: column.ellipsis,
+    // sortType: column.sortType,
+    // sorter: column.sorter,
+    // filter: column.filter,
+    // resizable: column.resizable,
     ...column,
   }));
+
+  console.log('res', res);
+
+  return res;
 });
+
+console.log('processedColumns.value', processedColumns.value);
 
 // 获取搜索表单数据
 const getSearchData = () => {
-  // 这里需要从 TdSearchForm 组件获取数据
-  // 由于组件间通信的限制，这里先返回空对象
-  // 实际使用时需要通过 ref 或者事件来获取
+  // 优先使用缓存的搜索参数
+  if (Object.keys(searchParams.value).length > 0) {
+    return searchParams.value;
+  }
+
+  // 尝试从搜索表单组件获取数据
+  if (searchFormRef.value && typeof searchFormRef.value.getFormData === 'function') {
+    return searchFormRef.value.getFormData();
+  }
+
   return {};
 };
 
 // 请求表格数据
-const getTableData = async () => {
+const getTableData = async (params = {}) => {
+  if (loading.value) return; // 防止重复请求
+
   loading.value = true;
-  
+
   try {
     const searchData = getSearchData();
-    const params = {
+    const requestParams = {
       page: currentPage.value,
       pageSize: pageSize.value,
       ...searchData,
+      ...params, // 允许外部传入额外参数
     };
 
-    const response = await props.request(params);
-    
+    const response = await props.request(requestParams);
+
     if (response && typeof response === 'object') {
       tableData.value = response.data || response.list || [];
+
+      console.log('tableData.value', tableData.value);
+
       total.value = response.total || response.totalCount || 0;
+
+      // 触发数据变化事件
+      emit('dataChange', {
+        data: tableData.value,
+        total: total.value,
+        params: requestParams,
+      });
     } else {
       tableData.value = [];
       total.value = 0;
@@ -282,6 +439,9 @@ const getTableData = async () => {
     console.error('获取表格数据失败:', error);
     tableData.value = [];
     total.value = 0;
+
+    // 触发错误事件
+    emit('error', error);
   } finally {
     loading.value = false;
   }
@@ -290,16 +450,16 @@ const getTableData = async () => {
 // 搜索
 const handleSearch = (searchData) => {
   currentPage.value = 1;
-  // 这里需要将搜索数据传递给 getTableData
-  // 由于组件间通信的限制，这里先调用 getTableData
-  getTableData();
+  searchParams.value = { ...searchData }; // 缓存搜索参数
+  debouncedRequest();
   emit('submit', searchData);
 };
 
 // 重置
 const handleReset = () => {
   currentPage.value = 1;
-  getTableData();
+  searchParams.value = {}; // 清空搜索参数
+  debouncedRequest();
   emit('reset');
 };
 
@@ -326,35 +486,21 @@ const handleCellClick = (context) => {
 // 排序变化
 const handleSortChange = (sortInfo) => {
   emit('sortChange', sortInfo);
-  getTableData();
+  debouncedRequest();
 };
 
 // 过滤变化
 const handleFilterChange = (filterInfo) => {
   emit('filterChange', filterInfo);
-  getTableData();
+  debouncedRequest();
 };
 
 // 分页变化
-const handlePaginationChange = (pageInfo) => {
+const handlePageChange = (pageInfo) => {
+  console.log('分页变化:', pageInfo);
   currentPage.value = pageInfo.current;
   pageSize.value = pageInfo.pageSize;
-  getTableData();
-  emit('pageChange', pageInfo);
-};
-
-// 页码变化
-const handleCurrentPageChange = (current, pageInfo) => {
-  currentPage.value = current;
-  getTableData();
-  emit('pageChange', pageInfo);
-};
-
-// 每页条数变化
-const handlePageSizeChange = (pageSize, pageInfo) => {
-  currentPage.value = 1;
-  pageSize.value = pageSize;
-  getTableData();
+  debouncedRequest();
   emit('pageChange', pageInfo);
 };
 
@@ -406,19 +552,46 @@ const handleScrollToTopRight = (params) => {
 };
 
 // 刷新数据
-const refresh = () => {
-  getTableData();
+const refresh = (params = {}) => {
+  debouncedRequest(params);
+};
+
+// 重置分页
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = paginationConfig.value.pageSize || 10;
+};
+
+// 清空选择
+const clearSelection = () => {
+  // 这里需要调用表格的清除选择方法
+  // 由于 TDesign Table 的限制，暂时通过事件通知父组件
+  emit('clearSelection');
+};
+
+// 获取当前选择的行
+const getSelectedRows = () => {
+  // 这里需要从表格组件获取选择的行
+  // 暂时返回空数组，实际使用时需要通过 ref 获取
+  return [];
 };
 
 // 暴露方法
 defineExpose({
   refresh,
   getTableData,
+  resetPagination,
+  clearSelection,
+  getSelectedRows,
+  // 暴露搜索表单引用
+  searchFormRef,
 });
 
 // 初始化
 onBeforeMount(() => {
-  getTableData();
+  if (props.autoRequest) {
+    debouncedRequest();
+  }
 });
 
 // 监听分页配置变化
@@ -428,7 +601,30 @@ watch(
     currentPage.value = newConfig.current || 1;
     pageSize.value = newConfig.pageSize || 10;
   },
-  { deep: true }
+  { deep: true },
+);
+
+// 监听列配置变化，重新处理列
+watch(
+  () => props.columns,
+  () => {
+    // 列配置变化时，可以在这里做一些处理
+    nextTick(() => {
+      // 确保 DOM 更新后再执行
+    });
+  },
+  { deep: true },
+);
+
+// 监听搜索配置变化
+watch(
+  () => props.search,
+  (newSearch) => {
+    if (newSearch === false) {
+      searchParams.value = {};
+    }
+  },
+  { deep: true },
 );
 </script>
 
@@ -436,6 +632,8 @@ watch(
 .td-pro-table {
   width: 100%;
   background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
 
   .table-header {
     display: flex;
@@ -443,6 +641,7 @@ watch(
     align-items: center;
     padding: 20px 20px 0;
     background: #fff;
+    border-bottom: 1px solid #f0f0f0;
 
     .table-title {
       font-size: 16px;
@@ -458,8 +657,42 @@ watch(
   }
 
   .table-container {
-    padding: 20px;
-    background: #fff;
+    // padding: 20px;
+    // background: #fff;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #999;
+
+    p {
+      margin-top: 12px;
+      font-size: 14px;
+    }
   }
 }
+
+// 响应式设计
+// @media (max-width: 768px) {
+//   .td-pro-table {
+//     .table-header {
+//       flex-direction: column;
+//       align-items: flex-start;
+//       gap: 12px;
+
+//       .table-toolbar {
+//         width: 100%;
+//         justify-content: flex-end;
+//       }
+//     }
+
+//     .table-container {
+//       padding: 16px;
+//     }
+//   }
+// }
 </style>
