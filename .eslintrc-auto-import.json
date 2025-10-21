@@ -70,6 +70,22 @@
     "watchEffect": true,
     "watchPostEffect": true,
     "watchSyncEffect": true,
-    "ElMessage": true
+    "ElMessage": true,
+    "TCheckbox": true,
+    "TCheckboxGroup": true,
+    "TDatePicker": true,
+    "TInput": true,
+    "TInputNumber": true,
+    "TOption": true,
+    "TRadio": true,
+    "TRadioGroup": true,
+    "TSelect": true,
+    "TSlider": true,
+    "TSwitch": true,
+    "TTag": true,
+    "TTextarea": true,
+    "TTimePicker": true,
+    "TUpload": true,
+    "TButton": true
   }
 }

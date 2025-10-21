@@ -5,7 +5,7 @@
       v-if="search"
       ref="searchFormRef"
       :config="searchConfig"
-      :request="searchRequest"
+      :request="request"
       @submit="handleSearch"
       @reset="handleReset"
     />
@@ -121,11 +121,6 @@ const props = defineProps({
   search: {
     type: [Boolean, Object],
     default: false,
-  },
-  // 搜索请求方法
-  searchRequest: {
-    type: Function,
-    default: null,
   },
   // 表格列配置
   columns: {
@@ -251,7 +246,7 @@ const searchConfig = computed(() => {
     fields: props.search.fields || [],
     layout: props.search.layout || 'inline',
     labelWidth: props.search.labelWidth || 'auto',
-    fieldSpacing: props.search.fieldSpacing || { horizontal: 16, vertical: 16 },
+    fieldSpacing: props.search.fieldSpacing || [16, 16],
     showSubmit: true,
     showReset: true,
     submitText: '查询',

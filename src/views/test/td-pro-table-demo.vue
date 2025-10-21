@@ -5,8 +5,6 @@
     <!-- 基础表格 -->
     <t-card :bordered="false" class="demo-section">
       <h3>基础表格</h3>
-
-      <!-- 用户列表 -->
       <td-pro-table
         :request="getTableData"
         :columns="columns"
@@ -32,7 +30,7 @@
           icon: 'user',
         }"
         :request-delay="300"
-        title="高级用户列表"
+        title=""
         @submit="handleSearch"
         @reset="handleReset"
         @selectionChange="handleSelectionChange"
@@ -91,7 +89,6 @@ const columns = [
     width: 180,
   },
 ];
-
 // 高级表格列配置
 const advancedColumns = [
   {
@@ -149,27 +146,29 @@ const advancedColumns = [
 
 // 基础搜索配置
 const searchConfig = {
+  layout: 'inline',
+  labelWidth: 'auto',
   fields: [
     {
       key: 'name',
       label: '姓名',
       type: 'input',
       placeholder: '请输入姓名',
-      span: 6,
+      span: 4,
     },
     {
       key: 'email',
       label: '邮箱',
       type: 'input',
       placeholder: '请输入邮箱',
-      span: 6,
+      span: 4,
     },
     {
       key: 'status',
       label: '状态',
       type: 'select',
       placeholder: '请选择状态',
-      span: 6,
+      span: 4,
       options: [
         { label: '全部', value: '' },
         { label: '启用', value: 1 },
@@ -177,10 +176,7 @@ const searchConfig = {
       ],
     },
   ],
-  layout: 'inline',
-  labelWidth: 'auto',
 };
-
 // 高级搜索配置（带自定义按钮）
 const advancedSearchConfig = {
   layout: 'inline',
@@ -191,21 +187,21 @@ const advancedSearchConfig = {
       label: '姓名',
       type: 'input',
       placeholder: '请输入姓名',
-      span: 6,
+      span: 4,
     },
     {
       key: 'email',
       label: '邮箱',
       type: 'input',
       placeholder: '请输入邮箱',
-      span: 6,
+      span: 4,
     },
     {
       key: 'status',
       label: '状态',
       type: 'select',
       placeholder: '请选择状态',
-      span: 6,
+      span: 4,
       options: [
         { label: '全部', value: '' },
         { label: '启用', value: 1 },
@@ -217,7 +213,7 @@ const advancedSearchConfig = {
       label: '创建时间',
       type: 'date-picker',
       placeholder: '请选择创建时间',
-      span: 6,
+      span: 4,
     },
   ],
   customButtons: [

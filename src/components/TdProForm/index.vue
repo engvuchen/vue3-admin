@@ -8,7 +8,7 @@
       :rules="formRules"
       style="width: 100%"
     >
-      <t-row :gutter="fieldSpacing">
+      <t-row :gutter="config.fieldSpacing || [16, 16]">
         <t-col v-for="field in visibleFields" :key="field.key" :span="field.span || 24" :offset="field.offset || 0">
           <!-- 上置装饰 -->
           <component
@@ -77,47 +77,27 @@
         </t-col>
       </t-row>
 
-      <!-- 表单操作按钮，也要放到 t-form-item -->
-      <t-form-item v-if="config.showSubmit || config.showReset">
-        <t-space>
-          <t-button v-if="config.showReset" theme="default" @click="handleReset">
-            {{ config.resetText || '重置' }}
-          </t-button>
-          <t-button v-if="config.showSubmit" theme="primary" @click="handleSubmit">
-            {{ config.submitText || '提交' }}
-          </t-button>
-        </t-space>
-      </t-form-item>
+      <!-- 表单操作按钮插槽 -->
+      <!-- <t-form-item v-if="$slots.submitBtnGroup"> -->
+
+      <!-- 默认按钮 -->
+      <slot name="submitBtnGroup">
+        <t-form-item>
+          <t-space>
+            <t-button theme="default" @click="handleReset">
+              {{ config.resetText || '重置' }}
+            </t-button>
+            <t-button theme="primary" @click="handleSubmit">
+              {{ config.submitText || '提交' }}
+            </t-button>
+          </t-space>
+        </t-form-item>
+      </slot>
     </t-form>
   </div>
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch, onMounted, provide } from 'vue';
-import {
-  Form as TForm,
-  FormItem as TFormItem,
-  Input as TInput,
-  Textarea as TTextarea,
-  Select as TSelect,
-  Option as TOption,
-  Radio as TRadio,
-  RadioGroup as TRadioGroup,
-  Checkbox as TCheckbox,
-  CheckboxGroup as TCheckboxGroup,
-  Switch as TSwitch,
-  DatePicker as TDatePicker,
-  TimePicker as TTimePicker,
-  Upload as TUpload,
-  InputNumber as TInputNumber,
-  Slider as TSlider,
-  Button as TButton,
-  Tag as TTag,
-  Row as TRow,
-  Col as TCol,
-  Space as TSpace,
-} from 'tdesign-vue-next';
-
 import { getCustomComponent } from './componentMap';
 
 // Props
@@ -191,17 +171,6 @@ const visibleFields = computed(() => {
   });
 });
 
-// 计算表单项间距
-const fieldSpacing = computed(() => {
-  const config = props.config;
-  const spacing = config.fieldSpacing || {};
-
-  return [
-    parseInt(spacing.horizontal, 10) || 0, // 水平间距
-    parseInt(spacing.vertical, 10) || 24, // 垂直间距
-  ];
-});
-
 // 生成表单校验规则
 const formRules = computed(() => {
   const rules = {};
@@ -234,7 +203,6 @@ const generateDefaultMessage = (field, rule) => {
 
 // 获取字段组件
 const getFieldComponent = (type) => {
-  // 基础组件映射
   const baseComponentMap = {
     input: TInput,
     textarea: TTextarea,
@@ -249,19 +217,7 @@ const getFieldComponent = (type) => {
     slider: TSlider,
   };
 
-  // 先检查基础组件映射
-  if (baseComponentMap[type]) {
-    return baseComponentMap[type];
-  }
-
-  // 再检查自定义组件映射
-  const customComponent = getCustomComponent(type);
-  if (customComponent) {
-    return customComponent;
-  }
-
-  // 默认返回输入框
-  return TInput;
+  return baseComponentMap[type] || getCustomComponent(type) || TInput;
 };
 
 // 获取选项组件
@@ -294,29 +250,19 @@ const renderDecorator = (decorator, value, fieldKey, position) => {
   const decoratorId = `${fieldKey}_${position}`;
 
   if (type === 'component') {
-    // 组件型装饰器：创建响应式组件包装器
     return createComponentDecorator(decorator, value, decoratorId);
-  } else if (type === 'html') {
-    // HTML 型装饰器：创建一个支持 v-html 的 div 组件
-    return {
-      template: `<div v-html="parsedContent"></div>`,
-      computed: {
-        parsedContent() {
-          return parseDecoratorContent(content, value);
-        },
-      },
-    };
-  } else {
-    // 文本型装饰器：创建一个纯文本的 div 组件
-    return {
-      template: `<div>{{ parsedContent }}</div>`,
-      computed: {
-        parsedContent() {
-          return parseDecoratorContent(content, value);
-        },
-      },
-    };
   }
+
+  // 文本和HTML装饰器使用相同的解析逻辑
+  const template = type === 'html' ? '<div v-html="parsedContent"></div>' : '<div>{{ parsedContent }}</div>';
+  return {
+    template,
+    computed: {
+      parsedContent() {
+        return parseDecoratorContent(content, value);
+      },
+    },
+  };
 };
 
 // 创建组件装饰器（支持联动更新）
@@ -333,19 +279,7 @@ const createComponentDecorator = (decorator, _value, decoratorId) => {
   }
 
   // 获取实际组件
-  let component = getCustomComponent(content);
-  if (!component) {
-    component = getFieldComponent(content);
-  }
-  // 如果还没找到，可能是TDesign组件的字符串名称
-  if (!component && typeof content === 'string') {
-    // 处理 TDesign 组件的特殊映射
-    const tdesignComponentMap = {
-      TButton: TButton,
-      TTag: TTag,
-    };
-    component = tdesignComponentMap[content];
-  }
+  const component = getFieldComponent(content) || content;
 
   // 返回响应式组件包装器
   return {
@@ -355,16 +289,7 @@ const createComponentDecorator = (decorator, _value, decoratorId) => {
         actualComponent: component || 'div',
       };
     },
-    template: `
-            <component 
-                v-if="decoratorState.visible"
-                :is="actualComponent" 
-                v-bind="decoratorState.props"
-            >
-                {{ decoratorState.content === 'TTag' ? '标签' : '' }}
-                {{ decoratorState.content === 'TButton' ? '按钮' : '' }}
-            </component>
-        `,
+    template: `<component v-if="decoratorState.visible" :is="actualComponent" v-bind="decoratorState.props" />`,
   };
 };
 
@@ -488,48 +413,38 @@ const createFormContext = () => ({
   },
 });
 
-// 处理联动逻辑 - 超级简化版本
+// 处理联动逻辑
 const handleLinkage = async (changedKey, changedValue) => {
   const context = createFormContext();
 
-  // 遍历所有字段的联动配置
-  for (const field of props.config.fields) {
-    if (field.linkage) {
-      for (const linkage of field.linkage) {
-        if (linkage.watchField !== changedKey) continue;
+  // 执行联动逻辑的通用函数
+  const executeLinkage = async (linkages, fieldKey, errorPrefix) => {
+    for (const linkage of linkages) {
+      if (linkage.watchField !== changedKey) continue;
 
-        try {
-          // 检查 action 是否是函数
-          if (typeof linkage.action !== 'function') {
-            throw new Error(`字段 ${field.key} 的联动配置中 action 不是函数: ${typeof linkage.action}`);
-          }
-          // 直接调用用户的 action 函数，让用户自己处理所有逻辑
-          await linkage.action(changedValue, context);
-        } catch (error) {
-          console.error(`❌ 联动执行失败: ${field.key}`, error);
-          emit('error', { field: field.key, error });
+      try {
+        if (typeof linkage.action !== 'function') {
+          throw new Error(`${errorPrefix} action 不是函数: ${typeof linkage.action}`);
         }
+        await linkage.action(changedValue, context);
+      } catch (error) {
+        console.error(`❌ ${errorPrefix}执行失败: ${fieldKey}`, error);
+        emit('error', { field: fieldKey, error });
       }
     }
+  };
 
-    // 处理装饰器的联动配置
+  // 处理字段和装饰器的联动
+  for (const field of props.config.fields) {
+    if (field.linkage) {
+      await executeLinkage(field.linkage, field.key, '联动');
+    }
+
+    // 处理装饰器联动
     const decorators = [field.topDecorator, field.beforeDecorator, field.afterDecorator, field.bottomDecorator];
     for (const decorator of decorators) {
-      if (!decorator?.linkage) continue;
-
-      for (const linkage of decorator.linkage) {
-        if (linkage.watchField !== changedKey) continue;
-        try {
-          // 检查 action 是否是函数
-          if (typeof linkage.action !== 'function') {
-            throw new Error(`字段 ${field.key} 的装饰器联动配置中 action 不是函数: ${typeof linkage.action}`);
-          }
-          // 直接调用用户的 action 函数，让用户自己处理所有逻辑
-          await linkage.action(changedValue, context);
-        } catch (error) {
-          console.error(`❌ 装饰器联动执行失败: ${field.key}`, error);
-          emit('error', { field: field.key, error });
-        }
+      if (decorator?.linkage) {
+        await executeLinkage(decorator.linkage, field.key, '装饰器联动');
       }
     }
   }
@@ -537,7 +452,7 @@ const handleLinkage = async (changedKey, changedValue) => {
 
 // 表单提交
 const handleSubmit = async (e) => {
-  let res = await formRef.value.validate(); // 校验通过是 true，返回出错的规则对象，例如 { name: [ { result: false, message: 'xxx' } ] }
+  let res = await formRef.value.validate(); // 校验通过返回 true；不通过，返回对象，例如 { name: [ { result: false, message: 'xxx' } ] }
   if (res === true) {
     emit('submit', { ...formData }); // 只有 formData 是被代理的，展开之后没有响应性了
   }
@@ -590,21 +505,11 @@ const restoreData = async (data) => {
 
 // 表单实例方法
 const formInstance = {
-  validate: async () => {
-    return await formRef.value?.validate();
-  },
-  resetFields: () => {
-    handleReset();
-  },
-  getFieldsValue: () => {
-    return { ...formData };
-  },
-  setFieldsValue: (values) => {
-    Object.assign(formData, values);
-  },
-  getFieldValue: (key) => {
-    return formData[key];
-  },
+  validate: () => formRef.value?.validate(),
+  resetFields: handleReset,
+  getFieldsValue: () => ({ ...formData }),
+  setFieldsValue: (values) => Object.assign(formData, values),
+  getFieldValue: (key) => formData[key],
   setFieldValue: (key, value) => {
     formData[key] = value;
   },
