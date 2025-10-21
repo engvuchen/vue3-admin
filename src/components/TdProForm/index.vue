@@ -6,6 +6,7 @@
       :layout="config.layout || 'vertical'"
       :label-width="config.labelWidth"
       :rules="formRules"
+      style="width: 100%"
     >
       <t-row :gutter="fieldSpacing">
         <t-col v-for="field in visibleFields" :key="field.key" :span="field.span || 24" :offset="field.offset || 0">
@@ -76,7 +77,7 @@
         </t-col>
       </t-row>
 
-      <!-- 表单操作按钮 -->
+      <!-- 表单操作按钮，也要放到 t-form-item -->
       <t-form-item v-if="config.showSubmit || config.showReset">
         <t-space>
           <t-button v-if="config.showReset" theme="default" @click="handleReset">
@@ -194,10 +195,10 @@ const visibleFields = computed(() => {
 const fieldSpacing = computed(() => {
   const config = props.config;
   const spacing = config.fieldSpacing || {};
-  
+
   return [
-    parseInt(spacing.horizontal) || 0,  // 水平间距
-    parseInt(spacing.vertical) || 24    // 垂直间距
+    parseInt(spacing.horizontal, 10) || 0, // 水平间距
+    parseInt(spacing.vertical, 10) || 24, // 垂直间距
   ];
 });
 
@@ -536,7 +537,7 @@ const handleLinkage = async (changedKey, changedValue) => {
 
 // 表单提交
 const handleSubmit = async (e) => {
-  let res = await form.value.validate(); // 校验通过是 true，返回出错的规则对象，例如 { name: [ { result: false, message: 'xxx' } ] }
+  let res = await formRef.value.validate(); // 校验通过是 true，返回出错的规则对象，例如 { name: [ { result: false, message: 'xxx' } ] }
   if (res === true) {
     emit('submit', { ...formData }); // 只有 formData 是被代理的，展开之后没有响应性了
   }

@@ -3,15 +3,16 @@
     <h2>TdProTable 组件演示</h2>
 
     <!-- 基础表格 -->
-
     <t-card :bordered="false" class="demo-section">
       <h3>基础表格</h3>
+
+      <!-- 用户列表 -->
       <td-pro-table
         :request="getTableData"
         :columns="columns"
         :search="searchConfig"
         :pagination="paginationConfig"
-        title="用户列表"
+        title=""
         @submit="handleSearch"
         @reset="handleReset"
         @selectionChange="handleSelectionChange"
@@ -19,7 +20,7 @@
     </t-card>
 
     <!-- 高级表格（带自定义按钮） -->
-    <div class="demo-section">
+    <t-card :bordered="false" class="demo-section">
       <h3>高级表格（带自定义按钮和优化分页）</h3>
       <td-pro-table
         :request="getTableData"
@@ -51,26 +52,12 @@
             批量删除
           </t-button>
         </template>
-
-        <template #status="{ row }">
-          <t-tag :theme="row.status === 1 ? 'success' : 'default'">
-            {{ row.status === 1 ? '启用' : '禁用' }}
-          </t-tag>
-        </template>
-
-        <template #action="{ row }">
-          <t-space>
-            <t-button theme="primary" @click="handleEdit(row)"> 编辑 </t-button>
-            <t-button theme="danger" @click="handleDelete(row)"> 删除 </t-button>
-          </t-space>
-        </template>
       </td-pro-table>
-    </div>
+    </t-card>
   </div>
 </template>
 
 <script setup lang="jsx">
-import { Button as TButton, Tag as TTag, Space as TSpace, Icon as TIcon } from 'tdesign-vue-next';
 import TdProTable from '@/components/TdProTable/index.vue';
 
 // 响应式数据
