@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS Grid minmax 和 auto-fill/auto-fit 演示</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+
+      .demo-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .demo-section {
+        margin-bottom: 40px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .demo-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .demo-code {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        margin-bottom: 15px;
+        border-left: 4px solid #007bff;
+      }
+
+      .grid-container {
+        border: 2px dashed #007bff;
+        padding: 10px;
+        margin-bottom: 15px;
+        min-height: 100px;
+      }
+
+      .grid-item {
+        background: #007bff;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+
+      /* auto-fill 示例 */
+      .auto-fill-demo {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+      }
+
+      /* auto-fit 示例 */
+      .auto-fit-demo {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+      }
+
+      /* 固定最大宽度示例 */
+      .fixed-max-demo {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 300px));
+        gap: 10px;
+      }
+
+      .explanation {
+        background: #e7f3ff;
+        padding: 15px;
+        border-radius: 4px;
+        border-left: 4px solid #007bff;
+        margin-top: 15px;
+      }
+
+      .container-width {
+        background: #fff3cd;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        border-left: 4px solid #ffc107;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-container">
+      <h1>CSS Grid minmax() 和 auto-fill/auto-fit 演示</h1>
+
+      <div class="demo-section">
+        <div class="demo-title">1. auto-fill 示例</div>
+        <div class="demo-code">grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));</div>
+        <div class="container-width">容器宽度: <span id="width1"></span>px</div>
+        <div class="grid-container auto-fill-demo">
+          <div class="grid-item">项目 1</div>
+          <div class="grid-item">项目 2</div>
+          <div class="grid-item">项目 3</div>
+          <div class="grid-item">项目 4</div>
+          <div class="grid-item">项目 5</div>
+        </div>
+        <div class="explanation">
+          <strong>auto-fill 特点：</strong>
+          <ul>
+            <li>尽可能多地创建列</li>
+            <li>即使列是空的，也会保留空间</li>
+            <li>剩余空间会平均分配给所有列</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-title">2. auto-fit 示例</div>
+        <div class="demo-code">grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));</div>
+        <div class="container-width">容器宽度: <span id="width2"></span>px</div>
+        <div class="grid-container auto-fit-demo">
+          <div class="grid-item">项目 1</div>
+          <div class="grid-item">项目 2</div>
+          <div class="grid-item">项目 3</div>
+          <div class="grid-item">项目 4</div>
+          <div class="grid-item">项目 5</div>
+        </div>
+        <div class="explanation">
+          <strong>auto-fit 特点：</strong>
+          <ul>
+            <li>只创建有内容的列</li>
+            <li>空列会被折叠，空间被其他列占用</li>
+            <li>更适合响应式布局</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-title">3. 固定最大宽度示例（类似你的代码）</div>
+        <div class="demo-code">grid-template-columns: repeat(auto-fill, minmax(200px, 300px));</div>
+        <div class="container-width">容器宽度: <span id="width3"></span>px</div>
+        <div class="grid-container fixed-max-demo">
+          <div class="grid-item">项目 1</div>
+          <div class="grid-item">项目 2</div>
+          <div class="grid-item">项目 3</div>
+          <div class="grid-item">项目 4</div>
+          <div class="grid-item">项目 5</div>
+        </div>
+        <div class="explanation">
+          <strong>固定最大宽度特点：</strong>
+          <ul>
+            <li>每列最小宽度 200px，最大宽度 300px</li>
+            <li>当容器宽度变化时，列数会动态调整</li>
+            <li>列宽不会超过 300px，剩余空间会作为间距</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-title">4. 你的代码分析</div>
+        <div class="demo-code">grid-template-columns: repeat(auto-fill, minmax(280px, 384px));</div>
+        <div class="explanation">
+          <strong>工作原理：</strong>
+          <ul>
+            <li><strong>最小宽度：</strong>280px - 确保每列至少有这个宽度</li>
+            <li><strong>最大宽度：</strong>384px - 限制每列最大宽度</li>
+            <li><strong>auto-fill：</strong>尽可能多地创建列</li>
+            <li><strong>动态计算：</strong>浏览器会根据容器宽度计算能放几列</li>
+          </ul>
+
+          <strong>示例计算：</strong>
+          <ul>
+            <li>容器 1200px：1200÷280=4.28 → 4列，每列300px</li>
+            <li>容器 800px：800÷280=2.85 → 2列，每列400px（但限制为384px）</li>
+            <li>容器 600px：600÷280=2.14 → 2列，每列300px</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 显示容器宽度
+      function updateWidths() {
+        const containers = document.querySelectorAll('.grid-container');
+        containers.forEach((container, index) => {
+          const widthSpan = document.getElementById(`width${index + 1}`);
+          if (widthSpan) {
+            widthSpan.textContent = container.offsetWidth;
+          }
+        });
+      }
+
+      // 初始化和窗口大小变化时更新
+      updateWidths();
+      window.addEventListener('resize', updateWidths);
+    </script>
+  </body>
+</html>

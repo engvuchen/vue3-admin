@@ -1,5 +1,5 @@
 <template>
-  <div class="primary-form" :class="config.className" :style="config.style">
+  <div class="form" :class="config.className" :style="config.style">
     <t-form
       ref="formRef"
       :data="formData"
@@ -8,8 +8,13 @@
       :rules="formRules"
       style="width: 100%"
     >
-      <t-row :gutter="config.fieldSpacing || [16, 16]">
+      <!-- <t-row :gutter="config.fieldSpacing || [16, 16]" style="max-width: 80%; flex: 1">
         <t-col v-for="field in visibleFields" :key="field.key" :span="field.span || 24" :offset="field.offset || 0">
+        </t-col>
+      </t-row> -->
+
+      <div class="form-item">
+        <template v-for="field in visibleFields">
           <!-- 上置装饰 -->
           <component
             v-if="field.topDecorator"
@@ -74,25 +79,22 @@
             :style="field.bottomDecorator.style"
             v-bind="field.bottomDecorator.type !== 'component' ? field.bottomDecorator.props || {} : {}"
           ></component>
-        </t-col>
-      </t-row>
+        </template>
 
-      <!-- 表单操作按钮插槽 -->
-      <!-- <t-form-item v-if="$slots.submitBtnGroup"> -->
-
-      <!-- 默认按钮 -->
-      <slot name="submitBtnGroup">
-        <t-form-item>
-          <t-space>
-            <t-button theme="default" @click="handleReset">
-              {{ config.resetText || '重置' }}
-            </t-button>
-            <t-button theme="primary" @click="handleSubmit">
-              {{ config.submitText || '提交' }}
-            </t-button>
-          </t-space>
-        </t-form-item>
-      </slot>
+        <!-- 默认按钮 -->
+        <slot name="submitBtnGroup">
+          <t-form-item>
+            <t-space>
+              <t-button theme="default" @click="handleReset">
+                {{ config.resetText || '重置' }}
+              </t-button>
+              <t-button theme="primary" @click="handleSubmit">
+                {{ config.submitText || '提交' }}
+              </t-button>
+            </t-space>
+          </t-form-item>
+        </slot>
+      </div>
     </t-form>
   </div>
 </template>
@@ -211,6 +213,7 @@ const getFieldComponent = (type) => {
     checkbox: TCheckboxGroup,
     switch: TSwitch,
     'date-picker': TDatePicker,
+    'date-range-picker': TDateRangePicker,
     'time-picker': TTimePicker,
     upload: TUpload,
     number: TInputNumber,
@@ -537,9 +540,19 @@ watch(
 );
 </script>
 
-<style scoped>
-.primary-form {
+<style lang="scss" scoped>
+.form {
   width: 100%;
+}
+.form-item {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  width: 100%;
+
+  :deep(.t-date-range-picker) {
+    width: 100%;
+  }
 }
 
 .field-decorator {

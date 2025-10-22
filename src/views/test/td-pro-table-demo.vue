@@ -37,17 +37,17 @@
         @error="handleError"
       >
         <template #toolbar>
-          <t-button theme="primary" @click="handleAdd">
-            <template #icon>
-              <t-icon name="add" />
-            </template>
-            新增用户
-          </t-button>
           <t-button theme="default" @click="handleBatchDelete" :disabled="!selectedRows.length">
             <template #icon>
               <t-icon name="delete" />
             </template>
             批量删除
+          </t-button>
+          <t-button theme="default" @click="handleAdd">
+            <template #icon>
+              <t-icon name="add" />
+            </template>
+            新增
           </t-button>
         </template>
       </td-pro-table>
@@ -147,28 +147,89 @@ const advancedColumns = [
 // 基础搜索配置
 const searchConfig = {
   layout: 'inline',
-  labelWidth: 'auto',
+  labelWidth: '80px', // 根据最长的表单标题，业务进行调节
   fields: [
     {
       key: 'name',
       label: '姓名',
       type: 'input',
       placeholder: '请输入姓名',
-      span: 4,
+      span: 2,
     },
     {
       key: 'email',
       label: '邮箱',
       type: 'input',
       placeholder: '请输入邮箱',
-      span: 4,
+      span: 2,
     },
     {
       key: 'status',
       label: '状态',
       type: 'select',
       placeholder: '请选择状态',
-      span: 4,
+      span: 2,
+      options: [
+        { label: '全部', value: '' },
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
+    },
+    {
+      key: 'dateRange',
+      label: '时间范围',
+      type: 'date-range-picker',
+      placeholder: '请选择时间范围',
+      span: 2,
+      props: {
+        rangeSeparator: '至',
+        clearable: true,
+        format: 'YYYY-MM-DD',
+        valueFormat: 'YYYY-MM-DD',
+      },
+    },
+    {
+      key: 'status',
+      label: '状态',
+      type: 'select',
+      placeholder: '请选择状态',
+      span: 2,
+      options: [
+        { label: '全部', value: '' },
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
+    },
+    {
+      key: 'status1',
+      label: '状态',
+      type: 'select',
+      placeholder: '请选择状态',
+      span: 2,
+      options: [
+        { label: '全部', value: '' },
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
+    },
+    {
+      key: 'status2',
+      label: '状态',
+      type: 'select',
+      placeholder: '请选择状态',
+      span: 2,
+      options: [
+        { label: '全部', value: '' },
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
+    },
+    {
+      key: 'status3',
+      label: '状态',
+      type: 'select',
+      placeholder: '请选择状态',
+      span: 2,
       options: [
         { label: '全部', value: '' },
         { label: '启用', value: 1 },
@@ -187,34 +248,47 @@ const advancedSearchConfig = {
       label: '姓名',
       type: 'input',
       placeholder: '请输入姓名',
-      span: 4,
+      span: 3,
     },
     {
       key: 'email',
       label: '邮箱',
       type: 'input',
       placeholder: '请输入邮箱',
-      span: 4,
+      span: 3,
     },
     {
       key: 'status',
       label: '状态',
       type: 'select',
       placeholder: '请选择状态',
-      span: 4,
+      span: 3,
       options: [
         { label: '全部', value: '' },
         { label: '启用', value: 1 },
         { label: '禁用', value: 0 },
       ],
     },
-    {
-      key: 'createTime',
-      label: '创建时间',
-      type: 'date-picker',
-      placeholder: '请选择创建时间',
-      span: 4,
-    },
+    // {
+    //   key: 'createTime',
+    //   label: '创建时间',
+    //   type: 'date-picker',
+    //   placeholder: '请选择创建时间',
+    //   span: 3,
+    // },
+    // {
+    //   key: 'dateRange',
+    //   label: '时间范围',
+    //   type: 'date-range-picker',
+    //   placeholder: '请选择时间范围',
+    //   span: 3,
+    //   props: {
+    //     rangeSeparator: '至',
+    //     clearable: true,
+    //     format: 'YYYY-MM-DD',
+    //     valueFormat: 'YYYY-MM-DD',
+    //   },
+    // },
   ],
   customButtons: [
     {
@@ -334,6 +408,17 @@ const getTableData = async (params) => {
 
   if (params.status !== undefined && params.status !== '') {
     filteredData = filteredData.filter((item) => item.status === params.status);
+  }
+
+  // 处理日期范围过滤
+  if (params.dateRange && params.dateRange.length === 2) {
+    const [startDate, endDate] = params.dateRange;
+    filteredData = filteredData.filter((item) => {
+      const itemDate = new Date(item.createTime);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      return itemDate >= start && itemDate <= end;
+    });
   }
 
   // 模拟分页

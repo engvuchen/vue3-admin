@@ -81,11 +81,9 @@ const handleFormSubmit = async (formData) => {
 const handleFormReset = () => {
   emit('reset');
 };
-
 const handleFormChange = (key, value, formData) => {
   emit('change', key, value, formData);
 };
-
 const handleFormError = (error) => {
   emit('error', error);
 };

@@ -555,13 +555,16 @@ watch(
   border-radius: 6px;
   overflow: hidden;
 
+  :deep(th) {
+    background-color: #eeeeee;
+  }
+
   .table-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 20px 0;
-    background: #fff;
-    border-bottom: 1px solid #f0f0f0;
+    // padding: 20px 20px 0;
+    margin-bottom: 20px;
 
     .table-title {
       font-size: 16px;
@@ -590,24 +593,4 @@ watch(
     }
   }
 }
-
-// 响应式设计
-// @media (max-width: 768px) {
-//   .td-pro-table {
-//     .table-header {
-//       flex-direction: column;
-//       align-items: flex-start;
-//       gap: 12px;
-
-//       .table-toolbar {
-//         width: 100%;
-//         justify-content: flex-end;
-//       }
-//     }
-
-//     .table-container {
-//       padding: 16px;
-//     }
-//   }
-// }
 </style>

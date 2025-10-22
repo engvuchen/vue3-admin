@@ -86,6 +86,7 @@
     "TTextarea": true,
     "TTimePicker": true,
     "TUpload": true,
-    "TButton": true
+    "TButton": true,
+    "TDateRangePicker": true
   }
 }
