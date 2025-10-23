@@ -15,11 +15,10 @@ import Menus from './Menus.vue';
 
 const appStore = useApp();
 const { sidebar, device } = storeToRefs(appStore);
-const { setCollapse } = appStore;
 const collapse = computed(() => sidebar.value.collapse);
 
 const closeSidebar = () => {
-  setCollapse(true);
+  appStore.setCollapse(true);
 };
 </script>
 

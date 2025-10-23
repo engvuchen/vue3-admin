@@ -89,6 +89,105 @@ const columns = [
     width: 180,
   },
 ];
+// 基础搜索配置
+const searchConfig = {
+  labelWidth: '80px', // 根据最长的表单标题，业务进行调节
+  fields: [
+    {
+      key: 'name',
+      label: '姓名',
+      type: 'input',
+      placeholder: '请输入姓名',
+      value: '123',
+    },
+    {
+      key: 'email',
+      label: '邮箱',
+      type: 'input',
+      placeholder: '请输入邮箱',
+    },
+    {
+      key: 'status',
+      label: '状态',
+      type: 'select',
+      placeholder: '请选择状态',
+      options: [
+        { label: '全部', value: '' },
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
+    },
+    // {
+    //   key: 'dateRange',
+    //   label: '时间范围',
+    //   type: 'date-range-picker',
+    //   placeholder: '请选择时间范围',
+    //   value: [],
+    //   props: {
+    //     rangeSeparator: '至',
+    //     clearable: true,
+    //     format: 'YYYY-MM-DD',
+    //     valueFormat: 'YYYY-MM-DD',
+    //   },
+    // },
+    // {
+    //   key: 'status',
+    //   label: '状态',
+    //   type: 'select',
+    //   placeholder: '请选择状态',
+    //   options: [
+    //     { label: '全部', value: '' },
+    //     { label: '启用', value: 1 },
+    //     { label: '禁用', value: 0 },
+    //   ],
+    // },
+    // {
+    //   key: 'status1',
+    //   label: '状态',
+    //   type: 'select',
+    //   placeholder: '请选择状态',
+    //   options: [
+    //     { label: '全部', value: '' },
+    //     { label: '启用', value: 1 },
+    //     { label: '禁用', value: 0 },
+    //   ],
+    // },
+    // {
+    //   key: 'status2',
+    //   label: '状态',
+    //   type: 'select',
+    //   placeholder: '请选择状态',
+    //   options: [
+    //     { label: '全部', value: '' },
+    //     { label: '启用', value: 1 },
+    //     { label: '禁用', value: 0 },
+    //   ],
+    // },
+    // {
+    //   key: 'status3',
+    //   label: '状态',
+    //   type: 'select',
+    //   placeholder: '请选择状态',
+    //   options: [
+    //     { label: '全部', value: '' },
+    //     { label: '启用', value: 1 },
+    //     { label: '禁用', value: 0 },
+    //   ],
+    // },
+  ],
+};
+// 分页配置
+const paginationConfig = {
+  show: true,
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  pageSizeOptions: [5, 10, 20, 50],
+  showTotal: true,
+  showJumper: true,
+  showSizer: true,
+};
+
 // 高级表格列配置
 const advancedColumns = [
   {
@@ -143,9 +242,8 @@ const advancedColumns = [
     },
   },
 ];
-
-// 基础搜索配置
-const searchConfig = {
+// 高级搜索配置（带自定义按钮）
+const advancedSearchConfig = {
   labelWidth: '80px', // 根据最长的表单标题，业务进行调节
   fields: [
     {
@@ -154,91 +252,6 @@ const searchConfig = {
       type: 'input',
       placeholder: '请输入姓名',
     },
-    {
-      key: 'email',
-      label: '邮箱',
-      type: 'input',
-      placeholder: '请输入邮箱',
-    },
-    {
-      key: 'status',
-      label: '状态',
-      type: 'select',
-      placeholder: '请选择状态',
-      options: [
-        { label: '全部', value: '' },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
-      ],
-    },
-    {
-      key: 'dateRange',
-      label: '时间范围',
-      type: 'date-range-picker',
-      placeholder: '请选择时间范围',
-      props: {
-        rangeSeparator: '至',
-        clearable: true,
-        format: 'YYYY-MM-DD',
-        valueFormat: 'YYYY-MM-DD',
-      },
-    },
-    {
-      key: 'status',
-      label: '状态',
-      type: 'select',
-      placeholder: '请选择状态',
-      options: [
-        { label: '全部', value: '' },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
-      ],
-    },
-    {
-      key: 'status1',
-      label: '状态',
-      type: 'select',
-      placeholder: '请选择状态',
-      options: [
-        { label: '全部', value: '' },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
-      ],
-    },
-    {
-      key: 'status2',
-      label: '状态',
-      type: 'select',
-      placeholder: '请选择状态',
-      options: [
-        { label: '全部', value: '' },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
-      ],
-    },
-    {
-      key: 'status3',
-      label: '状态',
-      type: 'select',
-      placeholder: '请选择状态',
-      options: [
-        { label: '全部', value: '' },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
-      ],
-    },
-  ],
-};
-// 高级搜索配置（带自定义按钮）
-const advancedSearchConfig = {
-  labelWidth: 'auto',
-  fields: [
-    // {
-    //   key: 'name',
-    //   label: '姓名',
-    //   type: 'input',
-    //   placeholder: '请输入姓名',
-    // },
     // {
     //   key: 'email',
     //   label: '邮箱',
@@ -267,6 +280,7 @@ const advancedSearchConfig = {
       label: '时间范围',
       type: 'date-range-picker',
       placeholder: '请选择时间范围',
+      value: [],
       props: {
         rangeSeparator: '至',
         clearable: true,
@@ -279,6 +293,7 @@ const advancedSearchConfig = {
       label: '时间范围',
       type: 'date-range-picker',
       placeholder: '请选择时间范围',
+      value: [],
       props: {
         rangeSeparator: '至',
         clearable: true,
@@ -287,10 +302,11 @@ const advancedSearchConfig = {
       },
     },
     {
-      key: 'dateRange',
+      key: 'dateRange1',
       label: '时间范围',
       type: 'date-range-picker',
       placeholder: '请选择时间范围',
+      value: [],
       props: {
         rangeSeparator: '至',
         clearable: true,
@@ -299,10 +315,11 @@ const advancedSearchConfig = {
       },
     },
     {
-      key: 'dateRange',
+      key: 'dateRange2',
       label: '时间范围',
       type: 'date-range-picker',
       placeholder: '请选择时间范围',
+      value: [],
       props: {
         rangeSeparator: '至',
         clearable: true,
@@ -311,10 +328,11 @@ const advancedSearchConfig = {
       },
     },
     {
-      key: 'dateRange',
+      key: 'dateRange3',
       label: '时间范围',
       type: 'date-range-picker',
       placeholder: '请选择时间范围',
+      value: [],
       props: {
         rangeSeparator: '至',
         clearable: true,
@@ -344,7 +362,6 @@ const advancedSearchConfig = {
     },
   ],
 };
-
 // 高级分页配置示例
 const advancedPaginationConfig = {
   show: true,
@@ -361,18 +378,6 @@ const advancedPaginationConfig = {
   style: {
     marginTop: '16px',
   },
-};
-
-// 分页配置
-const paginationConfig = {
-  show: true,
-  current: 1,
-  pageSize: 10,
-  total: 0,
-  pageSizeOptions: [5, 10, 20, 50],
-  showTotal: true,
-  showJumper: true,
-  showSizer: true,
 };
 
 // 模拟数据
@@ -459,7 +464,6 @@ const getTableData = async (params) => {
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
   const data = filteredData.slice(start, end);
-  console.log('❗️ ~ getTableData ~ data:', data);
 
   return {
     data,

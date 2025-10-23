@@ -11,6 +11,8 @@ const Iscache = () => import('@/views/test/Cache.vue');
 const Nocache = () => import('@/views/test/Nocache.vue');
 const ErrorLog = () => import('@/views/test/error-log/index.vue');
 const TdProTableDemo = () => import('@/views/test/td-pro-table-demo.vue');
+const TdesignThemeTest = () => import('@/views/test/tdesign-theme-test.vue');
+const TdProFormExtendedDemo = () => import('@/views/test/td-pro-form-extended-demo.vue');
 
 export default [
   {
@@ -123,6 +125,22 @@ export default [
         component: TdProTableDemo,
         meta: {
           title: 'TdProTable 演示',
+        },
+      },
+      {
+        path: 'tdesign-theme-test',
+        name: 'test-tdesign-theme-test',
+        component: TdesignThemeTest,
+        meta: {
+          title: 'TDesign 主题测试',
+        },
+      },
+      {
+        path: 'td-pro-form-extended-demo',
+        name: 'test-td-pro-form-extended-demo',
+        component: TdProFormExtendedDemo,
+        meta: {
+          title: 'TdProForm 扩展组件演示',
         },
       },
     ],

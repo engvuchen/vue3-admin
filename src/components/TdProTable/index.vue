@@ -1,16 +1,23 @@
 <template>
   <div class="td-pro-table">
     <!-- 搜索表单 -->
-    <td-search-form
-      v-if="search"
-      ref="searchFormRef"
-      :config="searchConfig"
-      :request="request"
-      @submit="handleSearch"
-      @reset="handleReset"
-    />
+    <div v-if="search" class="search-form-container">
+      <td-pro-form
+        ref="searchFormRef"
+        :config="searchFormConfig"
+        @change="handleSearchChange"
+        @error="handleSearchError"
+      >
+        <template #submitBtnGroup>
+          <t-space>
+            <t-button theme="default" @click="handleSearchReset">重置</t-button>
+            <t-button theme="primary" @click="handleSearchSubmit">查询</t-button>
+          </t-space>
+        </template>
+      </td-pro-form>
+    </div>
 
-    <div class="table-header" v-if="!hideTitleBar">
+    <div class="table-header" v-if="$slots.title || $slots.toolbar">
       <slot name="title">
         <span class="table-title">{{ title }}</span>
       </slot>
@@ -99,7 +106,7 @@
 <script setup>
 import { ref, computed, onBeforeMount, watch, nextTick } from 'vue';
 
-import TdSearchForm from '../TdSearchForm/index.vue';
+import TdProForm from '../TdProForm/index.vue';
 
 const props = defineProps({
   // 请求数据的方法
@@ -111,11 +118,6 @@ const props = defineProps({
   title: {
     type: String,
     default: '',
-  },
-  // 是否隐藏标题栏
-  hideTitleBar: {
-    type: Boolean,
-    default: false,
   },
   // 搜索表单配置
   search: {
@@ -178,11 +180,6 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-  // 请求防抖延迟（毫秒）
-  requestDelay: {
-    type: Number,
-    default: 0,
-  },
 });
 
 const emit = defineEmits([
@@ -237,20 +234,22 @@ const paginationConfig = computed(() => {
   };
 });
 
-// 搜索配置
-const searchConfig = computed(() => {
+// 搜索表单配置
+const searchFormConfig = computed(() => {
   if (!props.search || typeof props.search === 'boolean') {
     return null;
   }
   return {
-    fields: props.search.fields || [],
-    layout: props.search.layout || 'inline',
-    labelWidth: props.search.labelWidth || 'auto',
-    fieldSpacing: props.search.fieldSpacing || [16, 16],
-    showSubmit: true,
-    showReset: true,
-    submitText: '查询',
-    resetText: '重置',
+    // 搜索表单的默认配置
+    layout: 'inline',
+    labelWidth: 'auto',
+    labelAlign: 'left',
+    colon: false,
+    className: '',
+    style: {},
+    fields: [],
+
+    // 用户配置覆盖默认配置
     ...props.search,
   };
 });
@@ -267,21 +266,6 @@ const emptyConfig = computed(() => {
   };
 });
 
-// 防抖请求
-let requestTimer = null;
-const debouncedRequest = (params = {}) => {
-  if (requestTimer) {
-    clearTimeout(requestTimer);
-  }
-
-  if (props.requestDelay > 0) {
-    requestTimer = setTimeout(() => {
-      getTableData(params);
-    }, props.requestDelay);
-  } else {
-    getTableData(params);
-  }
-};
 const processedColumns = computed(() => {
   let res = props.columns.map((column) => ({
     // colKey: column.colKey,
@@ -299,12 +283,8 @@ const processedColumns = computed(() => {
     ...column,
   }));
 
-  console.log('res', res);
-
   return res;
 });
-
-console.log('processedColumns.value', processedColumns.value);
 
 // 获取搜索表单数据
 const getSearchData = () => {
@@ -313,14 +293,13 @@ const getSearchData = () => {
     return searchParams.value;
   }
 
-  // 尝试从搜索表单组件获取数据
+  // 尝试从搜索表单组件获取数据 todo???
   if (searchFormRef.value && typeof searchFormRef.value.getFormData === 'function') {
     return searchFormRef.value.getFormData();
   }
 
   return {};
 };
-
 // 请求表格数据
 const getTableData = async (params = {}) => {
   if (loading.value) return; // 防止重复请求
@@ -340,8 +319,6 @@ const getTableData = async (params = {}) => {
 
     if (response && typeof response === 'object') {
       tableData.value = response.data || response.list || [];
-
-      console.log('tableData.value', tableData.value);
 
       total.value = response.total || response.totalCount || 0;
 
@@ -367,11 +344,30 @@ const getTableData = async (params = {}) => {
   }
 };
 
+// 搜索表单事件处理
+const handleSearchChange = (key, value, formData) => {
+  emit('change', key, value, formData);
+};
+
+const handleSearchError = (error) => {
+  emit('error', error);
+};
+
+const handleSearchSubmit = () => {
+  const searchData = searchFormRef.value?.getFieldsValue() || {};
+  handleSearch(searchData);
+};
+
+const handleSearchReset = () => {
+  searchFormRef.value?.resetFields();
+  handleReset();
+};
+
 // 搜索
 const handleSearch = (searchData) => {
   currentPage.value = 1;
-  searchParams.value = { ...searchData }; // 缓存搜索参数
-  debouncedRequest();
+  searchParams.value = { ...searchData };
+  getTableData();
   emit('submit', searchData);
 };
 
@@ -379,7 +375,7 @@ const handleSearch = (searchData) => {
 const handleReset = () => {
   currentPage.value = 1;
   searchParams.value = {}; // 清空搜索参数
-  debouncedRequest();
+  getTableData();
   emit('reset');
 };
 
@@ -406,21 +402,20 @@ const handleCellClick = (context) => {
 // 排序变化
 const handleSortChange = (sortInfo) => {
   emit('sortChange', sortInfo);
-  debouncedRequest();
+  getTableData();
 };
 
 // 过滤变化
 const handleFilterChange = (filterInfo) => {
   emit('filterChange', filterInfo);
-  debouncedRequest();
+  getTableData();
 };
 
 // 分页变化
 const handlePageChange = (pageInfo) => {
-  console.log('分页变化:', pageInfo);
   currentPage.value = pageInfo.current;
   pageSize.value = pageInfo.pageSize;
-  debouncedRequest();
+  getTableData();
   emit('pageChange', pageInfo);
 };
 
@@ -473,7 +468,7 @@ const handleScrollToTopRight = (params) => {
 
 // 刷新数据
 const refresh = (params = {}) => {
-  debouncedRequest(params);
+  getTableData(params);
 };
 
 // 重置分页
@@ -510,7 +505,7 @@ defineExpose({
 // 初始化
 onBeforeMount(() => {
   if (props.autoRequest) {
-    debouncedRequest();
+    getTableData();
   }
 });
 
@@ -559,11 +554,18 @@ watch(
     background-color: #eeeeee;
   }
 
+  .search-form-container {
+    width: 100%;
+    padding: 20px;
+    background: #fff;
+    margin-bottom: 10px;
+    border-radius: 6px;
+  }
+
   .table-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    // padding: 20px 20px 0;
     margin-bottom: 20px;
 
     .table-title {

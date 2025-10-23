@@ -23,13 +23,15 @@ import 'virtual:svg-icons-register'; // vite
 // import './icon.js'; // webpack5
 
 // 引入 TDesign 主题样式
-import '@/assets/style/tdesign-theme.css';
 
 // 注册全局组件
 import * as Components from './global-components';
 Object.entries(Components).forEach(([key, component]) => {
   app.component(key, component);
 });
+
+// 要在全局组件后，否则会被全局组件样式覆盖。todo 按需组件的样式，如何导入的？按需 < 全局 < 这里？
+import '@/assets/style/tdesign-theme.css';
 
 // 全局注册 ele 图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';

@@ -10,7 +10,7 @@
       :rules="formRules"
       style="width: 100%"
     >
-      <div class="form-item" :class="{ 'form-item--grid': mergedConfig.fields.length > 4 }">
+      <div class="form-item" :class="{ 'form-item--grid': mergedConfig.fields.length >= 3 }">
         <template v-for="field in visibleFields">
           <!-- 上置装饰 -->
           <component
@@ -40,6 +40,7 @@
               :placeholder="field.placeholder"
               :disabled="disabledFields.has(field.key)"
               :loading="loadingFields.has(field.key)"
+              :options="getFieldOptions(field)"
               v-bind="field.props"
               v-on="getFieldEvents(field)"
             >
@@ -52,6 +53,7 @@
                   :value="option.value"
                   :disabled="option.disabled"
                   :label="option.label"
+                  v-bind="option.props || {}"
                 >
                   {{ option.label }}
                 </component>
@@ -104,36 +106,15 @@ const props = defineProps({
   config: {
     type: Object,
     required: true,
-    default: () => ({
-      // 表单布局配置
-      layout: 'vertical', // 表单布局：vertical | horizontal | inline
-      labelWidth: '120px', // 标签宽度
-      labelAlign: 'right', // 标签对齐方式：left | right | top
-      colon: true, // 是否显示冒号
-
-      // 样式配置
-      className: '', // 自定义类名
-      style: {}, // 自定义样式
-
-      // 按钮配置
-      showSubmit: true, // 是否显示提交按钮
-      showReset: true, // 是否显示重置按钮
-      submitText: '提交', // 提交按钮文本
-      resetText: '重置', // 重置按钮文本
-
-      // 字段配置
-      fields: [], // 表单字段配置数组
-    }),
   },
 });
-
 // Emits
 const emit = defineEmits(['submit', 'reset', 'change', 'error']);
 
 // 合并配置（使用默认值）
 const mergedConfig = computed(() => {
-  return {
-    layout: 'vertical', // 表单布局：vertical | horizontal | inline
+  const config = {
+    layout: 'vertical', // 表单布局：vertical | inline
     labelWidth: '120px', // 标签宽度
     labelAlign: 'right', // 标签对齐方式：left | right | top
     colon: true, // 是否显示冒号
@@ -153,13 +134,35 @@ const mergedConfig = computed(() => {
 
     ...props.config,
   };
+
+  return config;
 });
 
 // 表单引用
 const formRef = ref();
-
-// 表单数据
 const formData = reactive({});
+// 立即设置默认值（在模板渲染前）
+const initDefaultValues = () => {
+  props?.config?.fields?.forEach?.((field) => {
+    if (field.value !== undefined) {
+      formData[field.key] = field.value;
+    } else {
+      // 为特定组件类型设置默认值
+      if (field.type === 'date-range-picker') {
+        formData[field.key] = [];
+      } else if (field.type === 'checkbox') {
+        formData[field.key] = [];
+      } else if (field.type === 'transfer') {
+        formData[field.key] = [];
+      } else if (field.type === 'tag-input') {
+        formData[field.key] = [];
+      } else if (field.type === 'range-input') {
+        formData[field.key] = [];
+      }
+    }
+  });
+};
+initDefaultValues();
 
 // 隐藏的字段集合
 const hiddenFields = ref(new Set());
@@ -190,10 +193,10 @@ const initFormData = () => {
     }
   });
 
-  // 先设置默认值
+  // 重新设置字段值（覆盖之前的默认值）
   mergedConfig.value.fields.forEach((field) => {
-    if (field.defaultValue !== undefined) {
-      formData[field.key] = field.defaultValue;
+    if (field.value !== undefined) {
+      formData[field.key] = field.value;
     }
   });
 
@@ -260,6 +263,14 @@ const getFieldComponent = (type) => {
     upload: TUpload,
     number: TInputNumber,
     slider: TSlider,
+    rate: TRate,
+    cascader: TCascader,
+    'tree-select': TTreeSelect,
+    transfer: TTransfer,
+    'auto-complete': TAutoComplete,
+    'color-picker': TColorPicker,
+    'tag-input': TTagInput,
+    'range-input': TRangeInput,
   };
 
   return baseComponentMap[type] || getCustomComponent(type) || TInput;
@@ -415,7 +426,7 @@ const handleFieldChange = (key, value) => {
 
 // 创建表单操作上下文
 const createFormContext = () => ({
-  formData: formData,
+  formData,
   showField: (fieldKey) => {
     hiddenFields.value.delete(fieldKey);
   },

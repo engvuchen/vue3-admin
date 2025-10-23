@@ -2,7 +2,7 @@
   <div v-if="errorLogs.length > 0" class="errLog-container">
     <el-badge :is-dot="true" @click="dialogTableVisible = true">
       <el-button style="padding: 8px 10px" size="small" type="danger">
-        <svg-icon name="bug" />
+        <svg-icon name="icon-bug" />
       </el-button>
     </el-badge>
 

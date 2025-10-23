@@ -87,6 +87,14 @@
     "TTimePicker": true,
     "TUpload": true,
     "TButton": true,
-    "TDateRangePicker": true
+    "TDateRangePicker": true,
+    "TAutoComplete": true,
+    "TCascader": true,
+    "TColorPicker": true,
+    "TRangeInput": true,
+    "TRate": true,
+    "TTagInput": true,
+    "TTransfer": true,
+    "TTreeSelect": true
   }
 }
