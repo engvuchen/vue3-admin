@@ -1,0 +1,39 @@
+.form {
+  width: 100%;
+}
+
+.form-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+
+  :deep(.t-date-range-picker) {
+    width: 100%;
+  }
+}
+
+.form-item--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.field-decorator {
+  margin: 8px 0;
+}
+
+.field-decorator--top {
+  margin-bottom: 12px;
+}
+
+.field-decorator--before {
+  margin-bottom: 8px;
+}
+
+.field-decorator--after {
+  margin-top: 8px;
+}
+
+.field-decorator--bottom {
+  margin-top: 12px;
+}

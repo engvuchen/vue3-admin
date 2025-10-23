@@ -11,7 +11,7 @@
 <script>
 import PrimaryForm from '@/components/TdProForm/index.vue';
 
-let props = defindProps({
+const props = defineProps({
   config: {
     type: Object,
     required: true,

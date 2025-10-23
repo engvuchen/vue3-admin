@@ -3,7 +3,7 @@
     <h2>TdProTable 组件演示</h2>
 
     <!-- 基础表格 -->
-    <t-card :bordered="false" class="demo-section">
+    <t-card :bordered="false" class="card">
       <h3>基础表格</h3>
       <td-pro-table
         :request="getTableData"
@@ -18,7 +18,7 @@
     </t-card>
 
     <!-- 高级表格（带自定义按钮） -->
-    <t-card :bordered="false" class="demo-section">
+    <t-card :bordered="false" class="card">
       <h3>高级表格（带自定义按钮和优化分页）</h3>
       <td-pro-table
         :request="getTableData"
@@ -146,7 +146,6 @@ const advancedColumns = [
 
 // 基础搜索配置
 const searchConfig = {
-  layout: 'inline',
   labelWidth: '80px', // 根据最长的表单标题，业务进行调节
   fields: [
     {
@@ -154,21 +153,18 @@ const searchConfig = {
       label: '姓名',
       type: 'input',
       placeholder: '请输入姓名',
-      span: 2,
     },
     {
       key: 'email',
       label: '邮箱',
       type: 'input',
       placeholder: '请输入邮箱',
-      span: 2,
     },
     {
       key: 'status',
       label: '状态',
       type: 'select',
       placeholder: '请选择状态',
-      span: 2,
       options: [
         { label: '全部', value: '' },
         { label: '启用', value: 1 },
@@ -180,7 +176,6 @@ const searchConfig = {
       label: '时间范围',
       type: 'date-range-picker',
       placeholder: '请选择时间范围',
-      span: 2,
       props: {
         rangeSeparator: '至',
         clearable: true,
@@ -193,7 +188,6 @@ const searchConfig = {
       label: '状态',
       type: 'select',
       placeholder: '请选择状态',
-      span: 2,
       options: [
         { label: '全部', value: '' },
         { label: '启用', value: 1 },
@@ -205,7 +199,6 @@ const searchConfig = {
       label: '状态',
       type: 'select',
       placeholder: '请选择状态',
-      span: 2,
       options: [
         { label: '全部', value: '' },
         { label: '启用', value: 1 },
@@ -217,7 +210,6 @@ const searchConfig = {
       label: '状态',
       type: 'select',
       placeholder: '请选择状态',
-      span: 2,
       options: [
         { label: '全部', value: '' },
         { label: '启用', value: 1 },
@@ -229,7 +221,6 @@ const searchConfig = {
       label: '状态',
       type: 'select',
       placeholder: '请选择状态',
-      span: 2,
       options: [
         { label: '全部', value: '' },
         { label: '启用', value: 1 },
@@ -240,55 +231,97 @@ const searchConfig = {
 };
 // 高级搜索配置（带自定义按钮）
 const advancedSearchConfig = {
-  layout: 'inline',
   labelWidth: 'auto',
   fields: [
-    {
-      key: 'name',
-      label: '姓名',
-      type: 'input',
-      placeholder: '请输入姓名',
-      span: 3,
-    },
-    {
-      key: 'email',
-      label: '邮箱',
-      type: 'input',
-      placeholder: '请输入邮箱',
-      span: 3,
-    },
-    {
-      key: 'status',
-      label: '状态',
-      type: 'select',
-      placeholder: '请选择状态',
-      span: 3,
-      options: [
-        { label: '全部', value: '' },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
-      ],
-    },
     // {
-    //   key: 'createTime',
-    //   label: '创建时间',
-    //   type: 'date-picker',
-    //   placeholder: '请选择创建时间',
-    //   span: 3,
+    //   key: 'name',
+    //   label: '姓名',
+    //   type: 'input',
+    //   placeholder: '请输入姓名',
     // },
     // {
-    //   key: 'dateRange',
-    //   label: '时间范围',
-    //   type: 'date-range-picker',
-    //   placeholder: '请选择时间范围',
-    //   span: 3,
-    //   props: {
-    //     rangeSeparator: '至',
-    //     clearable: true,
-    //     format: 'YYYY-MM-DD',
-    //     valueFormat: 'YYYY-MM-DD',
-    //   },
+    //   key: 'email',
+    //   label: '邮箱',
+    //   type: 'input',
+    //   placeholder: '请输入邮箱',
     // },
+    // {
+    //   key: 'status',
+    //   label: '状态',
+    //   type: 'select',
+    //   placeholder: '请选择状态',
+    //   options: [
+    //     { label: '全部', value: '' },
+    //     { label: '启用', value: 1 },
+    //     { label: '禁用', value: 0 },
+    //   ],
+    // },
+    // // {
+    // //   key: 'createTime',
+    // //   label: '创建时间',
+    // //   type: 'date-picker',
+    // //   placeholder: '请选择创建时间',
+    // // },
+    {
+      key: 'dateRange',
+      label: '时间范围',
+      type: 'date-range-picker',
+      placeholder: '请选择时间范围',
+      props: {
+        rangeSeparator: '至',
+        clearable: true,
+        format: 'YYYY-MM-DD',
+        valueFormat: 'YYYY-MM-DD',
+      },
+    },
+    {
+      key: 'dateRange',
+      label: '时间范围',
+      type: 'date-range-picker',
+      placeholder: '请选择时间范围',
+      props: {
+        rangeSeparator: '至',
+        clearable: true,
+        format: 'YYYY-MM-DD',
+        valueFormat: 'YYYY-MM-DD',
+      },
+    },
+    {
+      key: 'dateRange',
+      label: '时间范围',
+      type: 'date-range-picker',
+      placeholder: '请选择时间范围',
+      props: {
+        rangeSeparator: '至',
+        clearable: true,
+        format: 'YYYY-MM-DD',
+        valueFormat: 'YYYY-MM-DD',
+      },
+    },
+    {
+      key: 'dateRange',
+      label: '时间范围',
+      type: 'date-range-picker',
+      placeholder: '请选择时间范围',
+      props: {
+        rangeSeparator: '至',
+        clearable: true,
+        format: 'YYYY-MM-DD',
+        valueFormat: 'YYYY-MM-DD',
+      },
+    },
+    {
+      key: 'dateRange',
+      label: '时间范围',
+      type: 'date-range-picker',
+      placeholder: '请选择时间范围',
+      props: {
+        rangeSeparator: '至',
+        clearable: true,
+        format: 'YYYY-MM-DD',
+        valueFormat: 'YYYY-MM-DD',
+      },
+    },
   ],
   customButtons: [
     {
@@ -438,11 +471,9 @@ const getTableData = async (params) => {
 const handleSearch = (searchData) => {
   console.log('搜索:', searchData);
 };
-
 const handleReset = () => {
   console.log('重置搜索');
 };
-
 const handleSelectionChange = (selectedRowKeys, selectedRowsData, currentRowData) => {
   selectedRows.value = selectedRowsData;
   console.log('选择变化:', selectedRowKeys, selectedRowsData);
@@ -451,11 +482,9 @@ const handleSelectionChange = (selectedRowKeys, selectedRowsData, currentRowData
 const handleAdd = () => {
   console.log('新增用户');
 };
-
 const handleEdit = (row) => {
   console.log('编辑用户:', row);
 };
-
 const handleDelete = (row) => {
   console.log('删除用户:', row);
 };
@@ -471,11 +500,11 @@ const handleError = (error) => {
   padding: 20px;
 }
 
-.demo-section {
+.card {
   margin-bottom: 40px;
 }
 
-.demo-section h3 {
+.card h3 {
   margin-bottom: 16px;
   color: #1f2937;
   font-size: 16px;

@@ -11,10 +11,9 @@
       @error="handleFormError"
     >
       <template #submitBtnGroup>
-        <!-- 默认按钮 -->
         <t-space>
           <t-button theme="default" @click="handleFormReset">重置</t-button>
-          <t-button theme="primary" @click="handleFormSubmit">提交</t-button>
+          <t-button theme="primary" @click="handleFormSubmit">查询</t-button>
         </t-space>
       </template>
     </td-pro-form>
@@ -44,23 +43,17 @@ const emit = defineEmits(['submit', 'reset', 'change', 'error']);
 // 转换为 TdProForm 的配置
 const proFormConfig = computed(() => {
   return {
-    // 基础配置
-    layout: props.config.layout || 'inline',
-    labelWidth: props.config.labelWidth || 'auto',
-    labelAlign: props.config.labelAlign || 'left',
-    colon: props.config.colon,
-    fieldSpacing: props.config.fieldSpacing,
-    className: props.config.className,
-    style: props.config.style,
+    // 搜索表单的默认配置
+    layout: 'inline',
+    labelWidth: 'auto',
+    labelAlign: 'left',
+    colon: false,
+    className: '',
+    style: {},
+    fields: [],
 
-    // 字段配置
-    fields: props.config.fields || [],
-
-    // 按钮配置
-    showSubmit: props.config.showSubmit !== false,
-    showReset: props.config.showReset !== false,
-    submitText: props.config.submitText || '查询',
-    resetText: props.config.resetText || '重置',
+    // 用户配置覆盖默认配置
+    ...props.config,
   };
 });
 

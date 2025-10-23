@@ -22,6 +22,9 @@ import './permission';
 import 'virtual:svg-icons-register'; // vite
 // import './icon.js'; // webpack5
 
+// 引入 TDesign 主题样式
+import '@/assets/style/tdesign-theme.css';
+
 // 注册全局组件
 import * as Components from './global-components';
 Object.entries(Components).forEach(([key, component]) => {

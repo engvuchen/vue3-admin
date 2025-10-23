@@ -1,19 +1,16 @@
 <template>
-  <div class="form" :class="config.className" :style="config.style">
+  <div class="form" :class="mergedConfig.className" :style="mergedConfig.style">
     <t-form
       ref="formRef"
       :data="formData"
-      :layout="config.layout || 'vertical'"
-      :label-width="config.labelWidth"
+      :layout="mergedConfig.layout"
+      :label-width="mergedConfig.labelWidth"
+      :label-align="mergedConfig.labelAlign"
+      :colon="mergedConfig.colon"
       :rules="formRules"
       style="width: 100%"
     >
-      <!-- <t-row :gutter="config.fieldSpacing || [16, 16]" style="max-width: 80%; flex: 1">
-        <t-col v-for="field in visibleFields" :key="field.key" :span="field.span || 24" :offset="field.offset || 0">
-        </t-col>
-      </t-row> -->
-
-      <div class="form-item">
+      <div class="form-item" :class="{ 'form-item--grid': mergedConfig.fields.length > 4 }">
         <template v-for="field in visibleFields">
           <!-- 上置装饰 -->
           <component
@@ -83,13 +80,13 @@
 
         <!-- 默认按钮 -->
         <slot name="submitBtnGroup">
-          <t-form-item>
+          <t-form-item v-if="mergedConfig.showSubmit || mergedConfig.showReset">
             <t-space>
-              <t-button theme="default" @click="handleReset">
-                {{ config.resetText || '重置' }}
+              <t-button v-if="mergedConfig.showReset" theme="default" @click="handleReset">
+                {{ mergedConfig.resetText }}
               </t-button>
-              <t-button theme="primary" @click="handleSubmit">
-                {{ config.submitText || '提交' }}
+              <t-button v-if="mergedConfig.showSubmit" theme="primary" @click="handleSubmit">
+                {{ mergedConfig.submitText }}
               </t-button>
             </t-space>
           </t-form-item>
@@ -107,11 +104,56 @@ const props = defineProps({
   config: {
     type: Object,
     required: true,
+    default: () => ({
+      // 表单布局配置
+      layout: 'vertical', // 表单布局：vertical | horizontal | inline
+      labelWidth: '120px', // 标签宽度
+      labelAlign: 'right', // 标签对齐方式：left | right | top
+      colon: true, // 是否显示冒号
+
+      // 样式配置
+      className: '', // 自定义类名
+      style: {}, // 自定义样式
+
+      // 按钮配置
+      showSubmit: true, // 是否显示提交按钮
+      showReset: true, // 是否显示重置按钮
+      submitText: '提交', // 提交按钮文本
+      resetText: '重置', // 重置按钮文本
+
+      // 字段配置
+      fields: [], // 表单字段配置数组
+    }),
   },
 });
 
 // Emits
 const emit = defineEmits(['submit', 'reset', 'change', 'error']);
+
+// 合并配置（使用默认值）
+const mergedConfig = computed(() => {
+  return {
+    layout: 'vertical', // 表单布局：vertical | horizontal | inline
+    labelWidth: '120px', // 标签宽度
+    labelAlign: 'right', // 标签对齐方式：left | right | top
+    colon: true, // 是否显示冒号
+
+    // 样式配置
+    className: '', // 自定义类名
+    style: {}, // 自定义样式
+
+    // 按钮配置
+    showSubmit: true, // 是否显示提交按钮
+    showReset: true, // 是否显示重置按钮
+    submitText: '提交', // 提交按钮文本
+    resetText: '重置', // 重置按钮文本
+
+    // 字段配置
+    fields: [], // 表单字段配置数组
+
+    ...props.config,
+  };
+});
 
 // 表单引用
 const formRef = ref();
@@ -139,7 +181,7 @@ const initFormData = () => {
   Object.keys(dynamicOptions).forEach((key) => delete dynamicOptions[key]);
 
   // 设置初始状态 - 根据字段配置设置隐藏字段
-  props.config.fields.forEach((field) => {
+  mergedConfig.value.fields.forEach((field) => {
     if (field.visible === false) {
       hiddenFields.value.add(field.key);
     }
@@ -149,7 +191,7 @@ const initFormData = () => {
   });
 
   // 先设置默认值
-  props.config.fields.forEach((field) => {
+  mergedConfig.value.fields.forEach((field) => {
     if (field.defaultValue !== undefined) {
       formData[field.key] = field.defaultValue;
     }
@@ -157,7 +199,7 @@ const initFormData = () => {
 
   // 然后执行所有字段的联动逻辑（包括没有默认值的字段）
   Promise.all(
-    props.config.fields.map(async (field) => {
+    mergedConfig.value.fields.map(async (field) => {
       const fieldValue = formData[field.key];
       await handleLinkage(field.key, fieldValue);
     }),
@@ -166,7 +208,7 @@ const initFormData = () => {
 
 // 计算可见字段
 const visibleFields = computed(() => {
-  return props.config.fields.filter((field) => {
+  return mergedConfig.value.fields.filter((field) => {
     // 只检查动态隐藏状态，不检查初始 visible 配置
     // 因为初始 visible 状态已经在 initFormData 中处理过了
     return !hiddenFields.value.has(field.key);
@@ -177,7 +219,7 @@ const visibleFields = computed(() => {
 const formRules = computed(() => {
   const rules = {};
 
-  props.config.fields.forEach((field) => {
+  mergedConfig.value.fields.forEach((field) => {
     if (field.rules && field.rules.length > 0) {
       rules[field.key] = field.rules.map((rule) => ({
         ...rule,
@@ -438,7 +480,7 @@ const handleLinkage = async (changedKey, changedValue) => {
   };
 
   // 处理字段和装饰器的联动
-  for (const field of props.config.fields) {
+  for (const field of mergedConfig.value.fields) {
     if (field.linkage) {
       await executeLinkage(field.linkage, field.key, '联动');
     }
@@ -481,7 +523,7 @@ const restoreData = async (data) => {
   Object.keys(dynamicOptions).forEach((key) => delete dynamicOptions[key]);
 
   // 设置初始状态
-  props.config.fields.forEach((field) => {
+  mergedConfig.value.fields.forEach((field) => {
     if (field.visible === false) {
       hiddenFields.value.add(field.key);
     }
@@ -491,7 +533,7 @@ const restoreData = async (data) => {
   });
 
   // 按字段顺序恢复数据，支持多级联动
-  for (const field of props.config.fields) {
+  for (const field of mergedConfig.value.fields) {
     if (data[field.key] !== undefined) {
       formData[field.key] = data[field.key];
 
@@ -532,7 +574,7 @@ onMounted(() => {
 
 // 监听配置变化
 watch(
-  () => props.config,
+  () => mergedConfig.value,
   () => {
     initFormData();
   },
@@ -541,37 +583,5 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.form {
-  width: 100%;
-}
-.form-item {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 12px;
-  width: 100%;
-
-  :deep(.t-date-range-picker) {
-    width: 100%;
-  }
-}
-
-.field-decorator {
-  margin: 8px 0;
-}
-
-.field-decorator--top {
-  margin-bottom: 12px;
-}
-
-.field-decorator--before {
-  margin-bottom: 8px;
-}
-
-.field-decorator--after {
-  margin-top: 8px;
-}
-
-.field-decorator--bottom {
-  margin-top: 12px;
-}
+@import './index.scss';
 </style>

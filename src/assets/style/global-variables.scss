@@ -36,4 +36,7 @@ $horizontalMenuHeight: 40px; // 菜单栏水平排列时候的高度
   --collapse-menu-active-border-width: #{$collapseMenuActiveBorderWidth};
   --arrow-color: #{$arrowColor};
   --horizontal-menu-height: #{$horizontalMenuHeight};
+  
+  // TDesign 主题模式控制
+  --theme-mode: light; // 默认浅色主题，可通过 JavaScript 动态切换为 'dark'
 }

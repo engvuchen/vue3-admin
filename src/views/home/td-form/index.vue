@@ -132,8 +132,7 @@ const activeTab = ref('basic');
 
 // 基础表单配置 - 包含所有表单项类型示例
 const basicFormConfig = {
-  layout: 'vertical',
-  labelWidth: '120px',
+  // 使用默认配置，只需要指定必要的字段
   fields: [
     // 基础输入框
     {
@@ -146,7 +145,6 @@ const basicFormConfig = {
         { required: true, message: '用户名不能为空' },
         { min: 3, max: 20, message: '用户名长度在3-20个字符之间' },
       ],
-      span: 12,
     },
     {
       key: 'password',
@@ -158,7 +156,6 @@ const basicFormConfig = {
         { required: true, message: '密码不能为空' },
         { min: 6, message: '密码至少6个字符' },
       ],
-      span: 12,
     },
     {
       key: 'email',
@@ -172,7 +169,6 @@ const basicFormConfig = {
           message: '邮箱格式不正确',
         },
       ],
-      span: 12,
     },
     {
       key: 'phone',
@@ -184,7 +180,6 @@ const basicFormConfig = {
         { required: true, message: '手机号不能为空' },
         { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式' },
       ],
-      span: 12,
     },
     // 数字输入框
     {
@@ -195,7 +190,6 @@ const basicFormConfig = {
       props: { min: 1, max: 120, step: 1 },
       help: '请输入1-120之间的年龄',
       rules: [{ required: true, message: '年龄不能为空' }],
-      span: 12,
     },
     {
       key: 'salary',
@@ -204,7 +198,6 @@ const basicFormConfig = {
       placeholder: '请输入薪资',
       props: { min: 0, step: 100, suffix: '元' },
       rules: [{ required: true, message: '薪资不能为空' }],
-      span: 12,
     },
     // 选择器
     {
@@ -220,7 +213,6 @@ const basicFormConfig = {
         { label: '杭州', value: 'hangzhou' },
       ],
       rules: [{ required: true, message: '请选择所在城市' }],
-      span: 12,
     },
     {
       key: 'department',
@@ -235,7 +227,6 @@ const basicFormConfig = {
         { label: '市场部', value: 'marketing' },
       ],
       rules: [{ required: true, message: '请选择部门' }],
-      span: 12,
     },
     // 单选框
     {
@@ -249,7 +240,6 @@ const basicFormConfig = {
         { label: '其他', value: 'other' },
       ],
       rules: [{ required: true, message: '请选择性别' }],
-      span: 12,
     },
     {
       key: 'education',
@@ -263,7 +253,6 @@ const basicFormConfig = {
         { label: '博士', value: 'phd' },
       ],
       rules: [{ required: true, message: '请选择学历' }],
-      span: 12,
     },
     // 多选框
     {
@@ -278,7 +267,6 @@ const basicFormConfig = {
         { label: '摄影', value: 'photography' },
         { label: '烹饪', value: 'cooking' },
       ],
-      span: 12,
     },
     {
       key: 'skills',
@@ -292,7 +280,6 @@ const basicFormConfig = {
         { label: 'Python', value: 'python' },
         { label: 'Java', value: 'java' },
       ],
-      span: 12,
     },
     // 开关
     {
@@ -305,7 +292,6 @@ const basicFormConfig = {
         content: '开启后将通过邮件接收重要通知',
         className: 'help-text',
       },
-      span: 12,
     },
     {
       key: 'publicProfile',
@@ -317,7 +303,6 @@ const basicFormConfig = {
         content: '其他用户可以查看您的公开资料',
         className: 'help-text',
       },
-      span: 12,
     },
     // 滑块
     {
@@ -342,7 +327,6 @@ const basicFormConfig = {
         content: '当前选择: {{value}}年',
         className: 'slider-decorator',
       },
-      span: 12,
     },
     {
       key: 'satisfaction',
@@ -360,7 +344,6 @@ const basicFormConfig = {
         content: '当前评分: {{value}}分',
         className: 'slider-decorator',
       },
-      span: 12,
     },
     // 日期选择器
     {
@@ -374,7 +357,6 @@ const basicFormConfig = {
         enableTimePicker: true,
       },
       rules: [{ required: true, message: '请选择出生日期' }],
-      span: 12,
     },
     {
       key: 'joinDate',
@@ -387,7 +369,6 @@ const basicFormConfig = {
         enableTimePicker: false,
       },
       rules: [{ required: true, message: '请选择入职日期' }],
-      span: 12,
     },
     // 时间选择器
     {
@@ -400,7 +381,6 @@ const basicFormConfig = {
         steps: { minute: 15 },
       },
       rules: [{ required: true, message: '请选择上班时间' }],
-      span: 12,
     },
     {
       key: 'workEndTime',
@@ -412,7 +392,6 @@ const basicFormConfig = {
         steps: { minute: 15 },
       },
       rules: [{ required: true, message: '请选择下班时间' }],
-      span: 12,
     },
     // 文件上传
     {
@@ -427,7 +406,6 @@ const basicFormConfig = {
         theme: 'image',
         tips: '支持 jpg/png 格式，文件大小不超过 2MB',
       },
-      span: 12,
     },
     {
       key: 'resume',
@@ -442,7 +420,6 @@ const basicFormConfig = {
         tips: '支持 PDF、Word 格式，单个文件不超过 10MB',
       },
       help: '支持 PDF、Word 格式，单个文件不超过 10MB',
-      span: 12,
     },
     // 多行文本
     {
@@ -460,7 +437,6 @@ const basicFormConfig = {
         content: '请详细描述您的个人情况和优势',
         className: 'help-text',
       },
-      span: 24,
     },
     // 地址信息
     {
@@ -472,19 +448,15 @@ const basicFormConfig = {
         rows: 3,
         maxlength: 200,
       },
-      span: 24,
     },
   ],
 };
 
 // 高级表单配置（包含联动和装饰）
 const advancedFormConfig = {
+  // 覆盖部分默认配置
   layout: 'horizontal',
-  labelWidth: '120px',
-  fieldSpacing: {
-    horizontal: 16,  // 水平间距
-    vertical: 24     // 垂直间距
-  },
+  fieldSpacing: 24,
   fields: [
     {
       key: 'userType',
@@ -502,7 +474,6 @@ const advancedFormConfig = {
         content: '💡 选择不同用户类型会显示不同的表单字段',
         className: 'tip-decorator',
       },
-      span: 12,
     },
     {
       key: 'vipLevel',
@@ -526,7 +497,6 @@ const advancedFormConfig = {
           },
         },
       ],
-      span: 12,
     },
     {
       key: 'companyName',
@@ -547,7 +517,6 @@ const advancedFormConfig = {
           },
         },
       ],
-      span: 12,
     },
     {
       key: 'companySize',
@@ -572,7 +541,6 @@ const advancedFormConfig = {
           },
         },
       ],
-      span: 12,
     },
     {
       key: 'discount',
@@ -603,7 +571,6 @@ const advancedFormConfig = {
           },
         },
       ],
-      span: 10,
     },
     {
       key: 'notifications',
@@ -615,16 +582,13 @@ const advancedFormConfig = {
         content: '开启后将通过邮件接收重要通知',
         className: 'help-text',
       },
-      span: 12,
     },
   ],
 };
 
 // Quill 富文本编辑器表单配置
 const quillFormConfig = {
-  layout: 'vertical',
-  labelWidth: '120px',
-  fieldSpacing: 24,
+  // 使用默认配置
   fields: [
     {
       key: 'title',
@@ -635,7 +599,6 @@ const quillFormConfig = {
         { required: true, message: '文章标题不能为空' },
         { min: 2, max: 100, message: '标题长度在2-100个字符之间' },
       ],
-      span: 24,
     },
     {
       key: 'author',
@@ -643,7 +606,6 @@ const quillFormConfig = {
       type: 'input',
       placeholder: '请输入作者姓名',
       rules: [{ required: true, message: '作者不能为空' }],
-      span: 12,
     },
     {
       key: 'category',
@@ -658,7 +620,6 @@ const quillFormConfig = {
         { label: '其他', value: 'other' },
       ],
       rules: [{ required: true, message: '请选择文章分类' }],
-      span: 12,
     },
     {
       key: 'tags',
@@ -672,7 +633,6 @@ const quillFormConfig = {
         { label: '前端开发', value: 'frontend' },
         { label: '组件库', value: 'component' },
       ],
-      span: 24,
     },
     {
       key: 'content',
@@ -699,7 +659,6 @@ const quillFormConfig = {
         { min: 10, message: '文章内容至少10个字符' },
       ],
       help: '支持富文本编辑，包括粗体、斜体、列表、链接等格式',
-      span: 24,
     },
     {
       key: 'summary',
@@ -716,7 +675,6 @@ const quillFormConfig = {
         content: '摘要将显示在文章列表中，建议控制在200字以内',
         className: 'help-text',
       },
-      span: 24,
     },
     {
       key: 'publishNow',
@@ -728,7 +686,6 @@ const quillFormConfig = {
         content: '开启后文章将立即发布，关闭则保存为草稿',
         className: 'help-text',
       },
-      span: 12,
     },
     {
       key: 'allowComments',
@@ -740,16 +697,13 @@ const quillFormConfig = {
         content: '是否允许读者对文章进行评论',
         className: 'help-text',
       },
-      span: 12,
     },
   ],
 };
 
 // 装饰器功能演示表单配置
 const decoratorFormConfig = {
-  layout: 'vertical',
-  labelWidth: '120px',
-  fieldSpacing: 24,
+  // 使用默认配置
   fields: [
     {
       key: 'decoratorExample',
@@ -797,7 +751,6 @@ const decoratorFormConfig = {
           },
         ],
       },
-      span: 24,
     },
     {
       key: 'componentDecorator',
@@ -818,7 +771,6 @@ const decoratorFormConfig = {
         },
         className: 'decorator-tag',
       },
-      span: 12,
     },
     {
       key: 'linkageExample',
@@ -854,7 +806,6 @@ const decoratorFormConfig = {
           },
         ],
       },
-      span: 12,
     },
   ],
 };
