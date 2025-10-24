@@ -1,38 +1,39 @@
 <template>
-  <div class="form" :class="mergedConfig.className" :style="mergedConfig.style">
-    <t-form
-      ref="formRef"
-      :data="formData"
-      :layout="mergedConfig.layout"
-      :label-width="mergedConfig.labelWidth"
-      :label-align="mergedConfig.labelAlign"
-      :colon="mergedConfig.colon"
-      :rules="formRules"
-      style="width: 100%"
-    >
-      <div class="form-item" :class="{ 'form-item--grid': mergedConfig.fields.length >= 3 }">
-        <template v-for="field in visibleFields">
-          <!-- 上置装饰 -->
-          <component
-            v-if="field.topDecorator"
-            :is="renderDecorator(field.topDecorator, formData[field.key], field.key, 'top')"
-            :class="['field-decorator', 'field-decorator--top', field.topDecorator.className]"
-            :style="field.topDecorator.style"
-            v-bind="field.topDecorator.type !== 'component' ? field.topDecorator.props || {} : {}"
-          ></component>
+  <t-form
+    ref="formRef"
+    :data="formData"
+    :layout="mergedConfig.layout"
+    :label-width="mergedConfig.labelWidth"
+    :label-align="mergedConfig.labelAlign"
+    :colon="mergedConfig.colon"
+    :rules="formRules"
+    class="form"
+    :class="[
+      {
+        'form--grid': mergedConfig.fields.length >= 3,
+        'form--vertical': mergedConfig.layout === 'vertical',
+      },
+      mergedConfig.className,
+    ]"
+    :style="mergedConfig.style"
+  >
+    <template v-for="field in visibleFields">
+      <div style="display: flex; flex-direction: column">
+        <!-- 上置装饰 -->
+        <component
+          v-if="field.topDecorator"
+          :is="renderDecorator(field.topDecorator, formData[field.key], field.key, 'top')"
+        />
 
+        <div style="display: flex">
           <!-- 前置装饰 -->
           <component
             v-if="field.beforeDecorator"
             :is="renderDecorator(field.beforeDecorator, formData[field.key], field.key, 'before')"
-            :class="['field-decorator', 'field-decorator--before', field.beforeDecorator.className]"
-            :style="field.beforeDecorator.style"
-            v-bind="field.beforeDecorator.type !== 'component' ? field.beforeDecorator.props || {} : {}"
-          ></component>
-
+          />
           <!-- form-item、普通组件都有 help（有状态着色）、可重置 -->
           <!-- 表单字段 -->
-          <t-form-item :name="field.key" :label="field.label" :help="field.help">
+          <t-form-item :name="field.key" :label="field.label" :help="parseHelpContent(field.help, formData[field.key])">
             <!-- 表单字段组件 -->
             <component
               :is="getFieldComponent(field.type)"
@@ -40,12 +41,11 @@
               :placeholder="field.placeholder"
               :disabled="disabledFields.has(field.key)"
               :loading="loadingFields.has(field.key)"
-              :options="getFieldOptions(field)"
               v-bind="field.props"
               v-on="getFieldEvents(field)"
             >
               <!-- 选项类组件的选项渲染 -->
-              <template v-if="field.options && ['select', 'radio', 'checkbox'].includes(field.type)">
+              <template v-if="['select', 'radio', 'checkbox'].includes(field.type)">
                 <component
                   v-for="option in getFieldOptions(field)"
                   :key="option.value"
@@ -60,45 +60,39 @@
               </template>
             </component>
           </t-form-item>
-
           <!-- 后置装饰 -->
           <component
             v-if="field.afterDecorator"
             :is="renderDecorator(field.afterDecorator, formData[field.key], field.key, 'after')"
-            :class="['field-decorator', 'field-decorator--after', field.afterDecorator.className]"
-            :style="field.afterDecorator.style"
-            v-bind="field.afterDecorator.type !== 'component' ? field.afterDecorator.props || {} : {}"
-          ></component>
+          />
+        </div>
 
-          <!-- 下置装饰 -->
-          <component
-            v-if="field.bottomDecorator"
-            :is="renderDecorator(field.bottomDecorator, formData[field.key], field.key, 'bottom')"
-            :class="['field-decorator', 'field-decorator--bottom', field.bottomDecorator.className]"
-            :style="field.bottomDecorator.style"
-            v-bind="field.bottomDecorator.type !== 'component' ? field.bottomDecorator.props || {} : {}"
-          ></component>
-        </template>
-
-        <!-- 默认按钮 -->
-        <slot name="submitBtnGroup">
-          <t-form-item v-if="mergedConfig.showSubmit || mergedConfig.showReset">
-            <t-space>
-              <t-button v-if="mergedConfig.showReset" theme="default" @click="handleReset">
-                {{ mergedConfig.resetText }}
-              </t-button>
-              <t-button v-if="mergedConfig.showSubmit" theme="primary" @click="handleSubmit">
-                {{ mergedConfig.submitText }}
-              </t-button>
-            </t-space>
-          </t-form-item>
-        </slot>
+        <!-- 下置装饰 -->
+        <component
+          v-if="field.bottomDecorator"
+          :is="renderDecorator(field.bottomDecorator, formData[field.key], field.key, 'bottom')"
+        />
       </div>
-    </t-form>
-  </div>
+    </template>
+
+    <!-- 默认按钮 -->
+    <slot name="submitBtnGroup">
+      <t-form-item v-if="mergedConfig.showSubmit || mergedConfig.showReset">
+        <t-space>
+          <t-button v-if="mergedConfig.showReset" theme="default" @click="handleReset">
+            {{ mergedConfig.resetText }}
+          </t-button>
+          <t-button v-if="mergedConfig.showSubmit" theme="primary" @click="handleSubmit">
+            {{ mergedConfig.submitText }}
+          </t-button>
+        </t-space>
+      </t-form-item>
+    </slot>
+  </t-form>
 </template>
 
 <script setup>
+import { h } from 'vue';
 import { getCustomComponent } from './componentMap';
 
 // Props
@@ -211,11 +205,11 @@ const initFormData = () => {
 
 // 计算可见字段
 const visibleFields = computed(() => {
-  return mergedConfig.value.fields.filter((field) => {
-    // 只检查动态隐藏状态，不检查初始 visible 配置
-    // 因为初始 visible 状态已经在 initFormData 中处理过了
+  const fields = mergedConfig.value.fields.filter((field) => {
     return !hiddenFields.value.has(field.key);
   });
+
+  return fields;
 });
 
 // 生成表单校验规则
@@ -302,21 +296,42 @@ const getFieldEvents = (field) => {
 const renderDecorator = (decorator, value, fieldKey, position) => {
   if (!decorator) return null;
 
-  const { type, content } = decorator;
+  const { type, content, className, style } = decorator;
   const decoratorId = `${fieldKey}_${position}`;
 
   if (type === 'component') {
     return createComponentDecorator(decorator, value, decoratorId);
   }
 
-  // 文本和HTML装饰器使用相同的解析逻辑
-  const template = type === 'html' ? '<div v-html="parsedContent"></div>' : '<div>{{ parsedContent }}</div>';
+  // 解析内容
+  const parsedContent = parseDecoratorContent(content, value);
+
+  console.log('renderDecorator 调用:', { type, content, className, style, parsedContent, value });
+
+  // 使用 h 函数创建 VNode（不需要模板编译器）
   return {
-    template,
-    computed: {
-      parsedContent() {
-        return parseDecoratorContent(content, value);
-      },
+    name: `Decorator_${decoratorId}`,
+    render() {
+      const props = {};
+
+      // 处理 className
+      if (className) {
+        props.class = className;
+      }
+
+      // 处理 style（h 函数直接支持对象格式）
+      if (style) {
+        props.style = style;
+      }
+
+      // 处理 HTML 类型
+      if (type === 'html') {
+        props.innerHTML = parsedContent;
+      }
+
+      console.log('render 执行:', { props, parsedContent, type });
+
+      return h('div', props, type === 'text' ? parsedContent : undefined);
     },
   };
 };
@@ -330,7 +345,7 @@ const createComponentDecorator = (decorator, _value, decoratorId) => {
     decoratorStates[decoratorId] = {
       props: { ...initialProps },
       visible: true,
-      content: content,
+      content,
     };
   }
 
@@ -345,6 +360,7 @@ const createComponentDecorator = (decorator, _value, decoratorId) => {
         actualComponent: component || 'div',
       };
     },
+    // 这里返回的已存在的组件
     template: `<component v-if="decoratorState.visible" :is="actualComponent" v-bind="decoratorState.props" />`,
   };
 };
@@ -355,6 +371,17 @@ const parseDecoratorContent = (content, value) => {
   return content.replace(/\{\{(\w+)\}\}/g, (match, key) => {
     if (key === 'value') {
       return value !== undefined ? String(value) : '';
+    }
+    return match;
+  });
+};
+
+// 解析 help 内容（支持模板变量）
+const parseHelpContent = (help, value) => {
+  if (!help) return help;
+  return help.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    if (key === 'value') {
+      return value !== undefined && value !== null && value !== '' ? String(value) : '未选择';
     }
     return match;
   });
@@ -535,12 +562,8 @@ const restoreData = async (data) => {
 
   // 设置初始状态
   mergedConfig.value.fields.forEach((field) => {
-    if (field.visible === false) {
-      hiddenFields.value.add(field.key);
-    }
-    if (field.disabled === true) {
-      disabledFields.value.add(field.key);
-    }
+    if (field.visible === false) hiddenFields.value.add(field.key);
+    if (field.disabled === true) disabledFields.value.add(field.key);
   });
 
   // 按字段顺序恢复数据，支持多级联动

@@ -245,6 +245,7 @@ const advancedColumns = [
 // 高级搜索配置（带自定义按钮）
 const advancedSearchConfig = {
   labelWidth: '80px', // 根据最长的表单标题，业务进行调节
+  layout: 'vertical',
   fields: [
     {
       key: 'userType',
@@ -256,9 +257,8 @@ const advancedSearchConfig = {
         { label: 'VIP用户', value: 'vip' },
         { label: '企业用户', value: 'enterprise' },
       ],
-      //
-      help: '当前选择：{{value}}，不同类型将显示不同的表单字段',
-      beforeDecorator: {
+      help: '当前选择：{{value}}，不同类型将显示不同的表单字段', // 之前我有计划 help 可以联动的吗？
+      topDecorator: {
         type: 'text',
         content: '💡 选择不同用户类型会显示不同的表单字段',
         className: 'tip-decorator',
@@ -331,47 +331,47 @@ const advancedSearchConfig = {
         },
       ],
     },
-    {
-      key: 'discount',
-      label: '折扣比例',
-      type: 'slider',
-      value: 100,
-      props: { min: 50, max: 100, step: 5 },
-      afterDecorator: {
-        type: 'text',
-        content: '当前折扣: {{value}}%',
-        className: 'discount-decorator',
-      },
-      linkage: [
-        {
-          watchField: 'userType',
-          action: (value, { setFieldValue }) => {
-            switch (value) {
-              case 'vip':
-                setFieldValue('discount', 85);
-                break;
-              case 'enterprise':
-                setFieldValue('discount', 75);
-                break;
-              default:
-                setFieldValue('discount', 100);
-                break;
-            }
-          },
-        },
-      ],
-    },
-    {
-      key: 'notifications',
-      label: '接收通知',
-      type: 'switch',
-      value: true,
-      afterDecorator: {
-        type: 'text',
-        content: '开启后将通过邮件接收重要通知',
-        className: 'help-text',
-      },
-    },
+    // {
+    //   key: 'discount',
+    //   label: '折扣比例',
+    //   type: 'slider',
+    //   value: 100,
+    //   props: { min: 50, max: 100, step: 5 },
+    //   afterDecorator: {
+    //     type: 'text',
+    //     content: '当前折扣: {{value}}%',
+    //     className: 'discount-decorator',
+    //   },
+    //   linkage: [
+    //     {
+    //       watchField: 'userType',
+    //       action: (value, { setFieldValue }) => {
+    //         switch (value) {
+    //           case 'vip':
+    //             setFieldValue('discount', 85);
+    //             break;
+    //           case 'enterprise':
+    //             setFieldValue('discount', 75);
+    //             break;
+    //           default:
+    //             setFieldValue('discount', 100);
+    //             break;
+    //         }
+    //       },
+    //     },
+    //   ],
+    // },
+    // {
+    //   key: 'notifications',
+    //   label: '接收通知',
+    //   type: 'switch',
+    //   value: true,
+    //   afterDecorator: {
+    //     type: 'text',
+    //     content: '开启后将通过邮件接收重要通知',
+    //     className: 'help-text',
+    //   },
+    // },
   ],
 };
 // 高级分页配置示例

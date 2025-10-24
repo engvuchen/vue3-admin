@@ -13,7 +13,6 @@ const ErrorLog = () => import('@/views/test/error-log/index.vue');
 const TdProTableDemo = () => import('@/views/test/td-pro-table-demo.vue');
 const TdesignThemeTest = () => import('@/views/test/tdesign-theme-test.vue');
 const TdProFormExtendedDemo = () => import('@/views/test/td-pro-form-extended-demo.vue');
-const DecoratorSimpleTest = () => import('@/views/test/decorator-simple-test.vue');
 
 export default [
   {
@@ -142,14 +141,6 @@ export default [
         component: TdProFormExtendedDemo,
         meta: {
           title: 'TdProForm 扩展组件演示',
-        },
-      },
-      {
-        path: 'decorator-simple-test',
-        name: 'test-decorator-simple-test',
-        component: DecoratorSimpleTest,
-        meta: {
-          title: '装饰器简单测试',
         },
       },
     ],

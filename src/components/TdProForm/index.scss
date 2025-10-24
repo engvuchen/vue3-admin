@@ -1,8 +1,10 @@
+/**
+ * 表单布局模式：
+ * 1. 默认模式（字段 < 3）：flex 横向布局，支持自动换行
+ * 2. 网格模式（字段 >= 3）：grid 布局，自适应列数（每列最小 280px）
+ * 3. 竖向模式（layout=vertical）：单列竖向布局，最大宽度 400px
+ */
 .form {
-  width: 100%;
-}
-
-.form-item {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -13,36 +15,24 @@
   }
 }
 
-.form-item--grid {
+.form--grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.form--vertical {
+  flex-direction: column;
+  max-width: 400px;
+
+  &.form--grid {
+    grid-template-columns: repeat(1, 400px);
+  }
 }
 
 .field-decorator {
   margin: 8px 0;
   font-size: 14px;
-  line-height: 1.5;
-  color: #666;
-  
-  &.tip-decorator {
-    background-color: #f0f9ff;
-    border: 1px solid #bae6fd;
-    border-radius: 4px;
-    padding: 8px 12px;
-    color: #0369a1;
-    font-size: 13px;
-  }
-  
-  &.discount-decorator {
-    color: #059669;
-    font-weight: 500;
-  }
-  
-  &.help-text {
-    color: #6b7280;
-    font-size: 12px;
-    font-style: italic;
-  }
 }
 
 .field-decorator--top {
