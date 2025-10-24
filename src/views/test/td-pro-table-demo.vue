@@ -247,117 +247,129 @@ const advancedSearchConfig = {
   labelWidth: '80px', // 根据最长的表单标题，业务进行调节
   fields: [
     {
-      key: 'name',
-      label: '姓名',
+      key: 'userType',
+      label: '用户类型',
+      type: 'select',
+      value: 'normal',
+      options: [
+        { label: '普通用户', value: 'normal' },
+        { label: 'VIP用户', value: 'vip' },
+        { label: '企业用户', value: 'enterprise' },
+      ],
+      //
+      help: '当前选择：{{value}}，不同类型将显示不同的表单字段',
+      beforeDecorator: {
+        type: 'text',
+        content: '💡 选择不同用户类型会显示不同的表单字段',
+        className: 'tip-decorator',
+      },
+    },
+    {
+      key: 'vipLevel',
+      label: 'VIP等级',
+      type: 'select',
+      options: [
+        { label: '银卡', value: 'silver' },
+        { label: '金卡', value: 'gold' },
+        { label: '钻石卡', value: 'diamond' },
+      ],
+      visible: false,
+      linkage: [
+        {
+          watchField: 'userType',
+          action: (value, { showField, hideField }) => {
+            if (value === 'vip') {
+              showField('vipLevel');
+            } else {
+              hideField('vipLevel');
+            }
+          },
+        },
+      ],
+    },
+    {
+      key: 'companyName',
+      label: '公司名称',
       type: 'input',
-      placeholder: '请输入姓名',
+      placeholder: '请输入公司名称',
+      visible: false,
+      rules: [{ required: true, message: '公司名称不能为空' }],
+      linkage: [
+        {
+          watchField: 'userType',
+          action: (value, { showField, hideField }) => {
+            if (value === 'enterprise') {
+              showField('companyName');
+            } else {
+              hideField('companyName');
+            }
+          },
+        },
+      ],
     },
-    // {
-    //   key: 'email',
-    //   label: '邮箱',
-    //   type: 'input',
-    //   placeholder: '请输入邮箱',
-    // },
-    // {
-    //   key: 'status',
-    //   label: '状态',
-    //   type: 'select',
-    //   placeholder: '请选择状态',
-    //   options: [
-    //     { label: '全部', value: '' },
-    //     { label: '启用', value: 1 },
-    //     { label: '禁用', value: 0 },
-    //   ],
-    // },
-    // // {
-    // //   key: 'createTime',
-    // //   label: '创建时间',
-    // //   type: 'date-picker',
-    // //   placeholder: '请选择创建时间',
-    // // },
     {
-      key: 'dateRange',
-      label: '时间范围',
-      type: 'date-range-picker',
-      placeholder: '请选择时间范围',
-      value: [],
-      props: {
-        rangeSeparator: '至',
-        clearable: true,
-        format: 'YYYY-MM-DD',
-        valueFormat: 'YYYY-MM-DD',
+      key: 'companySize',
+      label: '公司规模',
+      type: 'select',
+      options: [
+        { label: '1-10人', value: 'small' },
+        { label: '11-50人', value: 'medium' },
+        { label: '51-200人', value: 'large' },
+        { label: '200人以上', value: 'xlarge' },
+      ],
+      visible: false,
+      linkage: [
+        {
+          watchField: 'userType',
+          action: (value, { showField, hideField }) => {
+            if (value === 'enterprise') {
+              showField('companySize');
+            } else {
+              hideField('companySize');
+            }
+          },
+        },
+      ],
+    },
+    {
+      key: 'discount',
+      label: '折扣比例',
+      type: 'slider',
+      value: 100,
+      props: { min: 50, max: 100, step: 5 },
+      afterDecorator: {
+        type: 'text',
+        content: '当前折扣: {{value}}%',
+        className: 'discount-decorator',
       },
+      linkage: [
+        {
+          watchField: 'userType',
+          action: (value, { setFieldValue }) => {
+            switch (value) {
+              case 'vip':
+                setFieldValue('discount', 85);
+                break;
+              case 'enterprise':
+                setFieldValue('discount', 75);
+                break;
+              default:
+                setFieldValue('discount', 100);
+                break;
+            }
+          },
+        },
+      ],
     },
     {
-      key: 'dateRange',
-      label: '时间范围',
-      type: 'date-range-picker',
-      placeholder: '请选择时间范围',
-      value: [],
-      props: {
-        rangeSeparator: '至',
-        clearable: true,
-        format: 'YYYY-MM-DD',
-        valueFormat: 'YYYY-MM-DD',
-      },
-    },
-    {
-      key: 'dateRange1',
-      label: '时间范围',
-      type: 'date-range-picker',
-      placeholder: '请选择时间范围',
-      value: [],
-      props: {
-        rangeSeparator: '至',
-        clearable: true,
-        format: 'YYYY-MM-DD',
-        valueFormat: 'YYYY-MM-DD',
-      },
-    },
-    {
-      key: 'dateRange2',
-      label: '时间范围',
-      type: 'date-range-picker',
-      placeholder: '请选择时间范围',
-      value: [],
-      props: {
-        rangeSeparator: '至',
-        clearable: true,
-        format: 'YYYY-MM-DD',
-        valueFormat: 'YYYY-MM-DD',
-      },
-    },
-    {
-      key: 'dateRange3',
-      label: '时间范围',
-      type: 'date-range-picker',
-      placeholder: '请选择时间范围',
-      value: [],
-      props: {
-        rangeSeparator: '至',
-        clearable: true,
-        format: 'YYYY-MM-DD',
-        valueFormat: 'YYYY-MM-DD',
-      },
-    },
-  ],
-  customButtons: [
-    {
-      key: 'export',
-      text: '导出',
-      theme: 'default',
-      action: async (formData, context) => {
-        console.log('导出数据:', formData);
-        // 这里可以调用导出API
-      },
-    },
-    {
-      key: 'import',
-      text: '导入',
-      theme: 'default',
-      action: async (formData, context) => {
-        console.log('导入数据:', formData);
-        // 这里可以调用导入API
+      key: 'notifications',
+      label: '接收通知',
+      type: 'switch',
+      value: true,
+      afterDecorator: {
+        type: 'text',
+        content: '开启后将通过邮件接收重要通知',
+        className: 'help-text',
       },
     },
   ],
