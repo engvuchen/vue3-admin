@@ -260,9 +260,35 @@ const advancedSearchConfig = {
       help: '当前选择：{{value}}，不同类型将显示不同的表单字段', // 之前我有计划 help 可以联动的吗？
       topDecorator: {
         type: 'text',
-        content: '💡 选择不同用户类型会显示不同的表单字段',
+        value: '💡 选择不同用户类型会显示不同的表单字段',
         className: 'tip-decorator',
       },
+      // topDecorator: {
+      //   label: '文章内容',
+      //   type: 'quill',
+      //   props: {
+      //     value: '你好啊',
+      //     placeholder: '请输入文章内容...',
+      //     theme: 'snow',
+      //     toolbar: [
+      //       ['bold', 'italic', 'underline', 'strike'],
+      //       ['blockquote', 'code-block'],
+      //       [{ header: 1 }, { header: 2 }],
+      //       [{ list: 'ordered' }, { list: 'bullet' }],
+      //       [{ indent: '-1' }, { indent: '+1' }],
+      //       [{ size: ['small', false, 'large', 'huge'] }],
+      //       [{ color: [] }, { background: [] }],
+      //       [{ align: [] }],
+      //       ['clean'],
+      //       ['link'],
+      //     ],
+      //   },
+      //   rules: [
+      //     { required: true, message: '文章内容不能为空' },
+      //     { min: 10, message: '文章内容至少10个字符' },
+      //   ],
+      //   help: '支持富文本编辑，包括<strong>粗体</strong>、<em>斜体</em>、列表、链接等格式',
+      // },
     },
     {
       key: 'vipLevel',
@@ -339,7 +365,7 @@ const advancedSearchConfig = {
     //   props: { min: 50, max: 100, step: 5 },
     //   afterDecorator: {
     //     type: 'text',
-    //     content: '当前折扣: {{value}}%',
+    //     value: '当前折扣: {{value}}%',
     //     className: 'discount-decorator',
     //   },
     //   linkage: [
@@ -368,7 +394,7 @@ const advancedSearchConfig = {
     //   value: true,
     //   afterDecorator: {
     //     type: 'text',
-    //     content: '开启后将通过邮件接收重要通知',
+    //     value: '开启后将通过邮件接收重要通知',
     //     className: 'help-text',
     //   },
     // },

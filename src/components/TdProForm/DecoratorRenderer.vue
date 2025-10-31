@@ -7,18 +7,18 @@
   >
     <!-- 文本装饰 -->
     <template v-if="decorator.type === 'text'">
-      {{ parseDecoratorContent(decorator.content, value) }}
+      {{ parseDecoratorContent(decorator.value, value) }}
     </template>
 
     <!-- HTML 装饰 -->
     <template v-else-if="decorator.type === 'html'">
-      <div v-html="parseDecoratorContent(decorator.content, value)"></div>
+      <div v-html="parseDecoratorContent(decorator.value, value)"></div>
     </template>
 
     <!-- 组件装饰 -->
     <component
-      v-else-if="decorator.type === 'component'"
-      :is="getCustomComponent(decorator.content)"
+      v-else
+      :is="getCustomComponent(decorator.type)"
       v-bind="decorator.props"
       :value="value"
       :field="field"

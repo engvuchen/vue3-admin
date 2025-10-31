@@ -289,7 +289,7 @@ const basicFormConfig = {
       defaultValue: true,
       afterDecorator: {
         type: 'text',
-        content: '开启后将通过邮件接收重要通知',
+        value: '开启后将通过邮件接收重要通知',
         className: 'help-text',
       },
     },
@@ -300,7 +300,7 @@ const basicFormConfig = {
       defaultValue: false,
       afterDecorator: {
         type: 'text',
-        content: '其他用户可以查看您的公开资料',
+        value: '其他用户可以查看您的公开资料',
         className: 'help-text',
       },
     },
@@ -324,7 +324,7 @@ const basicFormConfig = {
       },
       afterDecorator: {
         type: 'text',
-        content: '当前选择: {{value}}年',
+        value: '当前选择: {{value}}年',
         className: 'slider-decorator',
       },
     },
@@ -341,7 +341,7 @@ const basicFormConfig = {
       },
       afterDecorator: {
         type: 'text',
-        content: '当前评分: {{value}}分',
+        value: '当前评分: {{value}}分',
         className: 'slider-decorator',
       },
     },
@@ -434,7 +434,7 @@ const basicFormConfig = {
       },
       afterDecorator: {
         type: 'text',
-        content: '请详细描述您的个人情况和优势',
+        value: '请详细描述您的个人情况和优势',
         className: 'help-text',
       },
     },
@@ -471,7 +471,7 @@ const advancedFormConfig = {
       help: '当前选择：{{value}}，不同类型将显示不同的表单字段',
       beforeDecorator: {
         type: 'text',
-        content: '💡 选择不同用户类型会显示不同的表单字段',
+        value: '💡 选择不同用户类型会显示不同的表单字段',
         className: 'tip-decorator',
       },
     },
@@ -550,7 +550,7 @@ const advancedFormConfig = {
       props: { min: 50, max: 100, step: 5 },
       afterDecorator: {
         type: 'text',
-        content: '当前折扣: {{value}}%',
+        value: '当前折扣: {{value}}%',
         className: 'discount-decorator',
       },
       linkage: [
@@ -579,7 +579,7 @@ const advancedFormConfig = {
       defaultValue: true,
       afterDecorator: {
         type: 'text',
-        content: '开启后将通过邮件接收重要通知',
+        value: '开启后将通过邮件接收重要通知',
         className: 'help-text',
       },
     },
@@ -672,7 +672,7 @@ const quillFormConfig = {
       },
       afterDecorator: {
         type: 'text',
-        content: '摘要将显示在文章列表中，建议控制在200字以内',
+        value: '摘要将显示在文章列表中，建议控制在200字以内',
         className: 'help-text',
       },
     },
@@ -683,7 +683,7 @@ const quillFormConfig = {
       defaultValue: false,
       afterDecorator: {
         type: 'text',
-        content: '开启后文章将立即发布，关闭则保存为草稿',
+        value: '开启后文章将立即发布，关闭则保存为草稿',
         className: 'help-text',
       },
     },
@@ -694,7 +694,7 @@ const quillFormConfig = {
       defaultValue: true,
       afterDecorator: {
         type: 'text',
-        content: '是否允许读者对文章进行评论',
+        value: '是否允许读者对文章进行评论',
         className: 'help-text',
       },
     },
@@ -713,18 +713,17 @@ const decoratorFormConfig = {
       defaultValue: 'Hello World',
       topDecorator: {
         type: 'text',
-        content: '⬆️ 这是上置装饰器（文本型）',
+        value: '⬆️ 这是上置装饰器（文本型）',
         className: 'decorator-top',
         style: { color: '#1890ff', fontWeight: 'bold' },
       },
       beforeDecorator: {
         type: 'html',
-        content: '<span style="color: #52c41a;">⬅️ 前置装饰器（HTML）：当前值是 <strong>{{value}}</strong></span>',
+        value: '<span style="color: #52c41a;">⬅️ 前置装饰器（HTML）：当前值是 <strong>{{value}}</strong></span>',
         className: 'decorator-before',
       },
       afterDecorator: {
-        type: 'component',
-        content: 'TButton',
+        type: 'TButton',
         props: {
           theme: 'primary',
           size: 'small',
@@ -735,7 +734,7 @@ const decoratorFormConfig = {
       },
       bottomDecorator: {
         type: 'html',
-        content: '<div style="color: #f5222d;">⬇️ 下置装饰器（HTML型）：字符长度 <span id="length">0</span></div>',
+        value: '<div style="color: #f5222d;">⬇️ 下置装饰器（HTML型）：字符长度 <span id="length">0</span></div>',
         className: 'decorator-bottom',
         linkage: [
           {
@@ -763,8 +762,7 @@ const decoratorFormConfig = {
         { label: '选项3', value: 'option3' },
       ],
       beforeDecorator: {
-        type: 'component',
-        content: 'TTag',
+        type: 'TTag',
         props: {
           theme: 'success',
           variant: 'light',
@@ -784,7 +782,7 @@ const decoratorFormConfig = {
       ],
       topDecorator: {
         type: 'html',
-        content: '<div style="color: red; font-weight: bold;">🔴 当前选择的颜色主题</div>',
+        value: '<div style="color: red; font-weight: bold;">🔴 当前选择的颜色主题</div>',
         linkage: [
           {
             watchField: 'linkageExample',

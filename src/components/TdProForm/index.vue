@@ -177,21 +177,34 @@ const initFormData = () => {
   disabledFields.value.clear();
   Object.keys(dynamicOptions).forEach((key) => delete dynamicOptions[key]);
 
-  // 设置初始状态 - 根据字段配置设置隐藏字段
+  // 单次遍历：初始化隐藏/禁用、默认值与装饰器状态
+  const positions = ['topDecorator', 'beforeDecorator', 'afterDecorator', 'bottomDecorator'];
   mergedConfig.value.fields.forEach((field) => {
-    if (field.visible === false) {
-      hiddenFields.value.add(field.key);
-    }
-    if (field.disabled === true) {
-      disabledFields.value.add(field.key);
-    }
-  });
+    // 隐藏/禁用
+    if (field.visible === false) hiddenFields.value.add(field.key);
+    if (field.disabled === true) disabledFields.value.add(field.key);
 
-  // 重新设置字段值（覆盖之前的默认值）
-  mergedConfig.value.fields.forEach((field) => {
+    // 默认值
     if (field.value !== undefined) {
       formData[field.key] = field.value;
     }
+
+    // 装饰器状态初始化（仅组件型）
+    positions.forEach((pos) => {
+      const decorator = field[pos];
+      if (!decorator) return;
+
+      const { type = 'html', props: initialProps = {} } = decorator;
+      const decoratorId = `${field.key}_${pos.replace('Decorator', '')}`;
+
+      if (!decoratorStates[decoratorId]) {
+        decoratorStates[decoratorId] = {
+          props: { ...initialProps },
+          visible: true,
+          type,
+        };
+      }
+    });
   });
 
   // 然后执行所有字段的联动逻辑（包括没有默认值的字段）
@@ -293,84 +306,63 @@ const getFieldEvents = (field) => {
 };
 
 // 渲染装饰器（支持文本、HTML 和组件三种类型）
-const renderDecorator = (decorator, value, fieldKey, position) => {
+// field.topDecorator, formData[field.key], field.key, 'top'
+const renderDecorator = (decorator, fieldValue, fieldKey, position) => {
   if (!decorator) return null;
 
-  const { type, content, className, style } = decorator;
+  const { type = 'html', value, className, style, props: decoratorProps = {} } = decorator;
   const decoratorId = `${fieldKey}_${position}`;
 
-  if (type === 'component') {
-    return createComponentDecorator(decorator, value, decoratorId);
-  }
+  // 无 type、text 或 html：统一按 HTML 渲染
+  if (type === 'text' || type === 'html') {
+    // 使用 h() 函数创建组件（函数式组件），透传 decorator.props
+    return () => {
+      // 每次渲染时解析内容，以支持动态字段值
+      const parsedContent = parseDecoratorContent(value, fieldValue);
 
-  // 解析内容
-  const parsedContent = parseDecoratorContent(content, value);
+      // 合并 props、class 和 style
+      const baseProps = { ...decoratorProps };
 
-  console.log('renderDecorator 调用:', { type, content, className, style, parsedContent, value });
-
-  // 使用 h 函数创建 VNode（不需要模板编译器）
-  return {
-    name: `Decorator_${decoratorId}`,
-    render() {
-      const props = {};
-
-      // 处理 className
-      if (className) {
-        props.class = className;
+      // class/style 以装饰器自身为准；若提供则覆盖 props 中的同名属性
+      if (className !== undefined) {
+        baseProps.class = className;
+      }
+      if (style !== undefined) {
+        baseProps.style = style;
       }
 
-      // 处理 style（h 函数直接支持对象格式）
-      if (style) {
-        props.style = style;
-      }
-
-      // 处理 HTML 类型
+      // HTML 类型：使用 innerHTML 渲染 HTML 字符串
       if (type === 'html') {
-        props.innerHTML = parsedContent;
+        return h('div', { ...baseProps, innerHTML: parsedContent });
       }
 
-      console.log('render 执行:', { props, parsedContent, type });
-
-      return h('div', props, type === 'text' ? parsedContent : undefined);
-    },
-  };
-};
-
-// 创建组件装饰器（支持联动更新）
-const createComponentDecorator = (decorator, _value, decoratorId) => {
-  const { content, props: initialProps = {} } = decorator;
-
-  // 初始化装饰器状态
-  if (!decoratorStates[decoratorId]) {
-    decoratorStates[decoratorId] = {
-      props: { ...initialProps },
-      visible: true,
-      content,
+      // 文本类型：直接渲染文本内容
+      return h('div', baseProps, parsedContent);
     };
   }
 
-  // 获取实际组件
-  const component = getFieldComponent(content) || content;
+  // 组件型装饰器：装饰器状态已在配置遍历阶段初始化
+  const component = getCustomComponent(type) || getFieldComponent(type) || 'div';
 
-  // 返回响应式组件包装器
   return {
     setup() {
       return {
         decoratorState: decoratorStates[decoratorId],
-        actualComponent: component || 'div',
+        actualComponent: component,
       };
     },
-    // 这里返回的已存在的组件
     template: `<component v-if="decoratorState.visible" :is="actualComponent" v-bind="decoratorState.props" />`,
   };
 };
 
+// 已合并组件型装饰器逻辑至 renderDecorator，删除 createComponentDecorator
+
 // 解析装饰器内容（支持模板变量）
-const parseDecoratorContent = (content, value) => {
+const parseDecoratorContent = (content, fieldValue) => {
   if (!content) return content;
   return content.replace(/\{\{(\w+)\}\}/g, (match, key) => {
     if (key === 'value') {
-      return value !== undefined ? String(value) : '';
+      return fieldValue !== undefined ? String(fieldValue) : '';
     }
     return match;
   });
