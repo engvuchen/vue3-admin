@@ -29,7 +29,7 @@
     <!-- 表格 -->
     <div class="table-container">
       <t-table
-        v-loading="loading"
+        :loading="loading"
         :data="tableData"
         :row-key="rowKey"
         :bordered="bordered"

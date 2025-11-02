@@ -290,7 +290,9 @@ const basicFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '开启后将通过邮件接收重要通知',
-        className: 'help-text',
+        props: {
+          class: 'help-text',
+        },
       },
     },
     {
@@ -301,7 +303,9 @@ const basicFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '其他用户可以查看您的公开资料',
-        className: 'help-text',
+        props: {
+          class: 'help-text',
+        },
       },
     },
     // 滑块
@@ -325,7 +329,9 @@ const basicFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '当前选择: {{value}}年',
-        className: 'slider-decorator',
+        props: {
+          class: 'slider-decorator',
+        },
       },
     },
     {
@@ -342,7 +348,9 @@ const basicFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '当前评分: {{value}}分',
-        className: 'slider-decorator',
+        props: {
+          class: 'slider-decorator',
+        },
       },
     },
     // 日期选择器
@@ -435,7 +443,9 @@ const basicFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '请详细描述您的个人情况和优势',
-        className: 'help-text',
+        props: {
+          class: 'help-text',
+        },
       },
     },
     // 地址信息
@@ -472,7 +482,9 @@ const advancedFormConfig = {
       beforeDecorator: {
         type: 'text',
         value: '💡 选择不同用户类型会显示不同的表单字段',
-        className: 'tip-decorator',
+        props: {
+          class: 'tip-decorator',
+        },
       },
     },
     {
@@ -551,7 +563,9 @@ const advancedFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '当前折扣: {{value}}%',
-        className: 'discount-decorator',
+        props: {
+          class: 'discount-decorator',
+        },
       },
       linkage: [
         {
@@ -580,7 +594,9 @@ const advancedFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '开启后将通过邮件接收重要通知',
-        className: 'help-text',
+        props: {
+          class: 'help-text',
+        },
       },
     },
   ],
@@ -673,7 +689,9 @@ const quillFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '摘要将显示在文章列表中，建议控制在200字以内',
-        className: 'help-text',
+        props: {
+          class: 'help-text',
+        },
       },
     },
     {
@@ -684,7 +702,9 @@ const quillFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '开启后文章将立即发布，关闭则保存为草稿',
-        className: 'help-text',
+        props: {
+          class: 'help-text',
+        },
       },
     },
     {
@@ -695,7 +715,9 @@ const quillFormConfig = {
       afterDecorator: {
         type: 'text',
         value: '是否允许读者对文章进行评论',
-        className: 'help-text',
+        props: {
+          class: 'help-text',
+        },
       },
     },
   ],
@@ -714,13 +736,17 @@ const decoratorFormConfig = {
       topDecorator: {
         type: 'text',
         value: '⬆️ 这是上置装饰器（文本型）',
-        className: 'decorator-top',
-        style: { color: '#1890ff', fontWeight: 'bold' },
+        props: {
+          class: 'decorator-top',
+          style: { color: '#1890ff', fontWeight: 'bold' },
+        },
       },
       beforeDecorator: {
         type: 'html',
         value: '<span style="color: #52c41a;">⬅️ 前置装饰器（HTML）：当前值是 <strong>{{value}}</strong></span>',
-        className: 'decorator-before',
+        props: {
+          class: 'decorator-before',
+        },
       },
       afterDecorator: {
         type: 'TButton',
@@ -728,14 +754,16 @@ const decoratorFormConfig = {
           theme: 'primary',
           size: 'small',
           variant: 'outline',
+          class: 'decorator-after',
+          style: { marginLeft: '8px' },
         },
-        className: 'decorator-after',
-        style: { marginLeft: '8px' },
       },
       bottomDecorator: {
         type: 'html',
         value: '<div style="color: #f5222d;">⬇️ 下置装饰器（HTML型）：字符长度 <span id="length">0</span></div>',
-        className: 'decorator-bottom',
+        props: {
+          class: 'decorator-bottom',
+        },
         linkage: [
           {
             watchField: 'decoratorExample',
@@ -766,8 +794,8 @@ const decoratorFormConfig = {
         props: {
           theme: 'success',
           variant: 'light',
+          class: 'decorator-tag',
         },
-        className: 'decorator-tag',
       },
     },
     {
@@ -1191,5 +1219,6 @@ pre {
   border-left: 1px solid #ccc;
   border-right: 1px solid #ccc;
   border-top: none;
+  height: auto;
 }
 </style>

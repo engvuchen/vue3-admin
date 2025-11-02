@@ -10,10 +10,10 @@
     class="form"
     :class="[
       {
-        'form--grid': mergedConfig.fields.length >= 3,
+        'form--grid': mergedConfig.fields.length >= 4,
         'form--vertical': mergedConfig.layout === 'vertical',
       },
-      mergedConfig.className,
+      mergedConfig.class,
     ]"
     :style="mergedConfig.style"
   >
@@ -31,16 +31,21 @@
             v-if="field.beforeDecorator"
             :is="renderDecorator(field.beforeDecorator, formData[field.key], field.key, 'before')"
           />
+
           <!-- form-item、普通组件都有 help（有状态着色）、可重置 -->
           <!-- 表单字段 -->
-          <t-form-item :name="field.key" :label="field.label" :help="parseHelpContent(field.help, formData[field.key])">
+          <t-form-item
+            :name="field.key"
+            :label="field.label"
+            :help="parseHelpContent(field.help, formData[field.key])"
+            v-bind="field.formItemProps || {}"
+          >
             <!-- 表单字段组件 -->
             <component
               :is="getFieldComponent(field.type)"
               v-model="formData[field.key]"
               :placeholder="field.placeholder"
               :disabled="disabledFields.has(field.key)"
-              :loading="loadingFields.has(field.key)"
               v-bind="field.props"
               v-on="getFieldEvents(field)"
             >
@@ -114,7 +119,7 @@ const mergedConfig = computed(() => {
     colon: true, // 是否显示冒号
 
     // 样式配置
-    className: '', // 自定义类名
+    class: '', // 自定义类名
     style: {}, // 自定义样式
 
     // 按钮配置
@@ -160,13 +165,10 @@ initDefaultValues();
 
 // 隐藏的字段集合
 const hiddenFields = ref(new Set());
-
 // 禁用的字段集合
 const disabledFields = ref(new Set());
 // 动态选项映射
 const dynamicOptions = reactive({});
-// 加载状态映射
-const loadingFields = ref(new Set());
 // 装饰器状态映射 - 用于存储动态装饰器的props和状态
 const decoratorStates = reactive({});
 
@@ -194,12 +196,11 @@ const initFormData = () => {
       const decorator = field[pos];
       if (!decorator) return;
 
-      const { type = 'html', props: initialProps = {} } = decorator;
+      const { type = 'html', props: decoratorProps = {} } = decorator;
       const decoratorId = `${field.key}_${pos.replace('Decorator', '')}`;
-
       if (!decoratorStates[decoratorId]) {
         decoratorStates[decoratorId] = {
-          props: { ...initialProps },
+          props: { ...decoratorProps },
           visible: true,
           type,
         };
@@ -308,28 +309,23 @@ const getFieldEvents = (field) => {
 // 渲染装饰器（支持文本、HTML 和组件三种类型）
 // field.topDecorator, formData[field.key], field.key, 'top'
 const renderDecorator = (decorator, fieldValue, fieldKey, position) => {
-  if (!decorator) return null;
+  if (!decorator) return;
 
-  const { type = 'html', value, className, style, props: decoratorProps = {} } = decorator;
+  const { type = 'html', value, props: decoratorProps = {} } = decorator;
   const decoratorId = `${fieldKey}_${position}`;
 
-  // 无 type、text 或 html：统一按 HTML 渲染
-  if (type === 'text' || type === 'html') {
+  // 按 HTML 渲染：无 type、text 或 html
+  if (['html', 'text'].includes(type)) {
     // 使用 h() 函数创建组件（函数式组件），透传 decorator.props
+    // component is 文档提到直接 引入组件，直接打印一个组件，显示有 render、setup；
+    // h 返回的是虚拟 dom 定义，也能用
+
     return () => {
       // 每次渲染时解析内容，以支持动态字段值
       const parsedContent = parseDecoratorContent(value, fieldValue);
 
-      // 合并 props、class 和 style
+      // 统一通过 props 传递所有属性（包括 class 和 style）
       const baseProps = { ...decoratorProps };
-
-      // class/style 以装饰器自身为准；若提供则覆盖 props 中的同名属性
-      if (className !== undefined) {
-        baseProps.class = className;
-      }
-      if (style !== undefined) {
-        baseProps.style = style;
-      }
 
       // HTML 类型：使用 innerHTML 渲染 HTML 字符串
       if (type === 'html') {
@@ -341,23 +337,18 @@ const renderDecorator = (decorator, fieldValue, fieldKey, position) => {
     };
   }
 
-  // 组件型装饰器：装饰器状态已在配置遍历阶段初始化
+  // 渲染组件型装饰器：装饰器状态已在配置遍历阶段初始化
   const component = getCustomComponent(type) || getFieldComponent(type) || 'div';
+  return () => {
+    const decoratorState = decoratorStates[decoratorId];
+    if (!decoratorState || !decoratorState.visible) return;
 
-  return {
-    setup() {
-      return {
-        decoratorState: decoratorStates[decoratorId],
-        actualComponent: component,
-      };
-    },
-    template: `<component v-if="decoratorState.visible" :is="actualComponent" v-bind="decoratorState.props" />`,
+    // 直接使用初始化时已合并好的 props
+    return h(component, decoratorState.props);
   };
 };
 
-// 已合并组件型装饰器逻辑至 renderDecorator，删除 createComponentDecorator
-
-// 解析装饰器内容（支持模板变量）
+// 解析装饰器 value 中的模板变量
 const parseDecoratorContent = (content, fieldValue) => {
   if (!content) return content;
   return content.replace(/\{\{(\w+)\}\}/g, (match, key) => {
@@ -443,7 +434,7 @@ const handleFieldChange = (key, value) => {
   handleLinkage(key, value);
 };
 
-// 创建表单操作上下文
+// 创建表单操作上下文-提供方法，让联动逻辑操作其他表单项的显示、隐藏
 const createFormContext = () => ({
   formData,
   showField: (fieldKey) => {
@@ -471,7 +462,8 @@ const createFormContext = () => ({
   updateDecoratorProps: (fieldKey, position, props) => {
     const decoratorId = `${fieldKey}_${position}`;
     if (decoratorStates[decoratorId]) {
-      Object.assign(decoratorStates[decoratorId].props, props);
+      // 创建新对象引用以确保 Vue 检测到变化并触发重新渲染
+      decoratorStates[decoratorId].props = { ...decoratorStates[decoratorId].props, ...props };
     }
   },
   showDecorator: (fieldKey, position) => {
@@ -487,7 +479,6 @@ const createFormContext = () => ({
     }
   },
 });
-
 // 处理联动逻辑
 const handleLinkage = async (changedKey, changedValue) => {
   const context = createFormContext();

@@ -248,6 +248,49 @@ const advancedSearchConfig = {
   layout: 'vertical',
   fields: [
     {
+      key: 'topic',
+      label: '话题',
+      type: 'textarea',
+      placeholder: '请输入话题内容',
+      props: {
+        style: { width: '400px' },
+        rows: 3,
+        maxlength: 500,
+        showLimit: true,
+      },
+      bottomDecorator: {
+        label: '话题详情',
+        type: 'quill',
+        props: {
+          style: { marginLeft: '80px', width: '400px' },
+          modelValue: '',
+          placeholder: '请输入话题详情...',
+          theme: 'snow',
+          toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ header: 1 }, { header: 2 }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ indent: '-1' }, { indent: '+1' }],
+            [{ size: ['small', false, 'large', 'huge'] }],
+            [{ color: [] }, { background: [] }],
+            [{ align: [] }],
+            ['clean'],
+            ['link'],
+          ],
+        },
+        linkage: [
+          {
+            watchField: 'topic',
+            action: (value, { updateDecoratorProps }) => {
+              // 将 textarea 的值同步到 quill 编辑器
+              updateDecoratorProps('topic', 'bottom', { modelValue: value || '' });
+            },
+          },
+        ],
+      },
+    },
+    {
       key: 'userType',
       label: '用户类型',
       type: 'select',
@@ -261,35 +304,43 @@ const advancedSearchConfig = {
       topDecorator: {
         type: 'text',
         value: '💡 选择不同用户类型会显示不同的表单字段',
-        className: 'tip-decorator',
+        props: {
+          class: 'tip-decorator',
+        },
       },
-      // topDecorator: {
-      //   label: '文章内容',
-      //   type: 'quill',
-      //   props: {
-      //     value: '你好啊',
-      //     placeholder: '请输入文章内容...',
-      //     theme: 'snow',
-      //     toolbar: [
-      //       ['bold', 'italic', 'underline', 'strike'],
-      //       ['blockquote', 'code-block'],
-      //       [{ header: 1 }, { header: 2 }],
-      //       [{ list: 'ordered' }, { list: 'bullet' }],
-      //       [{ indent: '-1' }, { indent: '+1' }],
-      //       [{ size: ['small', false, 'large', 'huge'] }],
-      //       [{ color: [] }, { background: [] }],
-      //       [{ align: [] }],
-      //       ['clean'],
-      //       ['link'],
-      //     ],
-      //   },
-      //   rules: [
-      //     { required: true, message: '文章内容不能为空' },
-      //     { min: 10, message: '文章内容至少10个字符' },
-      //   ],
-      //   help: '支持富文本编辑，包括<strong>粗体</strong>、<em>斜体</em>、列表、链接等格式',
-      // },
+      bottomDecorator: {
+        label: '文章内容',
+
+        // 只处理了 type、props ?
+        type: 'quill',
+        props: {
+          // style: { maxHeight: '200px' },
+          value: '你好啊',
+          placeholder: '请输入文章内容...',
+          theme: 'snow',
+          toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ header: 1 }, { header: 2 }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ indent: '-1' }, { indent: '+1' }],
+            [{ size: ['small', false, 'large', 'huge'] }],
+            [{ color: [] }, { background: [] }],
+            [{ align: [] }],
+            ['clean'],
+            ['link'],
+          ],
+        },
+
+        // 装饰器，不支持 rules、help；因为不参与表单校验
+        // rules: [
+        //   { required: true, message: '文章内容不能为空' },
+        //   { min: 10, message: '文章内容至少10个字符' },
+        // ],
+        // help: '支持富文本编辑，包括<strong>粗体</strong>、<em>斜体</em>、列表、链接等格式',
+      },
     },
+
     {
       key: 'vipLevel',
       label: 'VIP等级',
@@ -400,6 +451,12 @@ const advancedSearchConfig = {
     // },
   ],
 };
+setTimeout(() => {
+  // advancedSearchConfig
+
+  advancedSearchConfig[0].label = '延迟被改的话题';
+}, 1000);
+
 // 高级分页配置示例
 const advancedPaginationConfig = {
   show: true,

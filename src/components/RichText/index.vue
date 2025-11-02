@@ -95,21 +95,20 @@ const computedToolbarOptions = computed(() => {
 });
 
 // 计算高度配置
-const computedMinHeight = computed(() => {
-  const height = props.minHeight;
-  if (typeof height === 'number') {
-    return `${height}px`;
-  }
-  return height || '150px';
-});
-
-const computedMaxHeight = computed(() => {
-  const height = props.maxHeight;
-  if (typeof height === 'number') {
-    return `${height}px`;
-  }
-  return height || 'none';
-});
+// const computedMinHeight = computed(() => {
+//   const height = props.minHeight;
+//   if (typeof height === 'number') {
+//     return `${height}px`;
+//   }
+//   return height || '150px';
+// });
+// const computedMaxHeight = computed(() => {
+//   const height = props.maxHeight;
+//   if (typeof height === 'number') {
+//     return `${height}px`;
+//   }
+//   return height || 'none';
+// });
 
 // 处理文本变化
 const handleTextChange = (_delta, _oldDelta, source) => {
@@ -157,10 +156,16 @@ watch(
   width: 100%;
 }
 
+:deep(.ql-container) {
+  height: auto;
+}
+
 /* 确保编辑器样式正确加载 */
 :deep(.ql-editor) {
-  min-height: v-bind(computedMinHeight);
-  max-height: v-bind(computedMaxHeight);
+  /* min-height: v-bind(computedMinHeight);
+  max-height: v-bind(computedMaxHeight); */
+
+  height: 200px;
   font-size: 14px;
   line-height: 1.6;
 }
