@@ -19,18 +19,40 @@
   >
     <template v-for="field in visibleFields">
       <div style="display: flex; flex-direction: column">
-        <!-- 上置装饰 -->
-        <component
-          v-if="field.topDecorator"
-          :is="renderDecorator(field.topDecorator, formData[field.key], field.key, 'top')"
-        />
+        <!-- 上置装饰（支持单个装饰器或装饰器数组） -->
+        <template v-if="field.topDecorator">
+          <component
+            v-for="(decorator, index) in normalizeDecorators(field.topDecorator)"
+            :key="`top-${index}`"
+            :is="
+              renderDecorator({
+                decorator,
+                fieldValue: formData[field.key],
+                fieldKey: field.key,
+                position: 'top',
+                index,
+              })
+            "
+          />
+        </template>
 
         <div style="display: flex">
-          <!-- 前置装饰 -->
-          <component
-            v-if="field.beforeDecorator"
-            :is="renderDecorator(field.beforeDecorator, formData[field.key], field.key, 'before')"
-          />
+          <!-- 前置装饰（支持单个装饰器或装饰器数组） -->
+          <template v-if="field.beforeDecorator">
+            <component
+              v-for="(decorator, index) in normalizeDecorators(field.beforeDecorator)"
+              :key="`before-${index}`"
+              :is="
+                renderDecorator({
+                  decorator,
+                  fieldValue: formData[field.key],
+                  fieldKey: field.key,
+                  position: 'before',
+                  index,
+                })
+              "
+            />
+          </template>
 
           <!-- form-item、普通组件都有 help（有状态着色）、可重置 -->
           <!-- 表单字段 -->
@@ -65,18 +87,40 @@
               </template>
             </component>
           </t-form-item>
-          <!-- 后置装饰 -->
-          <component
-            v-if="field.afterDecorator"
-            :is="renderDecorator(field.afterDecorator, formData[field.key], field.key, 'after')"
-          />
+          <!-- 后置装饰（支持单个装饰器或装饰器数组） -->
+          <template v-if="field.afterDecorator">
+            <component
+              v-for="(decorator, index) in normalizeDecorators(field.afterDecorator)"
+              :key="`after-${index}`"
+              :is="
+                renderDecorator({
+                  decorator,
+                  fieldValue: formData[field.key],
+                  fieldKey: field.key,
+                  position: 'after',
+                  index,
+                })
+              "
+            />
+          </template>
         </div>
 
-        <!-- 下置装饰 -->
-        <component
-          v-if="field.bottomDecorator"
-          :is="renderDecorator(field.bottomDecorator, formData[field.key], field.key, 'bottom')"
-        />
+        <!-- 下置装饰（支持单个装饰器或装饰器数组） -->
+        <template v-if="field.bottomDecorator">
+          <component
+            v-for="(decorator, index) in normalizeDecorators(field.bottomDecorator)"
+            :key="`bottom-${index}`"
+            :is="
+              renderDecorator({
+                decorator,
+                fieldValue: formData[field.key],
+                fieldKey: field.key,
+                position: 'bottom',
+                index,
+              })
+            "
+          />
+        </template>
       </div>
     </template>
 
@@ -191,20 +235,24 @@ const initFormData = () => {
       formData[field.key] = field.value;
     }
 
-    // 装饰器状态初始化（仅组件型）
+    // 装饰器状态初始化（仅组件型，支持数组）
     positions.forEach((pos) => {
       const decorator = field[pos];
       if (!decorator) return;
 
-      const { type = 'html', props: decoratorProps = {} } = decorator;
-      const decoratorId = `${field.key}_${pos.replace('Decorator', '')}`;
-      if (!decoratorStates[decoratorId]) {
-        decoratorStates[decoratorId] = {
-          props: { ...decoratorProps },
-          visible: true,
-          type,
-        };
-      }
+      // 支持单个装饰器或装饰器数组
+      const decorators = Array.isArray(decorator) ? decorator : [decorator];
+      decorators.forEach((dec, index) => {
+        const { type = 'html', props: decoratorProps = {} } = dec;
+        const decoratorId = `${field.key}_${pos.replace('Decorator', '')}_${index}`;
+        if (!decoratorStates[decoratorId]) {
+          decoratorStates[decoratorId] = {
+            props: { ...decoratorProps },
+            visible: true,
+            type,
+          };
+        }
+      });
     });
   });
 
@@ -306,13 +354,18 @@ const getFieldEvents = (field) => {
   };
 };
 
+// 规范化装饰器：将单个装饰器或装饰器数组统一转换为数组
+const normalizeDecorators = (decorator) => {
+  if (!decorator) return [];
+  return Array.isArray(decorator) ? decorator : [decorator];
+};
+
 // 渲染装饰器（支持文本、HTML 和组件三种类型）
-// field.topDecorator, formData[field.key], field.key, 'top'
-const renderDecorator = (decorator, fieldValue, fieldKey, position) => {
+const renderDecorator = ({ decorator, fieldValue, fieldKey, position, index = 0 }) => {
   if (!decorator) return;
 
   const { type = 'html', value, props: decoratorProps = {} } = decorator;
-  const decoratorId = `${fieldKey}_${position}`;
+  const decoratorId = `${fieldKey}_${position}_${index}`;
 
   // 按 HTML 渲染：无 type、text 或 html
   if (['html', 'text'].includes(type)) {
@@ -458,22 +511,22 @@ const createFormContext = () => ({
   callApi: async (apiConfig, params) => {
     return await callApi(apiConfig, params);
   },
-  // 装饰器操作方法
-  updateDecoratorProps: (fieldKey, position, props) => {
-    const decoratorId = `${fieldKey}_${position}`;
+  // 装饰器操作方法（支持数组形式装饰器，index 可选，默认为 0）
+  updateDecoratorProps: (fieldKey, position, props, index = 0) => {
+    const decoratorId = `${fieldKey}_${position}_${index}`;
     if (decoratorStates[decoratorId]) {
       // 创建新对象引用以确保 Vue 检测到变化并触发重新渲染
       decoratorStates[decoratorId].props = { ...decoratorStates[decoratorId].props, ...props };
     }
   },
-  showDecorator: (fieldKey, position) => {
-    const decoratorId = `${fieldKey}_${position}`;
+  showDecorator: (fieldKey, position, index = 0) => {
+    const decoratorId = `${fieldKey}_${position}_${index}`;
     if (decoratorStates[decoratorId]) {
       decoratorStates[decoratorId].visible = true;
     }
   },
-  hideDecorator: (fieldKey, position) => {
-    const decoratorId = `${fieldKey}_${position}`;
+  hideDecorator: (fieldKey, position, index = 0) => {
+    const decoratorId = `${fieldKey}_${position}_${index}`;
     if (decoratorStates[decoratorId]) {
       decoratorStates[decoratorId].visible = false;
     }
@@ -506,11 +559,17 @@ const handleLinkage = async (changedKey, changedValue) => {
       await executeLinkage(field.linkage, field.key, '联动');
     }
 
-    // 处理装饰器联动
-    const decorators = [field.topDecorator, field.beforeDecorator, field.afterDecorator, field.bottomDecorator];
-    for (const decorator of decorators) {
-      if (decorator?.linkage) {
-        await executeLinkage(decorator.linkage, field.key, '装饰器联动');
+    // 处理装饰器联动（支持数组）
+    const decoratorConfigs = [field.topDecorator, field.beforeDecorator, field.afterDecorator, field.bottomDecorator];
+    for (const decoratorConfig of decoratorConfigs) {
+      if (!decoratorConfig) continue;
+
+      // 支持单个装饰器或装饰器数组
+      const decorators = Array.isArray(decoratorConfig) ? decoratorConfig : [decoratorConfig];
+      for (const decorator of decorators) {
+        if (decorator?.linkage) {
+          await executeLinkage(decorator.linkage, field.key, '装饰器联动');
+        }
       }
     }
   }

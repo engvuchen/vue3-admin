@@ -258,7 +258,7 @@ const advancedSearchConfig = {
         maxlength: 500,
         showLimit: true,
       },
-      bottomDecorator: {
+      beforeDecorator: {
         label: '话题详情',
         type: 'quill',
         props: {
@@ -310,8 +310,6 @@ const advancedSearchConfig = {
       },
       bottomDecorator: {
         label: '文章内容',
-
-        // 只处理了 type、props ?
         type: 'quill',
         props: {
           // style: { maxHeight: '200px' },
@@ -331,13 +329,6 @@ const advancedSearchConfig = {
             ['link'],
           ],
         },
-
-        // 装饰器，不支持 rules、help；因为不参与表单校验
-        // rules: [
-        //   { required: true, message: '文章内容不能为空' },
-        //   { min: 10, message: '文章内容至少10个字符' },
-        // ],
-        // help: '支持富文本编辑，包括<strong>粗体</strong>、<em>斜体</em>、列表、链接等格式',
       },
     },
 
