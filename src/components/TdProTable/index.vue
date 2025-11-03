@@ -556,9 +556,9 @@ watch(
 
   .search-form-container {
     width: 100%;
-    padding: 20px;
+    // padding: 20px 0 0 0;
     background: #fff;
-    margin-bottom: 10px;
+    margin: 20px 0;
     border-radius: 6px;
   }
 

@@ -6,15 +6,35 @@
     <t-card :bordered="false" class="card">
       <h3>基础表格</h3>
       <td-pro-table
+        ref="table"
         :request="getTableData"
         :columns="columns"
         :search="searchConfig"
         :pagination="paginationConfig"
-        title=""
         @submit="handleSearch"
         @reset="handleReset"
         @selectionChange="handleSelectionChange"
-      />
+      >
+        <!-- 工具栏 -->
+        <template #toolbar>
+          <t-button theme="default" @click="onShowAddForm">
+            <template #icon>
+              <t-icon name="add" />
+            </template>
+            添加
+          </t-button>
+          <t-button theme="default" @click="refresh">
+            <template #icon>
+              <t-icon name="refresh" />
+            </template>
+            刷新
+          </t-button>
+        </template>
+      </td-pro-table>
+      <!-- 新建&编辑对话框 -->
+      <t-dialog v-model="dialogVisible" :header="formTitle" @close="onCancel" class="dialog">
+        <td-pro-form ref="formRef" :config="formConfig" @submit="onSubmit" @reset="onCancel" />
+      </t-dialog>
     </t-card>
 
     <!-- 高级表格（带自定义按钮） -->
@@ -57,36 +77,75 @@
 
 <script setup lang="jsx">
 import TdProTable from '@/components/TdProTable/index.vue';
+import TdProForm from '@/components/TdProForm/index.vue';
+import tips from '@/utils/tips';
+import { apiGetResourceList, apiResourceModify, apiResourceDel } from '@/api/resource';
 
 // 响应式数据
 const selectedRows = ref([]);
+const table = ref(null);
+const formRef = ref(null);
+const dialogVisible = ref(false);
+const formTitle = ref('添加');
 
 // 基础表格列配置
 const columns = [
   {
-    colKey: 'id',
-    title: 'ID',
-    width: 80,
-  },
-  {
+    label: 'user/resource.name',
     colKey: 'name',
-    title: '姓名',
-    width: 120,
+    title: '资源名',
   },
   {
-    colKey: 'email', // 'detail.email' 支持往里取值？
-    title: '邮箱',
-    minWidth: 200,
+    label: 'user/resource.access',
+    colKey: 'access',
+    title: '路径',
+    cell: (h, { row }) => {
+      return (
+        <t-space>
+          {(row?.access || []).map((item, index) => (
+            <t-tag key={index} theme="default" variant="outline" size="small">
+              {item}
+            </t-tag>
+          ))}
+        </t-space>
+      );
+    },
   },
   {
-    colKey: 'phone',
-    title: '电话',
-    width: 150,
+    label: 'user/resource.cgi',
+    colKey: 'cgi',
+    title: '接口',
+    cell: (h, { row }) => {
+      return (
+        <t-space>
+          {(row?.cgi || []).map((item, index) => (
+            <t-tag key={index} theme="default" variant="outline" size="small">
+              {item}
+            </t-tag>
+          ))}
+        </t-space>
+      );
+    },
   },
   {
-    colKey: 'createTime',
-    title: '创建时间',
-    width: 180,
+    colKey: 'operate',
+    title: '操作',
+    width: 200,
+    align: 'center',
+    cell: (h, { row }) => {
+      return (
+        <t-space>
+          <t-button theme="primary" variant="text" onClick={() => onShowEditForm(row)}>
+            <t-icon name="edit" />
+          </t-button>
+          <t-popconfirm theme="danger" content="确定要删除这条记录吗？" onConfirm={() => onRemove(row)}>
+            <t-button theme="danger" variant="text">
+              <t-icon name="delete" />
+            </t-button>
+          </t-popconfirm>
+        </t-space>
+      );
+    },
   },
 ];
 // 基础搜索配置
@@ -442,10 +501,10 @@ const advancedSearchConfig = {
     // },
   ],
 };
-setTimeout(() => {
-  // advancedSearchConfig
 
-  advancedSearchConfig[0].label = '延迟被改的话题';
+// todo 外部改配置无效；因为组件设计把 fields 另外展开了，丢失了响应性；必须通过内部 api 控制了
+setTimeout(() => {
+  advancedSearchConfig.fields.label = '延迟被改的话题';
 }, 1000);
 
 // 高级分页配置示例
@@ -512,48 +571,10 @@ const mockData = [
 
 // 获取表格数据
 const getTableData = async (params) => {
-  console.log('请求参数:', params);
-
-  // 模拟API请求延迟
-  await new Promise((resolve) => {
-    setTimeout(resolve, 500);
-  });
-
-  // 模拟搜索过滤
-  let filteredData = [...mockData];
-
-  if (params.name) {
-    filteredData = filteredData.filter((item) => item.name.includes(params.name));
-  }
-
-  if (params.email) {
-    filteredData = filteredData.filter((item) => item.email.includes(params.email));
-  }
-
-  if (params.status !== undefined && params.status !== '') {
-    filteredData = filteredData.filter((item) => item.status === params.status);
-  }
-
-  // 处理日期范围过滤
-  if (params.dateRange && params.dateRange.length === 2) {
-    const [startDate, endDate] = params.dateRange;
-    filteredData = filteredData.filter((item) => {
-      const itemDate = new Date(item.createTime);
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      return itemDate >= start && itemDate <= end;
-    });
-  }
-
-  // 模拟分页
-  const { page = 1, pageSize = 10 } = params;
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize;
-  const data = filteredData.slice(start, end);
-
+  const { data } = await apiGetResourceList(params);
   return {
-    data,
-    total: filteredData.length,
+    data: data?.list || [],
+    total: Number(data?.total) || 0,
   };
 };
 
@@ -567,6 +588,99 @@ const handleReset = () => {
 const handleSelectionChange = (selectedRowKeys, selectedRowsData, currentRowData) => {
   selectedRows.value = selectedRowsData;
   console.log('选择变化:', selectedRowKeys, selectedRowsData);
+};
+
+// 表格刷新
+const refresh = () => {
+  table.value?.refresh();
+};
+
+// 表单配置
+const formConfig = ref({
+  labelWidth: '90px',
+  fields: [
+    {
+      key: 'id',
+      label: 'ID',
+      type: 'input',
+      visible: false,
+    },
+    {
+      key: 'name',
+      label: '姓名',
+      type: 'input',
+      placeholder: '请输入姓名',
+      rules: [{ required: true, message: '姓名不能为空' }],
+    },
+    {
+      key: 'email',
+      label: '邮箱',
+      type: 'input',
+      placeholder: '请输入邮箱',
+      rules: [
+        { required: true, message: '邮箱不能为空' },
+        { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: '邮箱格式不正确' },
+      ],
+    },
+    {
+      key: 'phone',
+      label: '电话',
+      type: 'input',
+      placeholder: '请输入电话',
+      rules: [{ required: true, message: '电话不能为空' }],
+    },
+  ],
+});
+
+// 显示添加表单
+const onShowAddForm = () => {
+  dialogVisible.value = true;
+  formTitle.value = '添加';
+  nextTick(() => {
+    formRef.value?.resetFields();
+  });
+};
+
+// 显示编辑表单
+const onShowEditForm = (row) => {
+  dialogVisible.value = true;
+  formTitle.value = '编辑';
+  nextTick(() => {
+    formRef.value?.setFieldsValue({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+    });
+  });
+};
+
+// 提交表单
+const onSubmit = async (data) => {
+  console.log('提交数据:', data);
+  // 这里可以调用实际的 API
+  // if (data.id) {
+  //   await apiUpdateUser(data);
+  // } else {
+  //   await apiCreateUser(data);
+  // }
+  tips.success('操作成功');
+  dialogVisible.value = false;
+  refresh();
+};
+
+// 取消表单
+const onCancel = () => {
+  dialogVisible.value = false;
+};
+
+// 删除记录
+const onRemove = async (row) => {
+  console.log('删除记录:', row);
+  // 这里可以调用实际的 API
+  // await apiDeleteUser({ id: row.id });
+  tips.success('删除成功');
+  refresh();
 };
 
 const handleAdd = () => {

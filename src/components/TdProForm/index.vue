@@ -67,9 +67,9 @@
               :is="getFieldComponent(field.type)"
               v-model="formData[field.key]"
               :placeholder="field.placeholder"
-              :disabled="disabledFields.has(field.key)"
+              :disabled="disabledFields[field.key]"
               v-bind="field.props"
-              v-on="getFieldEvents(field)"
+              @change="(value) => handleFieldChange(field.key, value)"
             >
               <!-- 选项类组件的选项渲染 -->
               <template v-if="['select', 'radio', 'checkbox'].includes(field.type)">
@@ -207,28 +207,87 @@ const initDefaultValues = () => {
 };
 initDefaultValues();
 
-// 隐藏的字段集合
-const hiddenFields = ref(new Set());
-// 禁用的字段集合
-const disabledFields = ref(new Set());
+// 隐藏的字段映射 - { [key]: true }
+const hiddenFields = ref({});
+// 禁用的字段映射 - { [key]: true }
+const disabledFields = ref({});
 // 动态选项映射
-const dynamicOptions = reactive({});
+const dynamicOptions = ref({});
 // 装饰器状态映射 - 用于存储动态装饰器的props和状态
-const decoratorStates = reactive({});
+const decoratorStates = ref({});
+// 联动索引 - watchField -> linkage[] 的映射，用于快速查找联动逻辑
+const linkageIndex = ref({});
+
+// 构建联动索引 - 将 watchField -> linkage[] 的映射预先建立好
+const buildLinkageIndex = () => {
+  linkageIndex.value = {};
+  const positions = ['topDecorator', 'beforeDecorator', 'afterDecorator', 'bottomDecorator'];
+
+  mergedConfig.value.fields.forEach((field) => {
+    // 处理字段联动
+    if (field.linkage) {
+      field.linkage.forEach((linkage) => {
+        const watchField = linkage.watchField;
+        if (!watchField) return;
+
+        if (!linkageIndex.value[watchField]) {
+          linkageIndex.value[watchField] = [];
+        }
+        linkageIndex.value[watchField].push({
+          linkage,
+          fieldKey: field.key,
+          errorPrefix: '联动',
+          type: 'field',
+        });
+      });
+    }
+
+    // 处理装饰器联动（支持数组）
+    positions.forEach((pos) => {
+      const decoratorConfig = field[pos];
+      if (!decoratorConfig) return;
+
+      const decorators = Array.isArray(decoratorConfig) ? decoratorConfig : [decoratorConfig];
+      decorators.forEach((decorator, index) => {
+        if (!decorator?.linkage) return;
+
+        decorator.linkage.forEach((linkage) => {
+          const watchField = linkage.watchField;
+          if (!watchField) return;
+
+          if (!linkageIndex.value[watchField]) {
+            linkageIndex.value[watchField] = [];
+          }
+          linkageIndex.value[watchField].push({
+            linkage,
+            fieldKey: field.key,
+            errorPrefix: '装饰器联动',
+            type: 'decorator',
+            position: pos,
+            index,
+          });
+        });
+      });
+    });
+  });
+};
 
 // 初始化表单数据
 const initFormData = () => {
   // 重置状态
-  hiddenFields.value.clear();
-  disabledFields.value.clear();
-  Object.keys(dynamicOptions).forEach((key) => delete dynamicOptions[key]);
+  hiddenFields.value = {};
+  disabledFields.value = {};
+  Object.keys(dynamicOptions.value).forEach((key) => delete dynamicOptions.value[key]);
+
+  // 构建联动索引（优先执行，因为后续会用到）
+  buildLinkageIndex();
 
   // 单次遍历：初始化隐藏/禁用、默认值与装饰器状态
   const positions = ['topDecorator', 'beforeDecorator', 'afterDecorator', 'bottomDecorator'];
   mergedConfig.value.fields.forEach((field) => {
     // 隐藏/禁用
-    if (field.visible === false) hiddenFields.value.add(field.key);
-    if (field.disabled === true) disabledFields.value.add(field.key);
+    if (field.visible === false) hiddenFields.value[field.key] = true;
+    if (field.disabled === true) disabledFields.value[field.key] = true;
 
     // 默认值
     if (field.value !== undefined) {
@@ -245,8 +304,8 @@ const initFormData = () => {
       decorators.forEach((dec, index) => {
         const { type = 'html', props: decoratorProps = {} } = dec;
         const decoratorId = `${field.key}_${pos.replace('Decorator', '')}_${index}`;
-        if (!decoratorStates[decoratorId]) {
-          decoratorStates[decoratorId] = {
+        if (!decoratorStates.value[decoratorId]) {
+          decoratorStates.value[decoratorId] = {
             props: { ...decoratorProps },
             visible: true,
             type,
@@ -268,7 +327,7 @@ const initFormData = () => {
 // 计算可见字段
 const visibleFields = computed(() => {
   const fields = mergedConfig.value.fields.filter((field) => {
-    return !hiddenFields.value.has(field.key);
+    return !hiddenFields.value[field.key];
   });
 
   return fields;
@@ -289,7 +348,6 @@ const formRules = computed(() => {
 
   return rules;
 });
-
 // 生成默认错误消息
 const generateDefaultMessage = (field, rule) => {
   if (rule.required) {
@@ -331,7 +389,6 @@ const getFieldComponent = (type) => {
 
   return baseComponentMap[type] || getCustomComponent(type) || TInput;
 };
-
 // 获取选项组件
 const getOptionComponent = (type) => {
   const optionMap = {
@@ -341,17 +398,9 @@ const getOptionComponent = (type) => {
   };
   return optionMap[type];
 };
-
 // 获取字段选项
 const getFieldOptions = (field) => {
-  return dynamicOptions[field.key] || field.options || [];
-};
-
-// 获取字段事件
-const getFieldEvents = (field) => {
-  return {
-    change: (value) => handleFieldChange(field.key, value),
-  };
+  return dynamicOptions.value[field.key] || field.options || [];
 };
 
 // 规范化装饰器：将单个装饰器或装饰器数组统一转换为数组
@@ -393,14 +442,13 @@ const renderDecorator = ({ decorator, fieldValue, fieldKey, position, index = 0 
   // 渲染组件型装饰器：装饰器状态已在配置遍历阶段初始化
   const component = getCustomComponent(type) || getFieldComponent(type) || 'div';
   return () => {
-    const decoratorState = decoratorStates[decoratorId];
+    const decoratorState = decoratorStates.value[decoratorId];
     if (!decoratorState || !decoratorState.visible) return;
 
     // 直接使用初始化时已合并好的 props
     return h(component, decoratorState.props);
   };
 };
-
 // 解析装饰器 value 中的模板变量
 const parseDecoratorContent = (content, fieldValue) => {
   if (!content) return content;
@@ -423,61 +471,85 @@ const parseHelpContent = (help, value) => {
   });
 };
 
-// API调用函数
-const callApi = async (apiConfig, params) => {
-  const { url, transform } = apiConfig;
-
+// API调用函数 - 支持两种方式：
+// 1. 直接传入 Promise 函数: callApi(() => request({ ... }))
+// 2. 传入配置对象: callApi({ url, method, ... }, params) - 内部会调用项目封装的 request
+const callApi = async (apiPromiseOrConfig, params) => {
   try {
-    // 检查是否为演示用的 mock API - 直接返回模拟数据，不发起真实请求
-    if (url.includes('mock-api.example.com')) {
-      if (window.getMockData) {
-        const data = await window.getMockData(url, params || {});
-
-        return transform ? transform(data) : data;
-      } else {
-        throw new Error('模拟数据函数未初始化，请确保已调用 initMockData()');
-      }
+    // 方式1: 如果传入的是函数，直接执行并返回 Promise
+    if (typeof apiPromiseOrConfig === 'function') {
+      const result = await apiPromiseOrConfig(params);
+      return result;
     }
 
-    // 真实的 API 调用
-    const { method = 'GET', headers = {} } = apiConfig;
-    const options = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
+    // 方式2: 如果传入的是配置对象，使用项目封装的 request
+    const { transform, ...requestConfig } = apiPromiseOrConfig;
+
+    // 处理参数：根据请求方法决定使用 params 还是 data
+    const method = requestConfig.method?.toLowerCase() || 'get';
+    const config = {
+      ...requestConfig,
+      ...(method === 'get'
+        ? { params: { ...requestConfig.params, ...params } }
+        : { data: params || requestConfig.data }),
     };
 
-    let finalUrl = url;
+    // 动态导入 request，避免循环依赖
+    const request = (await import('@/utils/request')).default;
+    const result = await request(config);
 
-    if (method === 'GET' && params) {
-      const searchParams = new URLSearchParams();
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          searchParams.append(key, String(value));
-        }
-      });
-      finalUrl += `?${searchParams.toString()}`;
-    } else if (method !== 'GET' && params) {
-      options.body = JSON.stringify(params);
-    }
-
-    const response = await fetch(finalUrl, options);
-
-    if (!response.ok) {
-      throw new Error(`API调用失败: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    return transform ? transform(data) : data;
+    // 如果有 transform 函数，对结果进行转换
+    return transform ? transform(result) : result;
   } catch (error) {
     console.error('❌ API调用错误:', error);
     throw error;
   }
 };
-
+// 联动逻辑：提供表单操作方法，控制其他表单项的显示、隐藏
+const createFormContext = () => ({
+  formData,
+  showField: (fieldKey) => {
+    delete hiddenFields.value[fieldKey];
+  },
+  hideField: (fieldKey) => {
+    hiddenFields.value[fieldKey] = true;
+  },
+  enableField: (fieldKey) => {
+    delete disabledFields.value[fieldKey];
+  },
+  disableField: (fieldKey) => {
+    disabledFields.value[fieldKey] = true;
+  },
+  setFieldValue: (fieldKey, value) => {
+    formData[fieldKey] = value;
+  },
+  setFieldOptions: (fieldKey, options) => {
+    dynamicOptions.value[fieldKey] = options;
+  },
+  callApi: async (apiConfig, params) => {
+    return await callApi(apiConfig, params);
+  },
+  // 装饰器操作方法（支持数组形式装饰器，index 可选，默认为 0）
+  updateDecoratorProps: (fieldKey, position, props, index = 0) => {
+    const decoratorId = `${fieldKey}_${position}_${index}`;
+    if (decoratorStates.value[decoratorId]) {
+      // 创建新对象引用以确保 Vue 检测到变化并触发重新渲染
+      decoratorStates.value[decoratorId].props = { ...decoratorStates.value[decoratorId].props, ...props };
+    }
+  },
+  showDecorator: (fieldKey, position, index = 0) => {
+    const decoratorId = `${fieldKey}_${position}_${index}`;
+    if (decoratorStates.value[decoratorId]) {
+      decoratorStates.value[decoratorId].visible = true;
+    }
+  },
+  hideDecorator: (fieldKey, position, index = 0) => {
+    const decoratorId = `${fieldKey}_${position}_${index}`;
+    if (decoratorStates.value[decoratorId]) {
+      decoratorStates.value[decoratorId].visible = false;
+    }
+  },
+});
 // 处理字段变化；同步值到 formData，且处理联动逻辑
 const handleFieldChange = (key, value) => {
   formData[key] = value;
@@ -486,91 +558,23 @@ const handleFieldChange = (key, value) => {
   // 处理联动逻辑
   handleLinkage(key, value);
 };
-
-// 创建表单操作上下文-提供方法，让联动逻辑操作其他表单项的显示、隐藏
-const createFormContext = () => ({
-  formData,
-  showField: (fieldKey) => {
-    hiddenFields.value.delete(fieldKey);
-  },
-  hideField: (fieldKey) => {
-    hiddenFields.value.add(fieldKey);
-  },
-  enableField: (fieldKey) => {
-    disabledFields.value.delete(fieldKey);
-  },
-  disableField: (fieldKey) => {
-    disabledFields.value.add(fieldKey);
-  },
-  setFieldValue: (fieldKey, value) => {
-    formData[fieldKey] = value;
-  },
-  setFieldOptions: (fieldKey, options) => {
-    dynamicOptions[fieldKey] = options;
-  },
-  callApi: async (apiConfig, params) => {
-    return await callApi(apiConfig, params);
-  },
-  // 装饰器操作方法（支持数组形式装饰器，index 可选，默认为 0）
-  updateDecoratorProps: (fieldKey, position, props, index = 0) => {
-    const decoratorId = `${fieldKey}_${position}_${index}`;
-    if (decoratorStates[decoratorId]) {
-      // 创建新对象引用以确保 Vue 检测到变化并触发重新渲染
-      decoratorStates[decoratorId].props = { ...decoratorStates[decoratorId].props, ...props };
-    }
-  },
-  showDecorator: (fieldKey, position, index = 0) => {
-    const decoratorId = `${fieldKey}_${position}_${index}`;
-    if (decoratorStates[decoratorId]) {
-      decoratorStates[decoratorId].visible = true;
-    }
-  },
-  hideDecorator: (fieldKey, position, index = 0) => {
-    const decoratorId = `${fieldKey}_${position}_${index}`;
-    if (decoratorStates[decoratorId]) {
-      decoratorStates[decoratorId].visible = false;
-    }
-  },
-});
-// 处理联动逻辑
+// 处理联动逻辑 - 使用预建的索引直接查找，避免遍历所有字段
 const handleLinkage = async (changedKey, changedValue) => {
   const context = createFormContext();
 
-  // 执行联动逻辑的通用函数
-  const executeLinkage = async (linkages, fieldKey, errorPrefix) => {
-    for (const linkage of linkages) {
-      if (linkage.watchField !== changedKey) continue;
+  // 从索引中直接获取匹配的联动逻辑
+  const matchedLinkages = linkageIndex.value[changedKey] || [];
 
-      try {
-        if (typeof linkage.action !== 'function') {
-          throw new Error(`${errorPrefix} action 不是函数: ${typeof linkage.action}`);
-        }
-        await linkage.action(changedValue, context);
-      } catch (error) {
-        console.error(`❌ ${errorPrefix}执行失败: ${fieldKey}`, error);
-        emit('error', { field: fieldKey, error });
+  // 执行所有匹配的联动逻辑
+  for (const { linkage, fieldKey, errorPrefix } of matchedLinkages) {
+    try {
+      if (typeof linkage.action !== 'function') {
+        throw new Error(`${errorPrefix} action 不是函数: ${typeof linkage.action}`);
       }
-    }
-  };
-
-  // 处理字段和装饰器的联动
-  for (const field of mergedConfig.value.fields) {
-    if (field.linkage) {
-      await executeLinkage(field.linkage, field.key, '联动');
-    }
-
-    // 处理装饰器联动（支持数组）
-    const decoratorConfigs = [field.topDecorator, field.beforeDecorator, field.afterDecorator, field.bottomDecorator];
-    for (const decoratorConfig of decoratorConfigs) {
-      if (!decoratorConfig) continue;
-
-      // 支持单个装饰器或装饰器数组
-      const decorators = Array.isArray(decoratorConfig) ? decoratorConfig : [decoratorConfig];
-      for (const decorator of decorators) {
-        if (decorator?.linkage) {
-          await executeLinkage(decorator.linkage, field.key, '装饰器联动');
-        }
-      }
+      await linkage.action(changedValue, context);
+    } catch (error) {
+      console.error(`❌ ${errorPrefix}执行失败: ${fieldKey}`, error);
+      emit('error', { field: fieldKey, error });
     }
   }
 };
@@ -582,30 +586,27 @@ const handleSubmit = async (e) => {
     emit('submit', { ...formData }); // 只有 formData 是被代理的，展开之后没有响应性了
   }
 };
-
 // 表单重置
 const handleReset = () => {
   formRef.value?.reset();
   initFormData();
   emit('reset');
 };
-
 // 数据恢复功能
 const restoreData = async (data) => {
   // 先清空当前数据
   Object.keys(formData).forEach((key) => {
     formData[key] = undefined;
   });
-
   // 重置联动状态
-  hiddenFields.value.clear();
-  disabledFields.value.clear();
-  Object.keys(dynamicOptions).forEach((key) => delete dynamicOptions[key]);
+  hiddenFields.value = {};
+  disabledFields.value = {};
+  Object.keys(dynamicOptions.value).forEach((key) => delete dynamicOptions.value[key]);
 
   // 设置初始状态
   mergedConfig.value.fields.forEach((field) => {
-    if (field.visible === false) hiddenFields.value.add(field.key);
-    if (field.disabled === true) disabledFields.value.add(field.key);
+    if (field.visible === false) hiddenFields.value[field.key] = true;
+    if (field.disabled === true) disabledFields.value[field.key] = true;
   });
 
   // 按字段顺序恢复数据，支持多级联动
@@ -636,10 +637,8 @@ const formInstance = {
   },
   restoreData,
 };
-
 // 暴露表单实例
 defineExpose(formInstance);
-
 // 提供表单实例给子组件
 provide('formInstance', formInstance);
 
