@@ -7,6 +7,7 @@
       <h3>基础表格</h3>
       <td-pro-table
         ref="table"
+        class="sample-list"
         :request="getTableData"
         :columns="columns"
         :search="searchConfig"
@@ -32,7 +33,14 @@
         </template>
       </td-pro-table>
       <!-- 新建&编辑对话框 -->
-      <t-dialog v-model="dialogVisible" :header="formTitle" @close="onCancel" class="dialog">
+      <t-dialog
+        v-model:visible="dialogVisible"
+        :header="formTitle"
+        @close="onCancel"
+        class="dialog"
+        :confirm-btn="null"
+        :cancel-btn="null"
+      >
         <td-pro-form ref="formRef" :config="formConfig" @submit="onSubmit" @reset="onCancel" />
       </t-dialog>
     </t-card>
@@ -80,6 +88,11 @@ import TdProTable from '@/components/TdProTable/index.vue';
 import TdProForm from '@/components/TdProForm/index.vue';
 import tips from '@/utils/tips';
 import { apiGetResourceList, apiResourceModify, apiResourceDel } from '@/api/resource';
+import { validMultiLineTxt } from '@/utils/validate';
+
+// 正则定义
+const accessReg = /^(\/[a-zA-Z-]+)+$/; // /user/list-ab
+const cgiReg = /^(\/[a-zA-Z_]+)+$/; // /user/get_list
 
 // 响应式数据
 const selectedRows = ref([]);
@@ -88,7 +101,7 @@ const formRef = ref(null);
 const dialogVisible = ref(false);
 const formTitle = ref('添加');
 
-// 基础表格列配置
+// 基础表格列配置 todo
 const columns = [
   {
     label: 'user/resource.name',
@@ -99,32 +112,29 @@ const columns = [
     label: 'user/resource.access',
     colKey: 'access',
     title: '路径',
+    // style: { whiteSpace: 'pre-line', workBreak: 'break-all', maxWidth: '400px' },
+    className: 'access',
     cell: (h, { row }) => {
-      return (
-        <t-space>
-          {(row?.access || []).map((item, index) => (
-            <t-tag key={index} theme="default" variant="outline" size="small">
-              {item}
-            </t-tag>
-          ))}
-        </t-space>
-      );
+      return (row?.access || []).map((item, index) => (
+        <t-tag key={index} style="margin-right: 8px" theme="success" variant="outline" size="small">
+          {item}
+        </t-tag>
+      ));
     },
   },
+  // todo
   {
     label: 'user/resource.cgi',
     colKey: 'cgi',
     title: '接口',
+    // style: { whiteSpace: 'pre-line', workBreak: 'break-all', maxWidth: '400px' },
+    className: 'cgi',
     cell: (h, { row }) => {
-      return (
-        <t-space>
-          {(row?.cgi || []).map((item, index) => (
-            <t-tag key={index} theme="default" variant="outline" size="small">
-              {item}
-            </t-tag>
-          ))}
-        </t-space>
-      );
+      return (row?.cgi || []).map((item, index) => (
+        <t-tag key={index} style="margin-right: 8px" theme="success" variant="outline" size="small">
+          {item}
+        </t-tag>
+      ));
     },
   },
   {
@@ -154,85 +164,22 @@ const searchConfig = {
   fields: [
     {
       key: 'name',
-      label: '姓名',
+      label: '资源名',
       type: 'input',
-      placeholder: '请输入姓名',
-      value: '123',
+      placeholder: '请输入',
     },
     {
-      key: 'email',
-      label: '邮箱',
+      key: 'access',
+      label: '路径',
       type: 'input',
-      placeholder: '请输入邮箱',
+      placeholder: '请输入',
     },
     {
-      key: 'status',
-      label: '状态',
-      type: 'select',
-      placeholder: '请选择状态',
-      options: [
-        { label: '全部', value: '' },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
-      ],
+      key: 'cgi',
+      label: '接口',
+      type: 'input',
+      placeholder: '请输入',
     },
-    // {
-    //   key: 'dateRange',
-    //   label: '时间范围',
-    //   type: 'date-range-picker',
-    //   placeholder: '请选择时间范围',
-    //   value: [],
-    //   props: {
-    //     rangeSeparator: '至',
-    //     clearable: true,
-    //     format: 'YYYY-MM-DD',
-    //     valueFormat: 'YYYY-MM-DD',
-    //   },
-    // },
-    // {
-    //   key: 'status',
-    //   label: '状态',
-    //   type: 'select',
-    //   placeholder: '请选择状态',
-    //   options: [
-    //     { label: '全部', value: '' },
-    //     { label: '启用', value: 1 },
-    //     { label: '禁用', value: 0 },
-    //   ],
-    // },
-    // {
-    //   key: 'status1',
-    //   label: '状态',
-    //   type: 'select',
-    //   placeholder: '请选择状态',
-    //   options: [
-    //     { label: '全部', value: '' },
-    //     { label: '启用', value: 1 },
-    //     { label: '禁用', value: 0 },
-    //   ],
-    // },
-    // {
-    //   key: 'status2',
-    //   label: '状态',
-    //   type: 'select',
-    //   placeholder: '请选择状态',
-    //   options: [
-    //     { label: '全部', value: '' },
-    //     { label: '启用', value: 1 },
-    //     { label: '禁用', value: 0 },
-    //   ],
-    // },
-    // {
-    //   key: 'status3',
-    //   label: '状态',
-    //   type: 'select',
-    //   placeholder: '请选择状态',
-    //   options: [
-    //     { label: '全部', value: '' },
-    //     { label: '启用', value: 1 },
-    //     { label: '禁用', value: 0 },
-    //   ],
-    // },
   ],
 };
 // 分页配置
@@ -525,50 +472,6 @@ const advancedPaginationConfig = {
   },
 };
 
-// 模拟数据
-const mockData = [
-  {
-    id: 1,
-    name: '张三',
-    email: 'zhangsan@example.com',
-    phone: '13800138001',
-    status: 1,
-    createTime: '2024-01-01 10:00:00',
-  },
-  {
-    id: 2,
-    name: '李四',
-    email: 'lisi@example.com',
-    phone: '13800138002',
-    status: 0,
-    createTime: '2024-01-02 10:00:00',
-  },
-  {
-    id: 3,
-    name: '王五',
-    email: 'wangwu@example.com',
-    phone: '13800138003',
-    status: 1,
-    createTime: '2024-01-03 10:00:00',
-  },
-  {
-    id: 4,
-    name: '赵六',
-    email: 'zhaoliu@example.com',
-    phone: '13800138004',
-    status: 1,
-    createTime: '2024-01-04 10:00:00',
-  },
-  {
-    id: 5,
-    name: '钱七',
-    email: 'qianqi@example.com',
-    phone: '13800138005',
-    status: 0,
-    createTime: '2024-01-05 10:00:00',
-  },
-];
-
 // 获取表格数据
 const getTableData = async (params) => {
   const { data } = await apiGetResourceList(params);
@@ -577,7 +480,6 @@ const getTableData = async (params) => {
     total: Number(data?.total) || 0,
   };
 };
-
 // 事件处理
 const handleSearch = (searchData) => {
   console.log('搜索:', searchData);
@@ -589,72 +491,119 @@ const handleSelectionChange = (selectedRowKeys, selectedRowsData, currentRowData
   selectedRows.value = selectedRowsData;
   console.log('选择变化:', selectedRowKeys, selectedRowsData);
 };
-
 // 表格刷新
 const refresh = () => {
   table.value?.refresh();
 };
-
+// todo
 // 表单配置
 const formConfig = ref({
   labelWidth: '90px',
+  resetText: '取消',
   fields: [
+    // id
     {
-      key: 'id',
-      label: 'ID',
       type: 'input',
+      key: 'id',
+      value: '',
       visible: false,
     },
+    // name
     {
       key: 'name',
-      label: '姓名',
       type: 'input',
-      placeholder: '请输入姓名',
-      rules: [{ required: true, message: '姓名不能为空' }],
-    },
-    {
-      key: 'email',
-      label: '邮箱',
-      type: 'input',
-      placeholder: '请输入邮箱',
+      label: '用户名',
+      // label: 'user/resource.name',
+      placeholder: '请输入用户名',
       rules: [
-        { required: true, message: '邮箱不能为空' },
-        { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: '邮箱格式不正确' },
+        {
+          required: true,
+          message: 'Name Required',
+        },
       ],
     },
+    // access
     {
-      key: 'phone',
-      label: '电话',
-      type: 'input',
-      placeholder: '请输入电话',
-      rules: [{ required: true, message: '电话不能为空' }],
+      key: 'access',
+      type: 'textarea',
+      label: '路径', // user/resource.batchDelete
+      placeholder: '请输入路径',
+      props: {
+        style: {
+          width: '280px',
+          minHeight: '150px',
+        },
+      },
+      rules: [
+        {
+          required: true,
+          message: 'Access Required',
+        },
+        {
+          validator: (value) => {
+            if (!validMultiLineTxt(accessReg, value)) {
+              return 'Word error';
+            }
+            return true;
+          },
+        },
+      ],
+    },
+    // cgi
+    {
+      key: 'cgi',
+      type: 'textarea',
+      label: '接口',
+      placeholder: '请输入接口',
+      props: {
+        style: {
+          width: '280px',
+          minHeight: '150px',
+        },
+      },
+      rules: [
+        {
+          required: true,
+          message: 'Cgi Required',
+        },
+        {
+          validator: (value) => {
+            if (!validMultiLineTxt(cgiReg, value)) {
+              return 'Word error';
+            }
+            return true;
+          },
+        },
+      ],
     },
   ],
 });
-
 // 显示添加表单
 const onShowAddForm = () => {
+  console.log('onShowAddForm');
+
   dialogVisible.value = true;
   formTitle.value = '添加';
   nextTick(() => {
-    formRef.value?.resetFields();
+    formRef.value?.resetFields(); // 会触发 reset
   });
 };
-
 // 显示编辑表单
 const onShowEditForm = (row) => {
   dialogVisible.value = true;
   formTitle.value = '编辑';
+
+  console.log('row', row);
+
   nextTick(() => {
     formRef.value?.setFieldsValue({
       id: row.id,
       name: row.name,
-      email: row.email,
-      phone: row.phone,
+      access: row.access.join('\n'),
+      cgi: row.cgi.join('\n'),
     });
   });
 };
-
 // 提交表单
 const onSubmit = async (data) => {
   console.log('提交数据:', data);
@@ -668,12 +617,10 @@ const onSubmit = async (data) => {
   dialogVisible.value = false;
   refresh();
 };
-
 // 取消表单
 const onCancel = () => {
   dialogVisible.value = false;
 };
-
 // 删除记录
 const onRemove = async (row) => {
   console.log('删除记录:', row);
@@ -699,9 +646,22 @@ const handleError = (error) => {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .td-pro-table-demo {
   padding: 20px;
+}
+
+.sample-list {
+  .access {
+    width: 400px;
+    white-space: pre-line;
+    word-break: break-all;
+  }
+  .cgi {
+    width: 400px;
+    white-space: pre-line;
+    word-break: break-all;
+  }
 }
 
 .card {

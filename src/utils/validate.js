@@ -24,7 +24,7 @@ export function validEmail(email) {
  * @param {*} str
  * @returns {Boolean} list
  */
-export function validMultiLineTxt(reg, str) {
+export function validMultiLineTxt(reg, str = '') {
   let list = str
     .replace(/[,;\n]+/g, ',')
     .split(',')

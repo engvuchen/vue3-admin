@@ -65,11 +65,6 @@
           <slot :name="`${column.colKey}-header`" v-bind="scope"></slot>
         </template>
 
-        <!-- 自定义列内容 todo1 这里有问题 -->
-        <!-- <template v-for="column in processedColumns" :key="column.colKey" #[`${column.colKey}`]="scope">
-          <slot :name="column.colKey" v-bind="scope"></slot>
-        </template> -->
-
         <!-- 空状态插槽 -->
         <template #empty>
           <slot name="empty">
