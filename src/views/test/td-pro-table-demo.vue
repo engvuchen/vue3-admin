@@ -41,7 +41,7 @@
         :confirm-btn="null"
         :cancel-btn="null"
       >
-        <td-pro-form ref="formRef" :config="formConfig" @submit="onSubmit" @reset="onCancel" />
+        <td-pro-form ref="formRef" :config="formConfig" @submit="onSubmit" />
       </t-dialog>
     </t-card>
 
@@ -112,7 +112,6 @@ const columns = [
     label: 'user/resource.access',
     colKey: 'access',
     title: '路径',
-    // style: { whiteSpace: 'pre-line', workBreak: 'break-all', maxWidth: '400px' },
     className: 'access',
     cell: (h, { row }) => {
       return (row?.access || []).map((item, index) => (
@@ -127,7 +126,6 @@ const columns = [
     label: 'user/resource.cgi',
     colKey: 'cgi',
     title: '接口',
-    // style: { whiteSpace: 'pre-line', workBreak: 'break-all', maxWidth: '400px' },
     className: 'cgi',
     cell: (h, { row }) => {
       return (row?.cgi || []).map((item, index) => (
@@ -450,9 +448,9 @@ const advancedSearchConfig = {
 };
 
 // todo 外部改配置无效；因为组件设计把 fields 另外展开了，丢失了响应性；必须通过内部 api 控制了
-setTimeout(() => {
-  advancedSearchConfig.fields.label = '延迟被改的话题';
-}, 1000);
+// setTimeout(() => {
+//   advancedSearchConfig.fields.label = '延迟被改的话题';
+// }, 1000);
 
 // 高级分页配置示例
 const advancedPaginationConfig = {
@@ -499,7 +497,6 @@ const refresh = () => {
 // 表单配置
 const formConfig = ref({
   labelWidth: '90px',
-  resetText: '取消',
   fields: [
     // id
     {
@@ -529,10 +526,13 @@ const formConfig = ref({
       label: '路径', // user/resource.batchDelete
       placeholder: '请输入路径',
       props: {
-        style: {
-          width: '280px',
-          minHeight: '150px',
-        },
+        // 源码不支持 style：1. 包裹 div 去掉了 style 2. textarea 接受的 props 是固定的
+        // style: {
+        //   // minWidth: '280px',
+        //   // minHeight: '280px',
+        // },
+        // rows: 80,
+        // cols: 1200,
       },
       rules: [
         {
@@ -590,14 +590,14 @@ const onShowAddForm = () => {
 };
 // 显示编辑表单
 const onShowEditForm = (row) => {
+  console.log('row', toRaw(row));
+
   dialogVisible.value = true;
   formTitle.value = '编辑';
 
-  console.log('row', row);
-
   nextTick(() => {
     formRef.value?.setFieldsValue({
-      id: row.id,
+      id: row._id,
       name: row.name,
       access: row.access.join('\n'),
       cgi: row.cgi.join('\n'),
@@ -606,27 +606,38 @@ const onShowEditForm = (row) => {
 };
 // 提交表单
 const onSubmit = async (data) => {
-  console.log('提交数据:', data);
-  // 这里可以调用实际的 API
-  // if (data.id) {
-  //   await apiUpdateUser(data);
-  // } else {
-  //   await apiCreateUser(data);
-  // }
-  tips.success('操作成功');
+  // 将 textarea 的多行文本转换为数组（去除空行和首尾空格）
+  const accessArray = (data.access || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line);
+  const cgiArray = (data.cgi || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line);
+
+  const postData = {
+    id: data.id,
+    name: data.name,
+    access: accessArray,
+    cgi: cgiArray,
+  };
+  let res = await apiResourceModify(postData);
+  if (res.code !== 0) return;
+
+  tips.success('成功');
   dialogVisible.value = false;
   refresh();
 };
 // 取消表单
 const onCancel = () => {
-  dialogVisible.value = false;
+  dialogVisible.value = false; // 重置会触发 reset；导致 onCancel 被触发
 };
 // 删除记录
 const onRemove = async (row) => {
-  console.log('删除记录:', row);
-  // 这里可以调用实际的 API
-  // await apiDeleteUser({ id: row.id });
-  tips.success('删除成功');
+  let res = await apiResourceDel({ id: row._id });
+  if (res.code !== 0) return;
+
   refresh();
 };
 
@@ -650,7 +661,6 @@ const handleError = (error) => {
 .td-pro-table-demo {
   padding: 20px;
 }
-
 .sample-list {
   .access {
     width: 400px;
@@ -661,6 +671,17 @@ const handleError = (error) => {
     width: 400px;
     white-space: pre-line;
     word-break: break-all;
+  }
+}
+
+:deep(.dialog) {
+  .t-form__controls {
+    margin-left: 0 !important;
+  }
+  .btn-group {
+    .t-form__controls-content {
+      justify-content: center;
+    }
   }
 }
 

@@ -102,7 +102,7 @@ export default (env) => {
       },
     },
     server: {
-      // port: 5173, // Vite默认端口就是5173
+      port: 5175, // 热更新端口
       open: 'http://admin.engvu.tech', // boolean || string, true => 默认 localhost
       // headers: {
       //   'Content-Type': 'application/javascript; charset=utf-8'

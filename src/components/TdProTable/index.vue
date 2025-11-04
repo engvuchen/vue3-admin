@@ -76,25 +76,6 @@
         </template>
       </t-table>
     </div>
-
-    <!-- 分页 -->
-    <!-- <t-pagination
-      v-if="paginationConfig.show && total > 0"
-      v-model:current="currentPage"
-      v-model:page-size="pageSize"
-      :total="total"
-      :page-size-options="paginationConfig.pageSizeOptions"
-      :show-total="paginationConfig.showTotal"
-      :show-jumper="paginationConfig.showJumper"
-      :show-sizer="paginationConfig.showSizer"
-      :size="paginationConfig.size"
-      :theme="paginationConfig.theme"
-      :class="paginationConfig.className"
-      :style="paginationConfig.style"
-      @change="handlePaginationChange"
-      @page-size-change="handlePageSizeChange"
-      @current-change="handleCurrentPageChange"
-    /> -->
   </div>
 </template>
 
@@ -214,6 +195,9 @@ const searchParams = ref({});
 // 分页配置
 const paginationConfig = computed(() => {
   return {
+    size: 'medium',
+    theme: 'default',
+    // className: '', // todo1 这个为空字符串，异常
     current: currentPage.value,
     pageSize: pageSize.value,
     total: total.value,
@@ -221,9 +205,6 @@ const paginationConfig = computed(() => {
     showSizer: true,
     showTotal: true,
     pageSizeOptions: [5, 10, 20, 50, 100],
-    size: 'medium',
-    theme: 'default',
-    className: '', // todo1 这个为空字符串，异常
     // style: {},
     ...props.pagination,
   };

@@ -17,7 +17,7 @@
     ]"
     :style="mergedConfig.style"
   >
-    <template v-for="field in visibleFields">
+    <template v-for="field in visibleFields" :key="field.key">
       <div style="display: flex; flex-direction: column">
         <!-- 上置装饰（支持单个装饰器或装饰器数组） -->
         <template v-if="field.topDecorator">
@@ -69,7 +69,13 @@
               :placeholder="field.placeholder"
               :disabled="disabledFields[field.key]"
               v-bind="field.props"
-              @change="(value) => handleFieldChange(field.key, value)"
+              @change="
+                (value) => {
+                  const fieldKey = field.key;
+                  handleFieldChange(fieldKey, value);
+                }
+              "
+              :key="`field-${field.key}`"
             >
               <!-- 选项类组件的选项渲染 -->
               <template v-if="['select', 'radio', 'checkbox'].includes(field.type)">
@@ -126,7 +132,7 @@
 
     <!-- 默认按钮 -->
     <slot name="submitBtnGroup">
-      <t-form-item v-if="mergedConfig.showSubmit || mergedConfig.showReset">
+      <t-form-item class="btn-group" v-if="mergedConfig.showSubmit || mergedConfig.showReset">
         <t-space>
           <t-button v-if="mergedConfig.showReset" theme="default" @click="handleReset">
             {{ mergedConfig.resetText }}
@@ -141,7 +147,6 @@
 </template>
 
 <script setup>
-import { h } from 'vue';
 import { getCustomComponent } from './componentMap';
 
 // Props
@@ -582,9 +587,7 @@ const handleLinkage = async (changedKey, changedValue) => {
 // 表单提交
 const handleSubmit = async (e) => {
   let res = await formRef.value.validate(); // 校验通过返回 true；不通过，返回对象，例如 { name: [ { result: false, message: 'xxx' } ] }
-  if (res === true) {
-    emit('submit', { ...formData }); // 只有 formData 是被代理的，展开之后没有响应性了
-  }
+  if (res === true) emit('submit', { ...formData }); // 只有 formData 是被代理的，展开之后没有响应性了
 };
 // 表单重置
 const handleReset = () => {
