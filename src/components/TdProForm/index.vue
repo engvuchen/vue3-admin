@@ -17,7 +17,7 @@
     ]"
     :style="mergedConfig.style"
   >
-    <template v-for="field in visibleFields" :key="field.key">
+    <template v-for="field in visibleFields" :key="field.name">
       <div style="display: flex; flex-direction: column">
         <!-- 上置装饰（支持单个装饰器或装饰器数组） -->
         <template v-if="field.topDecorator">
@@ -27,8 +27,8 @@
             :is="
               renderDecorator({
                 decorator,
-                fieldValue: formData[field.key],
-                fieldKey: field.key,
+                fieldValue: formData[field.name],
+                fieldName: field.name,
                 position: 'top',
                 index,
               })
@@ -37,52 +37,50 @@
         </template>
 
         <div style="display: flex">
-          <!-- 前置装饰（支持单个装饰器或装饰器数组） -->
-          <template v-if="field.beforeDecorator">
+          <!-- 左置装饰（支持单个装饰器或装饰器数组） -->
+          <template v-if="field.leftDecorator">
             <component
-              v-for="(decorator, index) in normalizeDecorators(field.beforeDecorator)"
-              :key="`before-${index}`"
+              v-for="(decorator, index) in normalizeDecorators(field.leftDecorator)"
+              :key="`left-${index}`"
               :is="
                 renderDecorator({
                   decorator,
-                  fieldValue: formData[field.key],
-                  fieldKey: field.key,
-                  position: 'before',
+                  fieldValue: formData[field.name],
+                  fieldName: field.name,
+                  position: 'left',
                   index,
                 })
               "
             />
           </template>
 
-          <!-- form-item、普通组件都有 help（有状态着色）、可重置 -->
           <!-- 表单字段 -->
           <t-form-item
-            :name="field.key"
+            :name="field.name"
             :label="field.label"
-            :help="parseHelpContent(field.help, formData[field.key])"
+            :help="parseHelpContent(field.help, formData[field.name])"
             v-bind="field.formItemProps || {}"
           >
             <!-- 表单字段组件 -->
             <component
-              :is="getFieldComponent(field.type)"
-              v-model="formData[field.key]"
+              :is="getFieldComponent(field.component)"
+              v-model="formData[field.name]"
               :placeholder="field.placeholder"
-              :disabled="disabledFields[field.key]"
-              v-bind="field.props"
+              :disabled="disabledFields[field.name]"
+              v-bind="field.componentProps"
               @change="
                 (value) => {
-                  const fieldKey = field.key;
-                  handleFieldChange(fieldKey, value);
+                  handleFieldChange(field.name, value);
                 }
               "
-              :key="`field-${field.key}`"
+              :key="`field-${field.name}`"
             >
               <!-- 选项类组件的选项渲染 -->
-              <template v-if="['select', 'radio', 'checkbox'].includes(field.type)">
+              <template v-if="['select', 'radio', 'checkbox'].includes(field.component)">
                 <component
                   v-for="option in getFieldOptions(field)"
                   :key="option.value"
-                  :is="getOptionComponent(field.type)"
+                  :is="getOptionComponent(field.component)"
                   :value="option.value"
                   :disabled="option.disabled"
                   :label="option.label"
@@ -93,17 +91,17 @@
               </template>
             </component>
           </t-form-item>
-          <!-- 后置装饰（支持单个装饰器或装饰器数组） -->
-          <template v-if="field.afterDecorator">
+          <!-- 右置装饰（支持单个装饰器或装饰器数组） -->
+          <template v-if="field.rightDecorator">
             <component
-              v-for="(decorator, index) in normalizeDecorators(field.afterDecorator)"
-              :key="`after-${index}`"
+              v-for="(decorator, index) in normalizeDecorators(field.rightDecorator)"
+              :key="`right-${index}`"
               :is="
                 renderDecorator({
                   decorator,
-                  fieldValue: formData[field.key],
-                  fieldKey: field.key,
-                  position: 'after',
+                  fieldValue: formData[field.name],
+                  fieldName: field.name,
+                  position: 'right',
                   index,
                 })
               "
@@ -119,8 +117,8 @@
             :is="
               renderDecorator({
                 decorator,
-                fieldValue: formData[field.key],
-                fieldKey: field.key,
+                fieldValue: formData[field.name],
+                fieldName: field.name,
                 position: 'bottom',
                 index,
               })
@@ -159,31 +157,137 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['submit', 'reset', 'change', 'error']);
 
-// 合并配置（使用默认值）
+// ========== CLS 规范映射 ==========
+const pickKnownKeys = (obj, keys) => {
+  const picked = {};
+  const rest = {};
+
+  for (let [k, v] of Object.entries(obj)) {
+    if (keys.includes(k)) picked[k] = v;
+    else rest[k] = v;
+  }
+
+  return { picked, rest };
+};
+const normalizeDecorationsFromCLS = (decorations) => {
+  if (!decorations) return {};
+  const list = Array.isArray(decorations) ? decorations : [decorations];
+  const map = { topDecorator: [], leftDecorator: [], rightDecorator: [], bottomDecorator: [] };
+  list.forEach((dec) => {
+    // 新规范：严格仅使用 { component, attributes }
+    const component = dec.component;
+    const attrs = dec.attributes;
+
+    // 装饰器位置：left、top、right、bottom
+    const placement = attrs.placement || 'bottom';
+
+    // 文本/HTML 类型装饰器
+    const isText = component === 'text';
+    const isHtml = component === 'html';
+
+    const decorator =
+      isText || isHtml
+        ? {
+            type: isHtml ? 'html' : 'text',
+            value: dec.value,
+            props: { ...attrs },
+            linkage: dec.linkage,
+          }
+        : { type: component, props: { ...attrs }, linkage: dec.linkage };
+
+    if (placement === 'top') map.topDecorator.push(decorator);
+    else if (placement === 'left') map.leftDecorator.push(decorator);
+    else if (placement === 'right') map.rightDecorator.push(decorator);
+    else if (placement === 'bottom') map.bottomDecorator.push(decorator);
+  });
+
+  return map;
+};
+
+const clsItemToField = (item) => {
+  // 规范字段：{ name, label, component, attributes, validity, items, decoration, linkage }
+  const attrs = item.attributes;
+  // 分离通用字段属性与组件 props
+  const known = [
+    'placeholder',
+    'value',
+    'hide',
+    'disabled',
+    'help',
+    'type',
+    'class',
+    'style',
+    'clearable',
+    'formItemProps',
+    'placement',
+    'valueKey',
+    'labelKey',
+  ];
+  const { picked: pickedAttrs, rest: componentProps } = pickKnownKeys(attrs, known);
+
+  // 规则映射
+  const rules = (item.validity || []).map((r) => ({
+    required: r.required,
+    message: r.message,
+    min: r.min,
+    max: r.max,
+    pattern: r.pattern,
+    validator: r.validator,
+  }));
+
+  // 装饰器映射
+  const decors = normalizeDecorationsFromCLS(item.decoration);
+
+  return {
+    // CLS 规范字段名
+    name: item.name,
+    component: item.component,
+    label: item.label,
+    hide: Boolean(pickedAttrs.hide),
+    disabled: Boolean(pickedAttrs.disabled),
+    help: pickedAttrs.help,
+
+    // 属性
+    placeholder: pickedAttrs.placeholder,
+    value: pickedAttrs.value,
+    formItemProps: {
+      ...(attrs?.formItemProps || {}),
+      ...(pickedAttrs.disabled ? { disabled: Boolean(pickedAttrs.disabled) } : {}),
+    },
+    componentProps,
+    rules,
+    items: item.items,
+    linkage: item.linkage,
+    ...decors,
+  };
+};
+
+// 合并配置（CLS 外部 → 内部统一结构）
 const mergedConfig = computed(() => {
-  const config = {
-    layout: 'vertical', // 表单布局：vertical | inline
-    labelWidth: '120px', // 标签宽度
-    labelAlign: 'right', // 标签对齐方式：left | right | top
-    colon: true, // 是否显示冒号
+  const attrs = props.config.attributes || {};
 
-    // 样式配置
-    class: '', // 自定义类名
-    style: {}, // 自定义样式
-
-    // 按钮配置
-    showSubmit: true, // 是否显示提交按钮
-    showReset: true, // 是否显示重置按钮
-    submitText: '提交', // 提交按钮文本
-    resetText: '重置', // 重置按钮文本
-
-    // 字段配置
-    fields: [], // 表单字段配置数组
-
-    ...props.config,
+  // 表单层 attributes → 顶层，使用默认值 + 展开覆盖
+  const formAttrs = {
+    layout: 'vertical',
+    labelWidth: '120px',
+    labelAlign: 'right',
+    colon: true,
+    class: '',
+    style: {},
+    showSubmit: true,
+    showReset: true,
+    submitText: '提交',
+    resetText: '重置',
+    ...attrs,
   };
 
-  return config;
+  // 字段层 items → fields
+  const fields = (props.config.items || []).map(clsItemToField);
+
+  return {
+    ...formAttrs,
+    fields,
+  };
 });
 
 // 表单引用
@@ -191,21 +295,14 @@ const formRef = ref();
 const formData = reactive({});
 // 立即设置默认值（在模板渲染前）
 const initDefaultValues = () => {
-  props?.config?.fields?.forEach?.((field) => {
+  mergedConfig?.value?.fields?.forEach?.((field) => {
     if (field.value !== undefined) {
-      formData[field.key] = field.value;
+      formData[field.name] = field.value;
     } else {
-      // 为特定组件类型设置默认值
-      if (field.type === 'date-range-picker') {
-        formData[field.key] = [];
-      } else if (field.type === 'checkbox') {
-        formData[field.key] = [];
-      } else if (field.type === 'transfer') {
-        formData[field.key] = [];
-      } else if (field.type === 'tag-input') {
-        formData[field.key] = [];
-      } else if (field.type === 'range-input') {
-        formData[field.key] = [];
+      // 为特定组件类型设置默认值（数组类型组件）
+      const arrayComponentTypes = ['date-range-picker', 'checkbox', 'transfer', 'tag-input', 'range-input'];
+      if (arrayComponentTypes.includes(field.component)) {
+        formData[field.name] = [];
       }
     }
   });
@@ -223,26 +320,49 @@ const decoratorStates = ref({});
 // 联动索引 - watchField -> linkage[] 的映射，用于快速查找联动逻辑
 const linkageIndex = ref({});
 
+// 添加联动索引项（公共函数）
+const addLinkageIndexItem = ({ watchField, linkage, fieldName, errorPrefix }) => {
+  if (!watchField) return;
+
+  if (!linkageIndex.value[watchField]) {
+    linkageIndex.value[watchField] = [];
+  }
+  linkageIndex.value[watchField].push({
+    linkage,
+    fieldName,
+    errorPrefix,
+  });
+};
+
+// 批量添加联动索引项（处理 linkage 数组）
+const addLinkageIndexItems = ({ linkages, fieldName, errorPrefix }) => {
+  if (!Array.isArray(linkages)) return;
+  linkages.forEach((linkage) => {
+    if (linkage?.watchField) {
+      addLinkageIndexItem({
+        watchField: linkage.watchField,
+        linkage,
+        fieldName,
+        errorPrefix,
+      });
+    }
+  });
+};
+
 // 构建联动索引 - 将 watchField -> linkage[] 的映射预先建立好
 const buildLinkageIndex = () => {
   linkageIndex.value = {};
-  const positions = ['topDecorator', 'beforeDecorator', 'afterDecorator', 'bottomDecorator'];
+  const positions = ['topDecorator', 'leftDecorator', 'rightDecorator', 'bottomDecorator'];
 
   mergedConfig.value.fields.forEach((field) => {
     // 处理字段联动
     if (field.linkage) {
       field.linkage.forEach((linkage) => {
-        const watchField = linkage.watchField;
-        if (!watchField) return;
-
-        if (!linkageIndex.value[watchField]) {
-          linkageIndex.value[watchField] = [];
-        }
-        linkageIndex.value[watchField].push({
+        addLinkageIndexItem({
+          watchField: linkage.watchField,
           linkage,
-          fieldKey: field.key,
+          fieldName: field.name,
           errorPrefix: '联动',
-          type: 'field',
         });
       });
     }
@@ -256,21 +376,10 @@ const buildLinkageIndex = () => {
       decorators.forEach((decorator, index) => {
         if (!decorator?.linkage) return;
 
-        decorator.linkage.forEach((linkage) => {
-          const watchField = linkage.watchField;
-          if (!watchField) return;
-
-          if (!linkageIndex.value[watchField]) {
-            linkageIndex.value[watchField] = [];
-          }
-          linkageIndex.value[watchField].push({
-            linkage,
-            fieldKey: field.key,
-            errorPrefix: '装饰器联动',
-            type: 'decorator',
-            position: pos,
-            index,
-          });
+        addLinkageIndexItems({
+          linkages: decorator.linkage,
+          fieldName: field.name,
+          errorPrefix: '装饰器联动',
         });
       });
     });
@@ -288,15 +397,15 @@ const initFormData = () => {
   buildLinkageIndex();
 
   // 单次遍历：初始化隐藏/禁用、默认值与装饰器状态
-  const positions = ['topDecorator', 'beforeDecorator', 'afterDecorator', 'bottomDecorator'];
+  const positions = ['topDecorator', 'leftDecorator', 'rightDecorator', 'bottomDecorator'];
   mergedConfig.value.fields.forEach((field) => {
     // 隐藏/禁用
-    if (field.visible === false) hiddenFields.value[field.key] = true;
-    if (field.disabled === true) disabledFields.value[field.key] = true;
+    if (field.hide === true) hiddenFields.value[field.name] = true;
+    if (field.disabled === true) disabledFields.value[field.name] = true;
 
     // 默认值
     if (field.value !== undefined) {
-      formData[field.key] = field.value;
+      formData[field.name] = field.value;
     }
 
     // 装饰器状态初始化（仅组件型，支持数组）
@@ -308,7 +417,7 @@ const initFormData = () => {
       const decorators = Array.isArray(decorator) ? decorator : [decorator];
       decorators.forEach((dec, index) => {
         const { type = 'html', props: decoratorProps = {} } = dec;
-        const decoratorId = `${field.key}_${pos.replace('Decorator', '')}_${index}`;
+        const decoratorId = `${field.name}_${pos.replace('Decorator', '')}_${index}`;
         if (!decoratorStates.value[decoratorId]) {
           decoratorStates.value[decoratorId] = {
             props: { ...decoratorProps },
@@ -323,8 +432,8 @@ const initFormData = () => {
   // 然后执行所有字段的联动逻辑（包括没有默认值的字段）
   Promise.all(
     mergedConfig.value.fields.map(async (field) => {
-      const fieldValue = formData[field.key];
-      await handleLinkage(field.key, fieldValue);
+      const fieldValue = formData[field.name];
+      await handleLinkage(field.name, fieldValue);
     }),
   );
 };
@@ -332,7 +441,7 @@ const initFormData = () => {
 // 计算可见字段
 const visibleFields = computed(() => {
   const fields = mergedConfig.value.fields.filter((field) => {
-    return !hiddenFields.value[field.key];
+    return !hiddenFields.value[field.name];
   });
 
   return fields;
@@ -344,7 +453,7 @@ const formRules = computed(() => {
 
   mergedConfig.value.fields.forEach((field) => {
     if (field.rules && field.rules.length > 0) {
-      rules[field.key] = field.rules.map((rule) => ({
+      rules[field.name] = field.rules.map((rule) => ({
         ...rule,
         message: rule.message || generateDefaultMessage(field, rule),
       }));
@@ -375,6 +484,7 @@ const getFieldComponent = (type) => {
     select: TSelect,
     radio: TRadioGroup,
     checkbox: TCheckboxGroup,
+    button: TButton,
     switch: TSwitch,
     'date-picker': TDatePicker,
     'date-range-picker': TDateRangePicker,
@@ -405,7 +515,7 @@ const getOptionComponent = (type) => {
 };
 // 获取字段选项
 const getFieldOptions = (field) => {
-  return dynamicOptions.value[field.key] || field.options || [];
+  return dynamicOptions.value[field.name] || field.items || [];
 };
 
 // 规范化装饰器：将单个装饰器或装饰器数组统一转换为数组
@@ -415,11 +525,11 @@ const normalizeDecorators = (decorator) => {
 };
 
 // 渲染装饰器（支持文本、HTML 和组件三种类型）
-const renderDecorator = ({ decorator, fieldValue, fieldKey, position, index = 0 }) => {
+const renderDecorator = ({ decorator, fieldValue, fieldName, position, index = 0 }) => {
   if (!decorator) return;
 
   const { type = 'html', value, props: decoratorProps = {} } = decorator;
-  const decoratorId = `${fieldKey}_${position}_${index}`;
+  const decoratorId = `${fieldName}_${position}_${index}`;
 
   // 按 HTML 渲染：无 type、text 或 html
   if (['html', 'text'].includes(type)) {
@@ -535,51 +645,51 @@ const createFormContext = () => ({
     return await callApi(apiConfig, params);
   },
   // 装饰器操作方法（支持数组形式装饰器，index 可选，默认为 0）
-  updateDecoratorProps: (fieldKey, position, props, index = 0) => {
-    const decoratorId = `${fieldKey}_${position}_${index}`;
+  updateDecoratorProps: (fieldName, position, props, index = 0) => {
+    const decoratorId = `${fieldName}_${position}_${index}`;
     if (decoratorStates.value[decoratorId]) {
       // 创建新对象引用以确保 Vue 检测到变化并触发重新渲染
       decoratorStates.value[decoratorId].props = { ...decoratorStates.value[decoratorId].props, ...props };
     }
   },
-  showDecorator: (fieldKey, position, index = 0) => {
-    const decoratorId = `${fieldKey}_${position}_${index}`;
+  showDecorator: (fieldName, position, index = 0) => {
+    const decoratorId = `${fieldName}_${position}_${index}`;
     if (decoratorStates.value[decoratorId]) {
       decoratorStates.value[decoratorId].visible = true;
     }
   },
-  hideDecorator: (fieldKey, position, index = 0) => {
-    const decoratorId = `${fieldKey}_${position}_${index}`;
+  hideDecorator: (fieldName, position, index = 0) => {
+    const decoratorId = `${fieldName}_${position}_${index}`;
     if (decoratorStates.value[decoratorId]) {
       decoratorStates.value[decoratorId].visible = false;
     }
   },
 });
 // 处理字段变化；同步值到 formData，且处理联动逻辑
-const handleFieldChange = (key, value) => {
-  formData[key] = value;
-  emit('change', key, value, { ...formData });
+const handleFieldChange = (name, value) => {
+  formData[name] = value;
+  emit('change', name, value, { ...formData });
 
   // 处理联动逻辑
-  handleLinkage(key, value);
+  handleLinkage(name, value);
 };
 // 处理联动逻辑 - 使用预建的索引直接查找，避免遍历所有字段
-const handleLinkage = async (changedKey, changedValue) => {
+const handleLinkage = async (changedName, changedValue) => {
   const context = createFormContext();
 
   // 从索引中直接获取匹配的联动逻辑
-  const matchedLinkages = linkageIndex.value[changedKey] || [];
+  const matchedLinkages = linkageIndex.value[changedName] || [];
 
   // 执行所有匹配的联动逻辑
-  for (const { linkage, fieldKey, errorPrefix } of matchedLinkages) {
+  for (const { linkage, fieldName, errorPrefix } of matchedLinkages) {
     try {
       if (typeof linkage.action !== 'function') {
         throw new Error(`${errorPrefix} action 不是函数: ${typeof linkage.action}`);
       }
       await linkage.action(changedValue, context);
     } catch (error) {
-      console.error(`❌ ${errorPrefix}执行失败: ${fieldKey}`, error);
-      emit('error', { field: fieldKey, error });
+      console.error(`❌ ${errorPrefix}执行失败: ${fieldName}`, error);
+      emit('error', { field: fieldName, error });
     }
   }
 };
@@ -608,19 +718,19 @@ const restoreData = async (data) => {
 
   // 设置初始状态
   mergedConfig.value.fields.forEach((field) => {
-    if (field.visible === false) hiddenFields.value[field.key] = true;
-    if (field.disabled === true) disabledFields.value[field.key] = true;
+    if (field.hide === true) hiddenFields.value[field.name] = true;
+    if (field.disabled === true) disabledFields.value[field.name] = true;
   });
 
   // 按字段顺序恢复数据，支持多级联动
   for (const field of mergedConfig.value.fields) {
-    if (data[field.key] !== undefined) {
-      formData[field.key] = data[field.key];
+    if (data[field.name] !== undefined) {
+      formData[field.name] = data[field.name];
 
       // 触发联动逻辑
       await new Promise((resolve) => {
         setTimeout(async () => {
-          await handleLinkage(field.key, data[field.key]);
+          await handleLinkage(field.name, data[field.name]);
           resolve();
         }, 50); // 小延迟确保联动按顺序执行
       });

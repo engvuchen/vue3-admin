@@ -101,7 +101,7 @@ const formRef = ref(null);
 const dialogVisible = ref(false);
 const formTitle = ref('添加');
 
-// 基础表格列配置 todo
+// 基础表格列配置
 const columns = [
   {
     label: 'user/resource.name',
@@ -156,27 +156,38 @@ const columns = [
     },
   },
 ];
-// 基础搜索配置
+// 基础搜索配置（CLS 规范）
 const searchConfig = {
-  labelWidth: '80px', // 根据最长的表单标题，业务进行调节
-  fields: [
+  attributes: {
+    labelWidth: '80px', // 根据最长的表单标题，业务进行调节
+    layout: 'inline',
+    labelAlign: 'left',
+    colon: false,
+  },
+  items: [
     {
-      key: 'name',
+      name: 'name',
       label: '资源名',
-      type: 'input',
-      placeholder: '请输入',
+      component: 'input',
+      attributes: {
+        placeholder: '请输入',
+      },
     },
     {
-      key: 'access',
+      name: 'access',
       label: '路径',
-      type: 'input',
-      placeholder: '请输入',
+      component: 'input',
+      attributes: {
+        placeholder: '请输入',
+      },
     },
     {
-      key: 'cgi',
+      name: 'cgi',
       label: '接口',
-      type: 'input',
-      placeholder: '请输入',
+      component: 'input',
+      attributes: {
+        placeholder: '请输入',
+      },
     },
   ],
 };
@@ -246,106 +257,117 @@ const advancedColumns = [
     },
   },
 ];
-// 高级搜索配置（带自定义按钮）
+// 高级搜索配置（CLS 规范，带装饰器和联动）
 const advancedSearchConfig = {
-  labelWidth: '80px', // 根据最长的表单标题，业务进行调节
-  layout: 'vertical',
-  fields: [
+  attributes: {
+    labelWidth: '80px', // 根据最长的表单标题，业务进行调节
+    layout: 'vertical',
+    labelAlign: 'right',
+    colon: true,
+  },
+  items: [
     {
-      key: 'topic',
+      name: 'topic',
       label: '话题',
-      type: 'textarea',
-      placeholder: '请输入话题内容',
-      props: {
+      component: 'textarea',
+      attributes: {
+        placeholder: '请输入话题内容',
         style: { width: '400px' },
         rows: 3,
         maxlength: 500,
         showLimit: true,
       },
-      beforeDecorator: {
-        label: '话题详情',
-        type: 'quill',
-        props: {
-          style: { marginLeft: '80px', width: '400px' },
-          modelValue: '',
-          placeholder: '请输入话题详情...',
-          theme: 'snow',
-          toolbar: [
-            ['bold', 'italic', 'underline', 'strike'],
-            ['blockquote', 'code-block'],
-            [{ header: 1 }, { header: 2 }],
-            [{ list: 'ordered' }, { list: 'bullet' }],
-            [{ indent: '-1' }, { indent: '+1' }],
-            [{ size: ['small', false, 'large', 'huge'] }],
-            [{ color: [] }, { background: [] }],
-            [{ align: [] }],
-            ['clean'],
-            ['link'],
+      decoration: [
+        {
+          component: 'quill',
+          attributes: {
+            placement: 'left',
+            style: { marginLeft: '80px', width: '400px' },
+            modelValue: '',
+            placeholder: '请输入话题详情...',
+            theme: 'snow',
+            toolbar: [
+              ['bold', 'italic', 'underline', 'strike'],
+              ['blockquote', 'code-block'],
+              [{ header: 1 }, { header: 2 }],
+              [{ list: 'ordered' }, { list: 'bullet' }],
+              [{ indent: '-1' }, { indent: '+1' }],
+              [{ size: ['small', false, 'large', 'huge'] }],
+              [{ color: [] }, { background: [] }],
+              [{ align: [] }],
+              ['clean'],
+              ['link'],
+            ],
+          },
+          linkage: [
+            {
+              watchField: 'topic',
+              action: (value, { updateDecoratorProps }) => {
+                // 将 textarea 的值同步到 quill 编辑器
+                updateDecoratorProps('topic', 'left', { modelValue: value || '' }, 0);
+              },
+            },
           ],
         },
-        linkage: [
-          {
-            watchField: 'topic',
-            action: (value, { updateDecoratorProps }) => {
-              // 将 textarea 的值同步到 quill 编辑器
-              updateDecoratorProps('topic', 'bottom', { modelValue: value || '' });
-            },
-          },
-        ],
-      },
+      ],
     },
     {
-      key: 'userType',
+      name: 'userType',
       label: '用户类型',
-      type: 'select',
-      value: 'normal',
-      options: [
+      component: 'select',
+      attributes: {
+        value: 'normal',
+        help: '当前选择：{{value}}，不同类型将显示不同的表单字段',
+      },
+      items: [
         { label: '普通用户', value: 'normal' },
         { label: 'VIP用户', value: 'vip' },
         { label: '企业用户', value: 'enterprise' },
       ],
-      help: '当前选择：{{value}}，不同类型将显示不同的表单字段', // 之前我有计划 help 可以联动的吗？
-      topDecorator: {
-        type: 'text',
-        value: '💡 选择不同用户类型会显示不同的表单字段',
-        props: {
-          class: 'tip-decorator',
+      decoration: [
+        {
+          component: 'text',
+          attributes: {
+            placement: 'top',
+            value: '💡 选择不同用户类型会显示不同的表单字段',
+            class: 'tip-decorator',
+          },
         },
-      },
-      bottomDecorator: {
-        label: '文章内容',
-        type: 'quill',
-        props: {
-          // style: { maxHeight: '200px' },
-          value: '你好啊',
-          placeholder: '请输入文章内容...',
-          theme: 'snow',
-          toolbar: [
-            ['bold', 'italic', 'underline', 'strike'],
-            ['blockquote', 'code-block'],
-            [{ header: 1 }, { header: 2 }],
-            [{ list: 'ordered' }, { list: 'bullet' }],
-            [{ indent: '-1' }, { indent: '+1' }],
-            [{ size: ['small', false, 'large', 'huge'] }],
-            [{ color: [] }, { background: [] }],
-            [{ align: [] }],
-            ['clean'],
-            ['link'],
-          ],
+        {
+          component: 'quill',
+          attributes: {
+            placement: 'bottom',
+            value: '你好啊',
+            placeholder: '请输入文章内容...',
+            theme: 'snow',
+            toolbar: [
+              ['bold', 'italic', 'underline', 'strike'],
+              ['blockquote', 'code-block'],
+              [{ header: 1 }, { header: 2 }],
+              [{ list: 'ordered' }, { list: 'bullet' }],
+              [{ indent: '-1' }, { indent: '+1' }],
+              [{ size: ['small', false, 'large', 'huge'] }],
+              [{ color: [] }, { background: [] }],
+              [{ align: [] }],
+              ['clean'],
+              ['link'],
+            ],
+          },
         },
-      },
+      ],
     },
-
     {
-      key: 'vipLevel',
+      name: 'vipLevel',
       label: 'VIP等级',
-      type: 'select',
-      options: [
+      component: 'select',
+      attributes: {
+        hide: true,
+      },
+      items: [
         { label: '银卡', value: 'silver' },
         { label: '金卡', value: 'gold' },
         { label: '钻石卡', value: 'diamond' },
       ],
-      visible: false,
       linkage: [
         {
           watchField: 'userType',
@@ -360,12 +382,14 @@ const advancedSearchConfig = {
       ],
     },
     {
-      key: 'companyName',
+      name: 'companyName',
       label: '公司名称',
-      type: 'input',
-      placeholder: '请输入公司名称',
-      visible: false,
-      rules: [{ required: true, message: '公司名称不能为空' }],
+      component: 'input',
+      attributes: {
+        placeholder: '请输入公司名称',
+        hide: true,
+      },
+      validity: [{ required: true, message: '公司名称不能为空' }],
       linkage: [
         {
           watchField: 'userType',
@@ -380,16 +404,18 @@ const advancedSearchConfig = {
       ],
     },
     {
-      key: 'companySize',
+      name: 'companySize',
       label: '公司规模',
-      type: 'select',
-      options: [
+      component: 'select',
+      attributes: {
+        hide: true,
+      },
+      items: [
         { label: '1-10人', value: 'small' },
         { label: '11-50人', value: 'medium' },
         { label: '51-200人', value: 'large' },
         { label: '200人以上', value: 'xlarge' },
       ],
-      visible: false,
       linkage: [
         {
           watchField: 'userType',
@@ -403,54 +429,8 @@ const advancedSearchConfig = {
         },
       ],
     },
-    // {
-    //   key: 'discount',
-    //   label: '折扣比例',
-    //   type: 'slider',
-    //   value: 100,
-    //   props: { min: 50, max: 100, step: 5 },
-    //   afterDecorator: {
-    //     type: 'text',
-    //     value: '当前折扣: {{value}}%',
-    //     className: 'discount-decorator',
-    //   },
-    //   linkage: [
-    //     {
-    //       watchField: 'userType',
-    //       action: (value, { setFieldValue }) => {
-    //         switch (value) {
-    //           case 'vip':
-    //             setFieldValue('discount', 85);
-    //             break;
-    //           case 'enterprise':
-    //             setFieldValue('discount', 75);
-    //             break;
-    //           default:
-    //             setFieldValue('discount', 100);
-    //             break;
-    //         }
-    //       },
-    //     },
-    //   ],
-    // },
-    // {
-    //   key: 'notifications',
-    //   label: '接收通知',
-    //   type: 'switch',
-    //   value: true,
-    //   afterDecorator: {
-    //     type: 'text',
-    //     value: '开启后将通过邮件接收重要通知',
-    //     className: 'help-text',
-    //   },
-    // },
   ],
 };
-
-// todo 外部改配置无效；因为组件设计把 fields 另外展开了，丢失了响应性；必须通过内部 api 控制了
-// setTimeout(() => {
-//   advancedSearchConfig.fields.label = '延迟被改的话题';
-// }, 1000);
 
 // 高级分页配置示例
 const advancedPaginationConfig = {
@@ -496,54 +476,48 @@ const refresh = () => {
 // todo
 // 表单配置
 const formConfig = ref({
-  labelWidth: '90px',
-  fields: [
-    // id
+  attributes: {
+    labelWidth: '90px',
+    layout: 'vertical',
+    showSubmit: true,
+    showReset: true,
+    submitText: '提交',
+    resetText: '重置',
+  },
+  items: [
+    // id（隐藏）
     {
-      type: 'input',
-      key: 'id',
-      value: '',
-      visible: false,
+      component: 'input',
+      name: 'id',
+      label: 'ID',
+      attributes: {
+        value: '',
+        hide: true,
+      },
     },
     // name
     {
-      key: 'name',
-      type: 'input',
+      name: 'name',
+      component: 'input',
       label: '用户名',
-      // label: 'user/resource.name',
-      placeholder: '请输入用户名',
-      rules: [
-        {
-          required: true,
-          message: 'Name Required',
-        },
-      ],
+      attributes: {
+        placeholder: '请输入用户名',
+      },
+      validity: [{ required: true, message: 'Name Required' }],
     },
     // access
     {
-      key: 'access',
-      type: 'textarea',
-      label: '路径', // user/resource.batchDelete
-      placeholder: '请输入路径',
-      props: {
-        // 源码不支持 style：1. 包裹 div 去掉了 style 2. textarea 接受的 props 是固定的
-        // style: {
-        //   // minWidth: '280px',
-        //   // minHeight: '280px',
-        // },
-        // rows: 80,
-        // cols: 1200,
+      name: 'access',
+      component: 'textarea',
+      label: '路径',
+      attributes: {
+        placeholder: '请输入路径',
       },
-      rules: [
-        {
-          required: true,
-          message: 'Access Required',
-        },
+      validity: [
+        { required: true, message: 'Access Required' },
         {
           validator: (value) => {
-            if (!validMultiLineTxt(accessReg, value)) {
-              return 'Word error';
-            }
+            if (!validMultiLineTxt(accessReg, value)) return 'Word error';
             return true;
           },
         },
@@ -551,26 +525,18 @@ const formConfig = ref({
     },
     // cgi
     {
-      key: 'cgi',
-      type: 'textarea',
+      name: 'cgi',
+      component: 'textarea',
       label: '接口',
-      placeholder: '请输入接口',
-      props: {
-        style: {
-          width: '280px',
-          minHeight: '150px',
-        },
+      attributes: {
+        placeholder: '请输入接口',
+        style: { width: '280px', minHeight: '150px' },
       },
-      rules: [
-        {
-          required: true,
-          message: 'Cgi Required',
-        },
+      validity: [
+        { required: true, message: 'Cgi Required' },
         {
           validator: (value) => {
-            if (!validMultiLineTxt(cgiReg, value)) {
-              return 'Word error';
-            }
+            if (!validMultiLineTxt(cgiReg, value)) return 'Word error';
             return true;
           },
         },

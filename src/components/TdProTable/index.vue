@@ -215,18 +215,21 @@ const searchFormConfig = computed(() => {
   if (!props.search || typeof props.search === 'boolean') {
     return null;
   }
-  return {
-    // 搜索表单的默认配置
-    layout: 'inline',
-    labelWidth: 'auto',
-    labelAlign: 'left',
-    colon: false,
-    className: '',
-    style: {},
-    fields: [],
 
-    // 用户配置覆盖默认配置
-    ...props.search,
+  // CLS 规范：直接使用，但补充默认的 attributes
+  return {
+    attributes: {
+      layout: 'inline',
+      labelWidth: 'auto',
+      labelAlign: 'left',
+      colon: false,
+      class: '',
+      style: {},
+      showSubmit: false,
+      showReset: false,
+      ...props.search.attributes,
+    },
+    items: props.search.items || [],
   };
 });
 
