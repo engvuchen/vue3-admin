@@ -80,6 +80,24 @@
         </template>
       </td-pro-table>
     </t-card>
+
+    <!-- 查询 指定用户 指定角色 的资源（使用 TdProForm） -->
+    <t-card :bordered="false" class="card">
+      <h3>查询指定用户在指定角色下的资源（TdProForm）</h3>
+      <td-pro-form ref="formRef2" :config="resourceQueryForm" @submit="onResourceQuerySubmit" />
+      <div style="margin-top: 12px">
+        <t-skeleton :loading="resourceQueryLoading" animation="gradient">
+          <div v-if="resourceQueryResult.length">
+            <t-space break-line>
+              <t-tag v-for="item in resourceQueryResult" :key="item.id" variant="outline" theme="primary">
+                {{ item.name || item.id }}
+              </t-tag>
+            </t-space>
+          </div>
+          <div v-else style="color: #999">请先选择用户、角色后点击“查询资源”</div>
+        </t-skeleton>
+      </div>
+    </t-card>
   </div>
 </template>
 
@@ -88,7 +106,12 @@ import TdProTable from '@/components/TdProTable/index.vue';
 import TdProForm from '@/components/TdProForm/index.vue';
 import tips from '@/utils/tips';
 import { apiGetResourceList, apiResourceModify, apiResourceDel } from '@/api/resource';
+import { apiGetUserList } from '@/api/user';
+import { apiGetRoleList } from '@/api/role';
+import { apiGetRoleResourceList } from '@/api/role_resource';
+import { apiGetUserRoleList } from '@/api/user_role';
 import { validMultiLineTxt } from '@/utils/validate';
+import { toRaw } from 'vue';
 
 // 正则定义
 const accessReg = /^(\/[a-zA-Z-]+)+$/; // /user/list-ab
@@ -280,6 +303,7 @@ const advancedSearchConfig = {
       decoration: [
         {
           component: 'quill',
+          name: 'topic_quill',
           attributes: {
             placement: 'left',
             style: { marginLeft: '80px', width: '400px' },
@@ -302,9 +326,9 @@ const advancedSearchConfig = {
           linkage: [
             {
               watchField: 'topic',
-              action: (value, { updateDecoratorProps }) => {
-                // 将 textarea 的值同步到 quill 编辑器
-                updateDecoratorProps('topic', 'left', { modelValue: value || '' }, 0);
+              action: (value, { updateItem }) => {
+                // 将 textarea 的值同步到 quill 编辑器（新 API：通过装饰器 name 更新）
+                updateItem('topic_quill', { modelValue: value || '' });
               },
             },
           ],
@@ -371,11 +395,11 @@ const advancedSearchConfig = {
       linkage: [
         {
           watchField: 'userType',
-          action: (value, { showField, hideField }) => {
+          action: (value, { show, hide }) => {
             if (value === 'vip') {
-              showField('vipLevel');
+              show('vipLevel');
             } else {
-              hideField('vipLevel');
+              hide('vipLevel');
             }
           },
         },
@@ -393,11 +417,11 @@ const advancedSearchConfig = {
       linkage: [
         {
           watchField: 'userType',
-          action: (value, { showField, hideField }) => {
+          action: (value, { show, hide }) => {
             if (value === 'enterprise') {
-              showField('companyName');
+              show('companyName');
             } else {
-              hideField('companyName');
+              hide('companyName');
             }
           },
         },
@@ -419,11 +443,11 @@ const advancedSearchConfig = {
       linkage: [
         {
           watchField: 'userType',
-          action: (value, { showField, hideField }) => {
+          action: (value, { show, hide }) => {
             if (value === 'enterprise') {
-              showField('companySize');
+              show('companySize');
             } else {
-              hideField('companySize');
+              hide('companySize');
             }
           },
         },
@@ -621,6 +645,113 @@ const handleError = (error) => {
   console.error('表格请求错误:', error);
   // 这里可以显示错误提示
 };
+
+// ===== 使用 TdProForm 查询 指定用户 指定角色 的资源 =====
+const resourceQueryResult = ref([]);
+const resourceQueryLoading = ref(false);
+const resourceQueryForm = ref({
+  attributes: {
+    layout: 'inline',
+    labelAlign: 'left',
+    colon: false,
+    showSubmit: true,
+    showReset: false,
+    submitText: '查询资源',
+    labelWidth: '60px',
+  },
+  items: [
+    {
+      name: 'user_id',
+      label: '用户',
+      component: 'select',
+      attributes: {
+        placeholder: '请选择用户',
+        filterable: true,
+      },
+      // 初始化选项：进入时加载一次
+      linkage: [
+        {
+          watchField: 'user_id',
+          action: async (value, { setOptions }) => {
+            // 当用户改变时，也可动态刷新角色列表（这里简单处理为不联动过滤）
+            const res = await apiGetUserRoleList({
+              user_id: [value],
+            });
+
+            let roleIds = res?.data?.list?.map((curr) => curr.role_id).flat();
+
+            console.log('roleIds', roleIds);
+
+            const options = [...toRaw(roleIdItems.value).filter((curr) => roleIds.includes(curr.value))];
+            // const options = [ roleIdItems.value.filter((curr) => roleIds.includes(curr.value)) ]; // ...toRaw([Proxy 对象])，怪不得不起效
+
+            console.log('options', JSON.parse(JSON.stringify(options)));
+            console.log('options', options);
+
+            // setOptions('role_id', options);
+          },
+        },
+      ],
+    },
+    {
+      name: 'role_id',
+      label: '角色',
+      component: 'select',
+      attributes: {
+        placeholder: '请选择角色',
+        filterable: true,
+      },
+    },
+  ],
+});
+
+// 首次进入时加载用户与角色选项
+onMounted(async () => {
+  initRoleItems({ page: 0, limit: 1000 });
+
+  try {
+    const userRes = await apiGetUserList({});
+    const userOptions = (userRes?.data?.list || []).map((u) => ({ label: u.username, value: u.id }));
+    nextTick(() => {
+      formRef2.value?.setOptions('user_id', userOptions);
+    });
+  } catch (e) {
+    console.error('初始化用户/角色失败', e);
+  }
+});
+
+const formRef2 = ref(null);
+const onResourceQuerySubmit = async (values) => {
+  console.log('values', values);
+
+  if (!values?.user_id || !values?.role_id) {
+    tips.warning('请选择用户与角色');
+    return;
+  }
+  resourceQueryLoading.value = true;
+  try {
+    const { data } = await apiGetRoleResourceList({ role_id: [values.role_id] });
+
+    const list = Array.isArray(data?.list) ? data.list : [];
+    // 将资源名/标识映射出来展示
+    resourceQueryResult.value = list.map((it) => ({
+      id: it.id || it._id || it.resource_id || it.value,
+      name: it.name || it.label || it.resource_name || String(it.resource_id || ''),
+    }));
+  } catch (e) {
+    console.error('查询资源失败', e);
+  } finally {
+    resourceQueryLoading.value = false;
+  }
+};
+
+// 表单
+let roleIdItems = ref([]);
+async function initRoleItems(name = '', { page, limit } = { page: 0, limit: 20 }) {
+  let res = await apiGetRoleList({ name, page, limit }); // [ { _id, name, access, cgi } ]
+  if (res.code !== 0) return;
+  roleIdItems.value = res.data.list.map((curr) => ({ label: curr.name, value: curr._id }));
+}
 </script>
 
 <style lang="scss" scoped>

@@ -18,7 +18,6 @@ function remainListItem(list, ...args) {
     if (result) remains.push(item);
   }
 
-  console.log('remainListItem, remains', remains);
   list.push(...remains);
 }
 

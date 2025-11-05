@@ -199,6 +199,18 @@ initFormData();
 const linkageIndex = ref({}); // 联动索引 - watchField -> linkage[] 的映射，用于快速查找联动逻辑
 const dynamicOptions = ref({}); // 联动动态选项
 const decoratorStates = ref({}); // 装饰器状态 - 用于存储动态装饰器的props和状态
+const nameToType = ref({}); // name 到类型的映射表 - 记录每个 name 是 'field' 还是 'decorator'
+const nameToDecoratorInfo = ref({}); // name 到装饰器信息的映射表 - 用于通过 name 查找装饰器
+
+// 校验名称冲突（字段或装饰器），存在则抛错
+const isNameUsed = (name, allNames) => {
+  const existing = allNames.get(name);
+  if (existing) {
+    console.error(`❌ name 冲突: "${name}" 已被 ${existing.type === 'field' ? '表单项' : '装饰器'} 使用`);
+    // throw new Error(`name 冲突: "${name}" 已被使用`);
+    return true;
+  }
+};
 
 // 初始化
 onMounted(() => {
@@ -220,32 +232,75 @@ const init = () => {
   hiddenFields.value = {};
   disabledFields.value = {};
   dynamicOptions.value = {};
+  nameToType.value = {};
+  nameToDecoratorInfo.value = {};
+  decoratorStates.value = {};
+
+  // 第一步：收集所有 name，检测冲突
+  const allNames = new Map(); // name -> { type, fieldName, position, index }
+
   mergedConfig.value.fields.forEach((field) => {
+    // 收集表单项 name
+    if (isNameUsed(field.name, allNames)) return;
+    allNames.set(field.name, { type: 'field', fieldName: field.name });
+
+    // 收集装饰器 name
+    const positions = ['topDecorator', 'leftDecorator', 'rightDecorator', 'bottomDecorator'];
+    positions.forEach((pos) => {
+      if (!field[pos]?.length) return;
+
+      const positionKey = pos.replace('Decorator', ''); // 'top', 'left', 'right', 'bottom'
+      field[pos].forEach((dec, index) => {
+        const { name: decoratorName, type: decoratorType = 'html', props: decoratorProps = {} } = dec;
+
+        // 如果装饰器有 name，使用 name；否则使用自动生成的 ID
+        const decoratorId = decoratorName || `${field.name}_${positionKey}_${index}`;
+
+        // 检测装饰器 name 冲突
+        if (decoratorName) isNameUsed(decoratorName, allNames);
+        if (decoratorName) {
+          allNames.set(decoratorName, {
+            type: 'decorator',
+            fieldName: field.name,
+          });
+        }
+
+        // 存储装饰器信息
+        if (!decoratorStates.value[decoratorId]) {
+          decoratorStates.value[decoratorId] = {
+            props: { ...decoratorProps },
+            visible: true,
+            type: decoratorType,
+            fieldName: field.name,
+            position: positionKey,
+            index,
+          };
+        }
+
+        // 如果装饰器有 name，建立映射关系
+        if (decoratorName) {
+          nameToType.value[decoratorName] = 'decorator';
+          nameToDecoratorInfo.value[decoratorName] = {
+            decoratorId,
+            fieldName: field.name,
+            position: positionKey,
+            index,
+          };
+        }
+      });
+    });
+  });
+
+  // 第二步：建立表单项 name 映射
+  mergedConfig.value.fields.forEach((field) => {
+    nameToType.value[field.name] = 'field';
+
     // 隐藏/禁用
     if (field.hide === true) hiddenFields.value[field.name] = true;
     if (field.disabled === true) disabledFields.value[field.name] = true;
 
     // formData 默认值
     if (field.value !== undefined) formData[field.name] = field.value;
-
-    // 装饰器状态初始化
-    const positions = ['topDecorator', 'leftDecorator', 'rightDecorator', 'bottomDecorator'];
-    positions.forEach((pos) => {
-      if (!field[pos]?.length) return;
-
-      field[pos].forEach((dec, index) => {
-        const { type = 'html', props: decoratorProps = {} } = dec;
-        const decoratorId = `${field.name}_${pos.replace('Decorator', '')}_${index}`;
-
-        if (!decoratorStates.value[decoratorId]) {
-          decoratorStates.value[decoratorId] = {
-            props: { ...decoratorProps },
-            visible: true,
-            type,
-          };
-        }
-      });
-    });
   });
 
   // 构建联动索引
@@ -363,12 +418,13 @@ const getFieldOptions = (field) => {
   return dynamicOptions.value[field.name] || field.items || [];
 };
 
-// 渲染装饰器（支持文本、HTML 和组件三种类型）
+// 渲染装饰器（支持文本、HTML、组件）
 const renderDecorator = ({ decorator, fieldValue, fieldName, position, index = 0 }) => {
   if (!decorator) return;
 
-  const { type = 'html', value, props: decoratorProps = {} } = decorator;
-  const decoratorId = `${fieldName}_${position}_${index}`;
+  const { name: decoratorName, type = 'html', value, props: decoratorProps = {} } = decorator;
+  // 如果装饰器有 name，使用 name；否则使用自动生成的 ID（与初始化逻辑保持一致）
+  const decoratorId = decoratorName || `${fieldName}_${position}_${index}`;
 
   // 按 HTML 渲染：无 type、text 或 html
   if (['html', 'text'].includes(type)) {
@@ -399,7 +455,6 @@ const renderDecorator = ({ decorator, fieldValue, fieldName, position, index = 0
     const decoratorState = decoratorStates.value[decoratorId];
     if (!decoratorState || !decoratorState.visible) return;
 
-    // 直接使用初始化时已合并好的 props
     return h(component, decoratorState.props);
   };
 };
@@ -461,68 +516,131 @@ const callApi = async (apiPromiseOrConfig, params) => {
 };
 
 /**
+ * 1. cls -> mergedConfig -> ui 表现、数据
+ * 2. 表单项 name 不可重复的
+ *
  * todo
  * 1. config 改变，是否改变 mergedConfig?
  *    1. 猜想：config.value 整个改就会，改里面的内容不会；
  *    2. 通过 form api 改？功能只有控制 decorator 的；语义上只想要 setValue、show、hide
- *    3. 开发的需求是啥？控制项的 隐藏、label、是否校验
- *
- * 2. name 不可重复的；
+ *    3. 开发的需求是啥？控制项的 隐藏、可能修改 label、是否校验
  *
  * 3. change 是用户输入，第一个派发点要完成所有联动任务
- *    1. 在 demo 页，补充 资源 反查 用户角色 的功能，接口都在整个项目里
+ *    1. 在 table-pro-table-demo 页，补充 查询指定用户指定角色的所有资源 的功能，接口在项目里；用 TdProForm 实现
  *
- * 4. callApi 是否有必要，可以从外部传入接口吗？
+ * 4. callApi 是否有必要，可以直接从外部传入接口吗？直接传，去掉了
+ * 
+*  linkage: [
+      {
+        watchField: 'topic',
+        action: (value, { updateDecoratorProps }) => {
+          getRoleList() // demo 页的接口
+        },
+      },
+    ],
  *
- * 5. restoreData、init 合并多余内容
+ * 5. restoreData 、init 合并多余内容
  *
  * 6. 验证联动逻辑
  */
 
 // 联动逻辑：提供表单操作方法，控制其他表单项的显示、隐藏
-const createFormContext = () => ({
-  formData,
-  showField: (fieldKey) => {
-    delete hiddenFields.value[fieldKey];
+const getItemType = (name) => {
+  return nameToType.value[name] || null;
+};
+
+// 统一的表单操作方法（共享实现，避免重复代码）
+const contextMethods = {
+  // 显示：支持表单项和装饰器
+  show: (name) => {
+    const itemType = getItemType(name);
+    if (itemType === 'decorator') {
+      const decoratorInfo = nameToDecoratorInfo.value[name];
+      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
+        decoratorStates.value[decoratorInfo.decoratorId].visible = true;
+      }
+    } else if (itemType === 'field') {
+      delete hiddenFields.value[name];
+    } else {
+      console.warn(`未找到 name 为 "${name}" 的表单项或装饰器`);
+    }
   },
-  hideField: (fieldKey) => {
-    hiddenFields.value[fieldKey] = true;
+  // 隐藏：支持表单项和装饰器
+  hide: (name) => {
+    const itemType = getItemType(name);
+    if (itemType === 'decorator') {
+      const decoratorInfo = nameToDecoratorInfo.value[name];
+      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
+        decoratorStates.value[decoratorInfo.decoratorId].visible = false;
+      }
+    } else if (itemType === 'field') {
+      hiddenFields.value[name] = true;
+    } else {
+      console.warn(`未找到 name 为 "${name}" 的表单项或装饰器`);
+    }
   },
-  enableField: (fieldKey) => {
-    delete disabledFields.value[fieldKey];
+  // 启用：支持表单项和装饰器（装饰器通过显示来"启用"）
+  enableItem: (name) => {
+    const itemType = getItemType(name);
+    if (itemType === 'decorator') {
+      const decoratorInfo = nameToDecoratorInfo.value[name];
+      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
+        decoratorStates.value[decoratorInfo.decoratorId].visible = true;
+      }
+    } else if (itemType === 'field') {
+      delete disabledFields.value[name];
+    } else {
+      console.warn(`未找到 name 为 "${name}" 的表单项或装饰器`);
+    }
   },
-  disableField: (fieldKey) => {
-    disabledFields.value[fieldKey] = true;
+  // 禁用：支持表单项和装饰器（装饰器通过隐藏来"禁用"）
+  disabledItem: (name) => {
+    const itemType = getItemType(name);
+    if (itemType === 'decorator') {
+      const decoratorInfo = nameToDecoratorInfo.value[name];
+      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
+        decoratorStates.value[decoratorInfo.decoratorId].visible = false;
+      }
+    } else if (itemType === 'field') {
+      disabledFields.value[name] = true;
+    } else {
+      console.warn(`未找到 name 为 "${name}" 的表单项或装饰器`);
+    }
   },
-  setFieldValue: (fieldKey, value) => {
+  // 更新：支持表单项和装饰器的属性更新
+  updateItem: (name, updates) => {
+    const itemType = getItemType(name);
+    if (itemType === 'decorator') {
+      const decoratorInfo = nameToDecoratorInfo.value[name];
+      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
+        decoratorStates.value[decoratorInfo.decoratorId].props = {
+          ...decoratorStates.value[decoratorInfo.decoratorId].props,
+          ...updates,
+        };
+      }
+    } else if (itemType === 'field') {
+      console.warn('表单项属性更新功能暂未实现');
+    } else {
+      console.warn(`未找到 name 为 "${name}" 的表单项或装饰器`);
+    }
+  },
+  // 设置值：仅支持表单项
+  setValue: (fieldKey, value) => {
     formData[fieldKey] = value;
   },
-  setFieldOptions: (fieldKey, options) => {
+  // 设置选项：仅支持表单项
+  setOptions: (fieldKey, options) => {
     dynamicOptions.value[fieldKey] = options;
   },
+  // API 调用
   callApi: async (apiConfig, params) => {
     return await callApi(apiConfig, params);
   },
-  // 装饰器操作方法（支持数组形式装饰器，index 可选，默认为 0）
-  updateDecoratorProps: (fieldName, position, props, index = 0) => {
-    const decoratorId = `${fieldName}_${position}_${index}`;
-    if (decoratorStates.value[decoratorId]) {
-      // 创建新对象引用以确保 Vue 检测到变化并触发重新渲染
-      decoratorStates.value[decoratorId].props = { ...decoratorStates.value[decoratorId].props, ...props };
-    }
-  },
-  showDecorator: (fieldName, position, index = 0) => {
-    const decoratorId = `${fieldName}_${position}_${index}`;
-    if (decoratorStates.value[decoratorId]) {
-      decoratorStates.value[decoratorId].visible = true;
-    }
-  },
-  hideDecorator: (fieldName, position, index = 0) => {
-    const decoratorId = `${fieldName}_${position}_${index}`;
-    if (decoratorStates.value[decoratorId]) {
-      decoratorStates.value[decoratorId].visible = false;
-    }
-  },
+};
+
+const createFormContext = () => ({
+  formData,
+  ...contextMethods,
 });
 // 处理字段变化；同步值到 formData，且处理联动逻辑
 const handleFieldChange = (name, value) => {
@@ -560,7 +678,7 @@ const handleReset = () => {
   init();
   emit('reset');
 };
-// 数据恢复功能
+// 数据恢复
 const restoreData = async (data) => {
   // 先清空当前数据
   Object.keys(formData).forEach((key) => {
@@ -593,6 +711,7 @@ const restoreData = async (data) => {
 
 // 表单实例方法
 const formInstance = {
+  // 核心表单能力
   validate: () => formRef.value?.validate(),
   resetFields: handleReset,
   getFieldsValue: () => ({ ...formData }),
@@ -602,6 +721,9 @@ const formInstance = {
     formData[key] = value;
   },
   restoreData,
+
+  // 与 createFormContext 对齐的统一 API（共享实现）
+  ...contextMethods,
 };
 // 暴露表单实例
 defineExpose(formInstance);

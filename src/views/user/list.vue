@@ -3,9 +3,6 @@
     <pro-table ref="table" :title="$t('user/list.title')" :request="getList" :columns="columns" :search="searchConfig">
       <!-- 查询栏 -->
       <template #toolbar>
-        <!-- <el-button icon="Plus" @click="onShowAddForm">
-          {{ $t('user/list.add') }}
-        </el-button> -->
         <el-button @click="refresh">
           <Refresh />
           {{ $t('user/list.refresh') }}
@@ -223,19 +220,8 @@ setTimeout(async () => {
     map[curr.value] = curr.label;
     return map;
   }, {});
-
-  let found = formConfig.value.fields.find((curr) => curr.name === 'role_id');
-  found.items = roleItems;
 });
 
-// const onShowAddForm = () => {
-//   formModalVisible.value = true;
-//   formTitle.value = '添加';
-
-//   nextTick(() => {
-//     proform?.value?.resetFields();
-//   });
-// };
 const onShowUpdForm = (row) => {
   formModalVisible.value = true;
   formTitle.value = '编辑';
