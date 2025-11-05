@@ -39,7 +39,6 @@
         :max-height="maxHeight"
         :height="height"
         :columns="processedColumns"
-        :empty="emptyConfig"
         :pagination="paginationConfig"
         @select-change="handleSelectionChange"
         @row-click="handleRowClick"
@@ -230,18 +229,6 @@ const searchFormConfig = computed(() => {
       ...props.search.attributes,
     },
     items: props.search.items || [],
-  };
-});
-
-// 空状态配置
-const emptyConfig = computed(() => {
-  if (typeof props.empty === 'string') {
-    return props.empty;
-  }
-  return {
-    description: '暂无数据',
-    icon: 'inbox',
-    ...props.empty,
   };
 });
 
