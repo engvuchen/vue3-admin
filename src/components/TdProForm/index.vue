@@ -200,7 +200,6 @@ const linkageIndex = ref({}); // 联动索引 - watchField -> linkage[] 的映�
 const dynamicOptions = ref({}); // 联动动态选项
 const decoratorStates = ref({}); // 装饰器状态 - 用于存储动态装饰器的props和状态
 const nameToType = ref({}); // name 到类型的映射表 - 记录每个 name 是 'field' 还是 'decorator'
-const nameToDecoratorInfo = ref({}); // name 到装饰器信息的映射表 - 用于通过 name 查找装饰器
 
 // 校验名称冲突（字段或装饰器），存在则抛错
 const isNameUsed = (name, allNames) => {
@@ -233,7 +232,6 @@ const init = () => {
   disabledFields.value = {};
   dynamicOptions.value = {};
   nameToType.value = {};
-  nameToDecoratorInfo.value = {};
   decoratorStates.value = {};
 
   // 第一步：收集所有 name，检测冲突
@@ -253,16 +251,18 @@ const init = () => {
       field[pos].forEach((dec, index) => {
         const { name: decoratorName, type: decoratorType = 'html', props: decoratorProps = {} } = dec;
 
-        // 如果装饰器有 name，使用 name；否则使用自动生成的 ID
         const decoratorId = decoratorName || `${field.name}_${positionKey}_${index}`;
 
         // 检测装饰器 name 冲突
-        if (decoratorName) isNameUsed(decoratorName, allNames);
+        if (isNameUsed(decoratorName, allNames)) return;
+        allNames.set(decoratorName, {
+          type: 'decorator',
+          fieldName: field.name,
+        });
+
+        // 如果装饰器有 name，建立映射关系
         if (decoratorName) {
-          allNames.set(decoratorName, {
-            type: 'decorator',
-            fieldName: field.name,
-          });
+          nameToType.value[decoratorName] = 'decorator';
         }
 
         // 存储装饰器信息
@@ -271,20 +271,6 @@ const init = () => {
             props: { ...decoratorProps },
             visible: true,
             type: decoratorType,
-            fieldName: field.name,
-            position: positionKey,
-            index,
-          };
-        }
-
-        // 如果装饰器有 name，建立映射关系
-        if (decoratorName) {
-          nameToType.value[decoratorName] = 'decorator';
-          nameToDecoratorInfo.value[decoratorName] = {
-            decoratorId,
-            fieldName: field.name,
-            position: positionKey,
-            index,
           };
         }
       });
@@ -522,8 +508,11 @@ const callApi = async (apiPromiseOrConfig, params) => {
  * todo
  * 1. config 改变，是否改变 mergedConfig?
  *    1. 猜想：config.value 整个改就会，改里面的内容不会；
- *    2. 通过 form api 改？功能只有控制 decorator 的；语义上只想要 setValue、show、hide
- *    3. 开发的需求是啥？控制项的 隐藏、可能修改 label、是否校验
+ *    2. 🟩 通过 form api 改？功能只有控制 decorator 的；语义上只想要 setValue、show、hide
+ *    3. 开发的需求是啥？
+ *        1. 控制项的 隐藏
+ *        2. 修改 label ？
+ *        3. 是否校验；直接隐藏就行
  *
  * 3. change 是用户输入，第一个派发点要完成所有联动任务
  *    1. 在 table-pro-table-demo 页，补充 查询指定用户指定角色的所有资源 的功能，接口在项目里；用 TdProForm 实现
@@ -555,9 +544,8 @@ const contextMethods = {
   show: (name) => {
     const itemType = getItemType(name);
     if (itemType === 'decorator') {
-      const decoratorInfo = nameToDecoratorInfo.value[name];
-      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
-        decoratorStates.value[decoratorInfo.decoratorId].visible = true;
+      if (decoratorStates.value[name]) {
+        decoratorStates.value[name].visible = true;
       }
     } else if (itemType === 'field') {
       delete hiddenFields.value[name];
@@ -569,9 +557,8 @@ const contextMethods = {
   hide: (name) => {
     const itemType = getItemType(name);
     if (itemType === 'decorator') {
-      const decoratorInfo = nameToDecoratorInfo.value[name];
-      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
-        decoratorStates.value[decoratorInfo.decoratorId].visible = false;
+      if (decoratorStates.value[name]) {
+        decoratorStates.value[name].visible = false;
       }
     } else if (itemType === 'field') {
       hiddenFields.value[name] = true;
@@ -583,9 +570,8 @@ const contextMethods = {
   enableItem: (name) => {
     const itemType = getItemType(name);
     if (itemType === 'decorator') {
-      const decoratorInfo = nameToDecoratorInfo.value[name];
-      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
-        decoratorStates.value[decoratorInfo.decoratorId].visible = true;
+      if (decoratorStates.value[name]) {
+        decoratorStates.value[name].visible = true;
       }
     } else if (itemType === 'field') {
       delete disabledFields.value[name];
@@ -597,9 +583,8 @@ const contextMethods = {
   disabledItem: (name) => {
     const itemType = getItemType(name);
     if (itemType === 'decorator') {
-      const decoratorInfo = nameToDecoratorInfo.value[name];
-      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
-        decoratorStates.value[decoratorInfo.decoratorId].visible = false;
+      if (decoratorStates.value[name]) {
+        decoratorStates.value[name].visible = false;
       }
     } else if (itemType === 'field') {
       disabledFields.value[name] = true;
@@ -611,11 +596,10 @@ const contextMethods = {
   updateItem: (name, updates) => {
     const itemType = getItemType(name);
     if (itemType === 'decorator') {
-      const decoratorInfo = nameToDecoratorInfo.value[name];
-      if (decoratorInfo && decoratorStates.value[decoratorInfo.decoratorId]) {
-        decoratorStates.value[decoratorInfo.decoratorId].props = {
-          ...decoratorStates.value[decoratorInfo.decoratorId].props,
-          ...updates,
+      if (decoratorStates.value[name]) {
+        decoratorStates.value[name].props = {
+          ...decoratorStates.value[name].props, // 这个是平铺的
+          ...updates, // 会直接覆盖{ hide }
         };
       }
     } else if (itemType === 'field') {
