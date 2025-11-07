@@ -37,9 +37,11 @@ export const normalizeDecorationsFromCLS = (decorations) => {
 
 /**
  * 扁平化 CLS 配置 { name, label, component, attributes, validity, items, decoration, linkage, decoration: [ { placement: 'top' } ] }
- * 1. 展开部分 attributes 属性，其他是 componentProps；
+ * 1. 展开部分 attributes 属性( hide、disabled、placeholder、help、class、style )，其他是 componentProps；
  * 2. decoration 转为分别 4 方向的 topDecorator...
  */
+
+// 返回有默认值处理
 export const clsItemToField = (item) => {
   let {
     name = '',
@@ -62,35 +64,39 @@ export const clsItemToField = (item) => {
     linkage,
   } = item;
 
-  // 规则应该是分开的 todo
-  // const rules = (item.validity || []).map((r) => ({
-  //   required: r.required,
-  //   message: r.message,
-  //   min: r.min,
-  //   max: r.max,
-  //   pattern: r.pattern,
-  //   validator: r.validator,
-  // }));
-
   // 装饰器映射
   const decors = normalizeDecorationsFromCLS(decoration);
+
+  /**
+   * 1. 我改造了这里的出口参数，注意需要你改造 td-pro-form fieldState 的结构
+   *    1. 触控顶层属性现在只有这些：component、name、value、hide、formItemProps、componentProps、rules、items、linkage
+   *
+   * 2. attributes class、style 现在是给到 t-form-item，而不是其中的 component
+   */
+
+  formItemProps = {
+    label,
+    help,
+    class: className,
+    style,
+    ...formItemProps,
+  };
+  componentProps = {
+    disabled,
+    placeholder,
+    ...componentProps,
+  };
 
   return {
     component,
     name,
-    label,
     value,
     hide: Boolean(hide),
-    disabled: Boolean(disabled),
-    help,
-    placeholder,
-    class: className,
-    style,
-    formItemProps,
-    componentProps,
     rules,
     items,
     linkage,
+    formItemProps,
+    componentProps,
     ...decors,
   };
 };
