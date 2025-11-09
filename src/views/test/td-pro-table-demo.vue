@@ -8,9 +8,9 @@
       <td-pro-table
         ref="table"
         class="sample-list"
+        :search="searchConfig"
         :request="getTableData"
         :columns="columns"
-        :search="searchConfig"
         :pagination="paginationConfig"
         @submit="handleSearch"
         @reset="handleReset"
@@ -53,10 +53,6 @@
         :columns="advancedColumns"
         :search="advancedSearchConfig"
         :pagination="advancedPaginationConfig"
-        :empty="{
-          description: '暂无用户数据',
-          icon: 'user',
-        }"
         :request-delay="300"
         title=""
         @submit="handleSearch"
@@ -214,14 +210,12 @@ const searchConfig = {
 };
 // 分页配置
 const paginationConfig = {
-  show: true,
+  // show: true,
   current: 1,
   pageSize: 10,
   total: 0,
-  pageSizeOptions: [5, 10, 20, 50],
-  showTotal: true,
-  showJumper: true,
-  showSizer: true,
+  // showTotal: true,
+  // showPageSize: false,
 };
 
 // 高级表格列配置
@@ -474,11 +468,13 @@ const advancedPaginationConfig = {
 
 // 获取表格数据
 const getTableData = async (params) => {
-  const { data } = await apiGetResourceList(params);
-  return {
-    data: data?.list || [],
-    total: Number(data?.total) || 0,
-  };
+  const res = await apiGetResourceList(params);
+  if (res.code === 0) {
+    return {
+      list: res?.data?.list || [],
+      total: res?.data?.total || 0,
+    };
+  }
 };
 // 事件处理
 const handleSearch = (searchData) => {
@@ -525,7 +521,7 @@ const formConfig = ref({
       attributes: {
         placeholder: '请输入用户名',
       },
-      validity: [{ required: true, message: 'Name Required' }],
+      validity: [{ required: true, message: 'Name Required' }], // todo
     },
     // access
     {
@@ -578,8 +574,6 @@ const onShowAddForm = () => {
 };
 // 显示编辑表单
 const onShowEditForm = (row) => {
-  console.log('row', toRaw(row));
-
   dialogVisible.value = true;
   formTitle.value = '编辑';
 

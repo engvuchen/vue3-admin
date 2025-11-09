@@ -21,6 +21,7 @@
       <div style="display: flex; flex-direction: column">
         <!-- 上置装饰（支持单个装饰器或装饰器数组） -->
         <template v-if="field.topDecorator">
+          <!-- todo -->
           <component
             v-for="(decorator, index) in field.topDecorator"
             :key="`top-${index}`"
@@ -57,12 +58,12 @@
           <!-- 表单字段：消费 label, name, attrs.help/class/style -->
           <t-form-item
             :name="field.name"
-            :label="fieldStates[field.name]?.formItemProps?.label"
             :help="parseTemplateContent(fieldStates[field.name]?.formItemProps?.help, formData[field.name])"
             v-bind="fieldStates[field.name]?.formItemProps"
           >
             <!-- 表单字段组件: 消费 formData、attrs.placeholder、attrs.disabled、items -->
             <component
+              :key="`field-${field.name}`"
               :is="getFieldComponent(field.component)"
               v-model="formData[field.name]"
               :options="getFieldOptions(field)"
@@ -72,7 +73,6 @@
                   handleFieldChange(field.name, value);
                 }
               "
-              :key="`field-${field.name}`"
             />
           </t-form-item>
           <!-- 右置装饰（支持单个装饰器或装饰器数组） -->
@@ -131,6 +131,11 @@
 <script setup>
 import { getCustomComponent } from './componentMap';
 import { clsItemToField } from './translateFromCls';
+
+// 禁用属性继承，避免父组件传递的 class/style/@submit 等属性自动绑定到根元素
+defineOptions({
+  inheritAttrs: false,
+});
 
 // Props
 const props = defineProps({
@@ -196,8 +201,9 @@ const linkageMap = ref({}); // 联动映射表 { [watchField]: [{ linkage, field
 const dynamicOptions = ref({}); // 联动动态选项 { [fieldName]: items }
 const decoratorStates = ref({}); // 装饰器状态 - 用于存储动态装饰器的props和状态
 
+const allNames = new Map(); // name 注册表 { name -> { type, fieldName } }，用于检测冲突
 // 校验名称冲突（字段或装饰器），存在则抛错
-const isNameUsed = (name, allNames) => {
+const isNameUsed = (name) => {
   const existing = allNames.get(name);
   if (existing) {
     console.error(`❌ name 冲突: "${name}" 已被 ${existing.type === 'field' ? '表单项' : '装饰器'} 使用`);
@@ -221,84 +227,75 @@ watch(
 // 初始化：状态字段、表单数据、装饰器数据
 const init = () => {
   // 初始化隐藏/禁用、默认值与装饰器状态
-
   hiddenFields.value = {};
   dynamicOptions.value = {};
   decoratorStates.value = {};
   fieldStates.value = {};
 
-  // 第一步：收集所有 name，检测冲突
-  const allNames = new Map(); // name -> { type, fieldName, position, index }
+  allNames.clear();
 
   mergedConfig.value.fields.forEach((field) => {
-    // 收集表单项 name
-    if (isNameUsed(field.name, allNames)) return;
-    allNames.set(field.name, { type: 'field', fieldName: field.name });
+    // todo
+    // 收集 field name、设置默认值、初始化 fieldStates
+    if (field.name) {
+      if (isNameUsed(field.name)) return;
+      allNames.set(field.name, { type: 'field', fieldName: field.name });
 
-    // 收集装饰器 name
+      /**
+       * 不同数据结构的作用：
+       * 1. hiddenFields 隐藏
+       * 2. fieldStates formItem、组件属性
+       * 3. formData 表单值
+       */
+
+      // 隐藏
+      if (field.hide === true) hiddenFields.value[field.name] = true;
+
+      /**
+       * fieldStates 是管组件属性的，只有：formItemProps、 componentProps
+       * formItemProps：label、help、placeholder、class、style
+       * componentProps： disabled、placeholder
+       */
+      if (!fieldStates.value[field.name]) {
+        fieldStates.value[field.name] = {
+          formItemProps: { ...field.formItemProps },
+          componentProps: { ...field.componentProps },
+        };
+      }
+      // formData 管表单的值
+      if (field.value !== undefined) formData[field.name] = field.value;
+    }
+
     const positions = ['topDecorator', 'leftDecorator', 'rightDecorator', 'bottomDecorator'];
     positions.forEach((pos) => {
       if (!field[pos]?.length) return;
 
       const positionKey = pos.replace('Decorator', ''); // 'top', 'left', 'right', 'bottom'
       field[pos].forEach((dec, index) => {
-        const { name: decoratorName, type: decoratorType = 'html', props: decoratorProps = {} } = dec;
+        const { name, component: decoratorComponent = 'html', props: decoratorProps = {}, hide = false } = dec;
 
-        const decoratorId = decoratorName || `${field.name}_${positionKey}_${index}`;
-
+        const decoratorId = name || `${field.name}_${positionKey}_${index}`;
         // 检测装饰器 name 冲突
-        if (isNameUsed(decoratorName, allNames)) return;
-        allNames.set(decoratorName, {
-          type: 'decorator',
-          fieldName: field.name,
-        });
-
-        // 装饰器信息已存储在 decoratorStates 中，无需额外的映射表
+        if (isNameUsed(decoratorId)) return;
+        allNames.set(decoratorId, { type: 'decorator', fieldName: field.name });
 
         // 存储装饰器信息
         if (!decoratorStates.value[decoratorId]) {
-          // { type, visible, props } 结构
+          // { component, visible, props } 结构
           decoratorStates.value[decoratorId] = {
             props: { ...decoratorProps },
-            visible: true,
-            type: decoratorType,
+            visible: !hide, // hide 为 true 时，visible 为 false
+            component: decoratorComponent,
           };
         }
       });
     });
   });
 
-  // 第二步：建立表单项 name 映射
-  mergedConfig.value.fields.forEach((field) => {
-    // 字段信息已存储在 fieldStates 中，无需额外的映射表
-
-    // 隐藏/禁用
-    if (field.hide === true) hiddenFields.value[field.name] = true;
-    // disabled 在 componentProps 中，通过 fieldStates 管理
-
-    // 初始化字段状态 结构（与 translateFromCls.js 返回结构一致）
-    // 顶层只有：formItemProps、componentProps
-    // label、help、placeholder、class、style 在 formItemProps 中
-    if (!fieldStates.value[field.name]) {
-      fieldStates.value[field.name] = {
-        formItemProps: { ...field.formItemProps },
-        componentProps: { ...field.componentProps },
-      };
-    }
-
-    // formData 默认值
-    if (field.value !== undefined) formData[field.name] = field.value;
-  });
-
   // 构建联动映射表
   buildLinkageMap();
   // 执行所有联动逻辑
-  Promise.all(
-    mergedConfig.value.fields.map(async (field) => {
-      const fieldValue = formData[field.name];
-      await handleLinkage(field.name, fieldValue);
-    }),
-  );
+  Promise.all(mergedConfig.value.fields.map(async (field) => await handleLinkage(field.name, formData[field.name])));
 };
 // 批量添加联动映射项（处理 linkage 数组）
 const addLinkageMapItems = ({ linkages, fieldName, errorPrefix }) => {
@@ -410,40 +407,38 @@ const getFieldOptions = (field) => {
 const renderDecorator = ({ decorator, fieldValue, fieldName, position, index = 0 }) => {
   if (!decorator) return;
 
-  const { name: decoratorName, type = 'html', value, props: decoratorProps = {} } = decorator;
-  // 如果装饰器有 name，使用 name；否则使用自动生成的 ID（与初始化逻辑保持一致）
-  const decoratorId = decoratorName || `${fieldName}_${position}_${index}`;
+  const { name, component = 'html', props: decoratorProps = {} } = decorator;
+  const decoratorId = name || `${fieldName}_${position}_${index}`;
 
-  // 按 HTML 渲染：无 type、text 或 html
-  if (['html', 'text'].includes(type)) {
+  const decoratorState = decoratorStates.value[decoratorId]; // { props, visible, component }
+  if (!decoratorState || !decoratorState.visible) return;
+
+  // 按 HTML 渲染：无 component、text 或 html
+  if (['html', 'text'].includes(component)) {
     // 使用 h() 函数创建组件（函数式组件），透传 decorator.props
     // component is 文档提到直接 引入组件，直接打印一个组件，显示有 render、setup；
     // h 返回的是虚拟 dom 定义，也能用
 
     return () => {
-      // 每次渲染时解析内容，以支持动态字段值
-      const parsedContent = parseTemplateContent(value, fieldValue);
-
       // 统一通过 props 传递所有属性（包括 class 和 style）
-      const baseProps = { ...decoratorProps };
+      // 排除 value，避免传递到 DOM 属性
+      const { value, ...restProps } = decoratorProps;
+
+      // 每次渲染时解析内容，以支持动态字段值
+      const content = parseTemplateContent(value, fieldValue);
 
       // HTML 类型：使用 innerHTML 渲染 HTML 字符串
-      if (type === 'html') {
-        return h('div', { ...baseProps, innerHTML: parsedContent });
-      }
+      if (component === 'html') return h('div', { ...restProps, innerHTML: content });
 
       // 文本类型：直接渲染文本内容
-      return h('div', baseProps, parsedContent);
+      return h('div', { ...restProps }, content);
     };
   }
 
   // 渲染组件型装饰器：装饰器状态已在配置遍历阶段初始化
-  const component = getCustomComponent(type) || getFieldComponent(type) || 'div';
+  const componentInstance = getCustomComponent(component) || getFieldComponent(component) || 'div';
   return () => {
-    const decoratorState = decoratorStates.value[decoratorId];
-    if (!decoratorState || !decoratorState.visible) return;
-
-    return h(component, decoratorState.props);
+    return h(componentInstance, decoratorState.props);
   };
 };
 // 解析模板变量（支持 {{value}} 等变量）
@@ -476,7 +471,7 @@ const parseTemplateContent = (content, value) => {
  *    1. 🟩 在 table-pro-table-demo 页，补充 查询指定用户指定角色的所有资源 的功能，接口在项目里；用 TdProForm 实现
  *
  * 4. 🟩 callApi 是否有必要，可以直接从外部传入接口吗？直接传，去掉了
- * 
+ *
 *  linkage: [
       {
         watchField: 'topic',
@@ -571,18 +566,14 @@ const contextMethods = {
         };
       }
     } else if (itemType === 'field') {
-      // todo 应该能从 decoratorStates、fieldStates 直接更新类型
-
       const fieldState = fieldStates.value[name];
-      if (!fieldState) return console.warn(`未找到 name 为 "${name}" 的字段状态`);
+      // if (!fieldState) return console.warn(`未找到 name 为 "${name}" 的字段状态`);
 
       // 更新字段属性（label、help、placeholder、class、style 在 formItemProps 中）
-      const formItemPropsKeys = ['label', 'help', 'placeholder', 'class', 'style'];
-      const formItemPropsUpdates = formItemPropsKeys.reduce((acc, key) => {
+      const formItemPropsUpdates = ['label', 'help', 'placeholder', 'class', 'style'].reduce((acc, key) => {
         if (updates[key] !== undefined) acc[key] = updates[key];
         return acc;
       }, {});
-
       // 更新 formItemProps
       if (Object.keys(formItemPropsUpdates).length > 0 || updates.formItemProps !== undefined) {
         fieldState.formItemProps = {
@@ -621,14 +612,14 @@ const createFormContext = () => ({
   formData,
   ...contextMethods,
 });
-// 处理字段变化；同步值到 formData，且处理联动逻辑
+// 处理字段变化；同步值到 formData、处理联动逻辑
 const handleFieldChange = (name, value) => {
   formData[name] = value;
   emit('change', name, value, { ...formData });
 
   handleLinkage(name, value);
 };
-// 处理联动逻辑 - 使用预建的映射表直接查找，避免遍历所有字段
+// 处理联动逻辑
 const handleLinkage = async (changedName, changedValue) => {
   const context = createFormContext();
 
@@ -668,7 +659,6 @@ const restoreData = async (data) => {
   dynamicOptions.value = {};
   mergedConfig.value.fields.forEach((field) => {
     if (field.hide === true) hiddenFields.value[field.name] = true;
-    // disabled 在 componentProps 中，通过 fieldStates 管理
   });
 
   // 按字段顺序恢复数据，支持多级联动
@@ -692,14 +682,13 @@ const formInstance = {
   // 核心表单能力
   validate: () => formRef.value?.validate(),
   resetFields: handleReset,
-  getFieldsValue: () => ({ ...formData }),
-  setFieldsValue: (values) => Object.assign(formData, values),
+  getFieldsValue: () => ({ ...formData }), // 批量获取
+  setFieldsValue: (values) => Object.assign(formData, values), // 批量设置
   getFieldValue: (key) => formData[key],
   setFieldValue: (key, value) => {
     formData[key] = value;
   },
   restoreData,
-
   // 与 createFormContext 对齐的统一 API（共享实现）
   ...contextMethods,
 };

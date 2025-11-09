@@ -36,10 +36,11 @@
         :stripe="stripe"
         :hover="hover"
         :size="size"
+        :disable-data-page="disableDataPage"
         :max-height="maxHeight"
         :height="height"
-        :columns="processedColumns"
-        :pagination="paginationConfig"
+        :columns="columns"
+        :pagination="pagination"
         @select-change="handleSelectionChange"
         @row-click="handleRowClick"
         @row-dblclick="handleRowDblClick"
@@ -59,16 +60,11 @@
         @scroll-to-top-left="handleScrollToTopLeft"
         @scroll-to-top-right="handleScrollToTopRight"
       >
-        <!-- 自定义列头 -->
-        <template v-for="column in processedColumns" :key="column.colKey" #[`${column.colKey}-header`]="scope">
-          <slot :name="`${column.colKey}-header`" v-bind="scope"></slot>
-        </template>
-
         <!-- 空状态插槽 -->
         <template #empty>
           <slot name="empty">
             <div class="empty-state">
-              <t-icon name="inbox" size="48px" />
+              <t-icon name="file" size="20px" stroke-width="1" />
               <p>暂无数据</p>
             </div>
           </slot>
@@ -79,8 +75,6 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, watch, nextTick } from 'vue';
-
 import TdProForm from '../TdProForm/index.vue';
 
 const props = defineProps({
@@ -99,6 +93,7 @@ const props = defineProps({
     type: [Boolean, Object],
     default: false,
   },
+
   // 表格列配置
   columns: {
     type: Array,
@@ -140,15 +135,14 @@ const props = defineProps({
     type: [String, Number],
     default: null,
   },
+  disableDataPage: {
+    type: Boolean,
+    default: true,
+  },
   // 分页配置
   pagination: {
     type: [Boolean, Object],
     default: () => ({}),
-  },
-  // 空状态配置
-  empty: {
-    type: [String, Object],
-    default: '暂无数据',
   },
   // 是否自动请求数据
   autoRequest: {
@@ -156,7 +150,6 @@ const props = defineProps({
     default: true,
   },
 });
-
 const emit = defineEmits([
   'submit',
   'reset',
@@ -183,37 +176,16 @@ const emit = defineEmits([
 ]);
 
 // 响应式数据
+const searchFormRef = ref(null);
 const loading = ref(false);
 const tableData = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
-const searchFormRef = ref(null);
-const searchParams = ref({});
-
-// 分页配置
-const paginationConfig = computed(() => {
-  return {
-    size: 'medium',
-    theme: 'default',
-    // className: '', // todo1 这个为空字符串，异常
-    current: currentPage.value,
-    pageSize: pageSize.value,
-    total: total.value,
-    showJumper: true,
-    showSizer: true,
-    showTotal: true,
-    pageSizeOptions: [5, 10, 20, 50, 100],
-    // style: {},
-    ...props.pagination,
-  };
-});
 
 // 搜索表单配置
 const searchFormConfig = computed(() => {
-  if (!props.search || typeof props.search === 'boolean') {
-    return null;
-  }
+  if (!props.search) return;
 
   // CLS 规范：直接使用，但补充默认的 attributes
   return {
@@ -231,16 +203,15 @@ const searchFormConfig = computed(() => {
     items: props.search.items || [],
   };
 });
-
-const processedColumns = computed(() => {
+const columns = computed(() => {
   let res = props.columns.map((column) => ({
+    align: column.align || 'left',
     // colKey: column.colKey,
     // title: column.title,
     // width: column.width,
     // minWidth: column.minWidth,
     // maxWidth: column.maxWidth,
     // fixed: column.fixed,
-    align: column.align || 'left',
     // ellipsis: column.ellipsis,
     // sortType: column.sortType,
     // sorter: column.sorter,
@@ -251,58 +222,54 @@ const processedColumns = computed(() => {
 
   return res;
 });
+// 分页配置
+const pagination = computed(() => {
+  return {
+    size: 'medium',
+    theme: 'default',
+    showJumper: true,
+    showTotal: true,
+    showPageSize: false,
+    // style: {},
+    // className: '', // todo1 这个为空字符串，异常
+    ...props.pagination,
+    // 这些属性必须在最后，确保响应式数据不会被 props 覆盖
+    current: currentPage.value,
+    pageSize: pageSize.value,
+    total: total.value,
+  };
+});
 
-// 获取搜索表单数据
-const getSearchData = () => {
-  // 优先使用缓存的搜索参数
-  if (Object.keys(searchParams.value).length > 0) {
-    return searchParams.value;
-  }
-
-  // 尝试从搜索表单组件获取数据 todo???
-  if (searchFormRef.value && typeof searchFormRef.value.getFormData === 'function') {
-    return searchFormRef.value.getFormData();
-  }
-
-  return {};
-};
 // 请求表格数据
 const getTableData = async (params = {}) => {
   if (loading.value) return; // 防止重复请求
-
   loading.value = true;
 
+  tableData.value = [];
+  total.value = 0;
+
   try {
-    const searchData = getSearchData();
-    const requestParams = {
-      page: currentPage.value,
-      pageSize: pageSize.value,
+    const searchData = searchFormRef?.value?.getFieldsValue?.() || {}; // beforeMount 调用，form 还没初始化，需要可访问符
+    const res = await props.request({
+      page: currentPage.value - 1,
+      limit: pageSize.value,
       ...searchData,
-      ...params, // 允许外部传入额外参数
-    };
+      // ...params, // 允许外部传入额外参数
+    });
 
-    const response = await props.request(requestParams);
-
-    if (response && typeof response === 'object') {
-      tableData.value = response.data || response.list || [];
-
-      total.value = response.total || response.totalCount || 0;
+    if (res) {
+      tableData.value = res.list || [];
+      total.value = res.total || 0;
 
       // 触发数据变化事件
       emit('dataChange', {
         data: tableData.value,
         total: total.value,
-        params: requestParams,
+        // params: requestParams,
       });
-    } else {
-      tableData.value = [];
-      total.value = 0;
     }
   } catch (error) {
     console.error('获取表格数据失败:', error);
-    tableData.value = [];
-    total.value = 0;
-
     // 触发错误事件
     emit('error', error);
   } finally {
@@ -310,67 +277,46 @@ const getTableData = async (params = {}) => {
   }
 };
 
-// 搜索表单事件处理
-const handleSearchChange = (key, value, formData) => {
-  emit('change', key, value, formData);
-};
-
-const handleSearchError = (error) => {
-  emit('error', error);
-};
-
 const handleSearchSubmit = () => {
   const searchData = searchFormRef.value?.getFieldsValue() || {};
-  handleSearch(searchData);
-};
-
-const handleSearchReset = () => {
-  searchFormRef.value?.resetFields();
-  handleReset();
-};
-
-// 搜索
-const handleSearch = (searchData) => {
   currentPage.value = 1;
-  searchParams.value = { ...searchData };
   getTableData();
   emit('submit', searchData);
 };
-
-// 重置
-const handleReset = () => {
+const handleSearchReset = () => {
+  searchFormRef.value?.resetFields();
   currentPage.value = 1;
-  searchParams.value = {}; // 清空搜索参数
   getTableData();
   emit('reset');
+};
+const handleSearchChange = (key, value, formData) => {
+  emit('change', key, value, formData);
+};
+const handleSearchError = (error) => {
+  emit('error', error);
 };
 
 // 选择变化
 const handleSelectionChange = (selectedRowKeys, selectedRows, currentRowData) => {
   emit('selectionChange', selectedRowKeys, selectedRows, currentRowData);
 };
-
 // 行点击
 const handleRowClick = (context) => {
   emit('rowClick', context);
 };
-
 // 行双击
 const handleRowDblClick = (context) => {
   emit('rowDblClick', context);
 };
-
 // 单元格点击
 const handleCellClick = (context) => {
   emit('cellClick', context);
 };
-
 // 排序变化
 const handleSortChange = (sortInfo) => {
   emit('sortChange', sortInfo);
   getTableData();
 };
-
 // 过滤变化
 const handleFilterChange = (filterInfo) => {
   emit('filterChange', filterInfo);
@@ -381,53 +327,42 @@ const handleFilterChange = (filterInfo) => {
 const handlePageChange = (pageInfo) => {
   currentPage.value = pageInfo.current;
   pageSize.value = pageInfo.pageSize;
-  getTableData();
+  getTableData(); // todo
   emit('pageChange', pageInfo);
 };
-
 // 数据变化
 const handleDataChange = (data) => {
   emit('dataChange', data);
 };
-
 // 异步加载变化
 const handleAsyncLoadingChange = (loading) => {
   emit('asyncLoadingChange', loading);
 };
-
 // 滚动事件
 const handleScroll = (params) => {
   emit('scroll', params);
 };
-
 const handleScrollToBottom = (params) => {
   emit('scrollToBottom', params);
 };
-
 const handleScrollToLeft = (params) => {
   emit('scrollToLeft', params);
 };
-
 const handleScrollToRight = (params) => {
   emit('scrollToRight', params);
 };
-
 const handleScrollToTop = (params) => {
   emit('scrollToTop', params);
 };
-
 const handleScrollToBottomLeft = (params) => {
   emit('scrollToBottomLeft', params);
 };
-
 const handleScrollToBottomRight = (params) => {
   emit('scrollToBottomRight', params);
 };
-
 const handleScrollToTopLeft = (params) => {
   emit('scrollToTopLeft', params);
 };
-
 const handleScrollToTopRight = (params) => {
   emit('scrollToTopRight', params);
 };
@@ -436,27 +371,23 @@ const handleScrollToTopRight = (params) => {
 const refresh = (params = {}) => {
   getTableData(params);
 };
-
 // 重置分页
 const resetPagination = () => {
   currentPage.value = 1;
-  pageSize.value = paginationConfig.value.pageSize || 10;
+  pageSize.value = pagination.value.pageSize || 10;
 };
-
 // 清空选择
 const clearSelection = () => {
   // 这里需要调用表格的清除选择方法
   // 由于 TDesign Table 的限制，暂时通过事件通知父组件
   emit('clearSelection');
 };
-
 // 获取当前选择的行
 const getSelectedRows = () => {
   // 这里需要从表格组件获取选择的行
   // 暂时返回空数组，实际使用时需要通过 ref 获取
   return [];
 };
-
 // 暴露方法
 defineExpose({
   refresh,
@@ -464,46 +395,20 @@ defineExpose({
   resetPagination,
   clearSelection,
   getSelectedRows,
-  // 暴露搜索表单引用
-  searchFormRef,
+  searchFormRef, // 暴露搜索表单引用
 });
 
 // 初始化
 onBeforeMount(() => {
-  if (props.autoRequest) {
-    getTableData();
-  }
+  if (props.autoRequest) getTableData();
 });
 
 // 监听分页配置变化
 watch(
-  () => paginationConfig.value,
+  () => pagination.value,
   (newConfig) => {
     currentPage.value = newConfig.current || 1;
     pageSize.value = newConfig.pageSize || 10;
-  },
-  { deep: true },
-);
-
-// 监听列配置变化，重新处理列
-watch(
-  () => props.columns,
-  () => {
-    // 列配置变化时，可以在这里做一些处理
-    nextTick(() => {
-      // 确保 DOM 更新后再执行
-    });
-  },
-  { deep: true },
-);
-
-// 监听搜索配置变化
-watch(
-  () => props.search,
-  (newSearch) => {
-    if (newSearch === false) {
-      searchParams.value = {};
-    }
   },
   { deep: true },
 );
