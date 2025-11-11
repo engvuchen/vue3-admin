@@ -28,7 +28,7 @@
             :is="
               renderDecorator({
                 decorator,
-                fieldValue: formData[field.name],
+                fieldValue: getNestedValue(formData, field.name),
                 fieldName: field.name,
                 position: 'top',
                 index,
@@ -46,7 +46,7 @@
               :is="
                 renderDecorator({
                   decorator,
-                  fieldValue: formData[field.name],
+                  fieldValue: getNestedValue(formData, field.name),
                   fieldName: field.name,
                   position: 'left',
                   index,
@@ -58,14 +58,17 @@
           <!-- 表单字段：消费 label, name, attrs.help/class/style -->
           <t-form-item
             :name="field.name"
-            :help="parseTemplateContent(fieldStates[field.name]?.formItemProps?.help, formData[field.name])"
+            :help="
+              parseTemplateContent(fieldStates[field.name]?.formItemProps?.help, getNestedValue(formData, field.name))
+            "
             v-bind="fieldStates[field.name]?.formItemProps"
           >
             <!-- 表单字段组件: 消费 formData、attrs.placeholder、attrs.disabled、items -->
             <component
               :key="`field-${field.name}`"
               :is="getFieldComponent(field.component)"
-              v-model="formData[field.name]"
+              :model-value="getNestedValue(formData, field.name)"
+              @update:model-value="(value) => setNestedValue(formData, field.name, value)"
               :options="getFieldOptions(field)"
               v-bind="fieldStates[field.name]?.componentProps"
               @change="
@@ -83,7 +86,7 @@
               :is="
                 renderDecorator({
                   decorator,
-                  fieldValue: formData[field.name],
+                  fieldValue: getNestedValue(formData, field.name),
                   fieldName: field.name,
                   position: 'right',
                   index,
@@ -101,7 +104,7 @@
             :is="
               renderDecorator({
                 decorator,
-                fieldValue: formData[field.name],
+                fieldValue: getNestedValue(formData, field.name),
                 fieldName: field.name,
                 position: 'bottom',
                 index,
@@ -181,15 +184,46 @@ const visibleFields = computed(() =>
 // 2. 表单默认值
 const formRef = ref();
 const formData = reactive({});
+
+// 工具函数：设置嵌套对象的值
+const setNestedValue = (obj, path, value) => {
+  const keys = path.split('.');
+  let current = obj;
+
+  // a.b.c.d 遍历到 b，current 会被更新；最后 d 是用来赋值的
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    if (current[key] === undefined) current[key] = {};
+    current = current[key];
+  }
+
+  current[keys[keys.length - 1]] = value;
+};
+// 工具函数：获取嵌套对象的值
+const getNestedValue = (obj, path) => {
+  const keys = path.split('.');
+  let current = obj;
+
+  for (const key of keys) {
+    // 中途遇到不可访问，退出
+    if (current === undefined || current === null) {
+      return undefined;
+    }
+    current = current[key];
+  }
+
+  return current;
+};
+
 const initFormData = () => {
   mergedConfig?.value?.fields?.forEach?.((field) => {
     if (field.value !== undefined) {
-      formData[field.name] = field.value;
+      setNestedValue(formData, field.name, field.value);
     } else {
       // 为特定组件类型设置默认值（数组类型组件）
       const arrayComponentTypes = ['date-range-picker', 'checkbox', 'transfer', 'tag-input', 'range-input'];
       if (arrayComponentTypes.includes(field.component)) {
-        formData[field.name] = [];
+        setNestedValue(formData, field.name, []);
       }
     }
   });
@@ -263,7 +297,7 @@ const init = () => {
         };
       }
       // formData 管表单的值
-      if (field.value !== undefined) formData[field.name] = field.value;
+      if (field.value !== undefined) setNestedValue(formData, field.name, field.value);
     }
 
     const positions = ['topDecorator', 'leftDecorator', 'rightDecorator', 'bottomDecorator'];
@@ -468,22 +502,11 @@ const parseTemplateContent = (content, value) => {
  *        3. 是否校验；直接隐藏就行
  *
  * 3. change 是用户输入，第一个派发点要完成所有联动任务
- *    1. 🟩 在 table-pro-table-demo 页，补充 查询指定用户指定角色的所有资源 的功能，接口在项目里；用 TdProForm 实现
+ *    1. 🟩 验证联动逻辑：在 table-pro-table-demo 页，补充 查询指定用户指定角色的所有资源 的功能，接口在项目里；用 TdProForm 实现
  *
  * 4. 🟩 callApi 是否有必要，可以直接从外部传入接口吗？直接传，去掉了
  *
-*  linkage: [
-      {
-        watchField: 'topic',
-        action: (value, { updateDecoratorProps }) => {
-          getRoleList() // demo 页的接口
-        },
-      },
-    ],
- *
  * 5. restoreData 、init 合并多余内容
- *
- * 6. 验证联动逻辑
  */
 
 // 通过检查 fieldStates 和 decoratorStates 来判断类型，无需额外的映射表
@@ -598,9 +621,9 @@ const contextMethods = {
       console.warn(`未找到 name 为 "${name}" 的表单项或装饰器`);
     }
   },
-  // 设置值：仅支持表单项
+  // 设置值：仅支持表单项（支持嵌套路径）
   setValue: (fieldKey, value) => {
-    formData[fieldKey] = value;
+    setNestedValue(formData, fieldKey, value);
   },
   // 设置选项：仅支持表单项
   setOptions: (fieldKey, options) => {
@@ -614,7 +637,7 @@ const createFormContext = () => ({
 });
 // 处理字段变化；同步值到 formData、处理联动逻辑
 const handleFieldChange = (name, value) => {
-  formData[name] = value;
+  setNestedValue(formData, name, value);
   emit('change', name, value, { ...formData });
 
   handleLinkage(name, value);
@@ -663,18 +686,39 @@ const restoreData = async (data) => {
 
   // 按字段顺序恢复数据，支持多级联动
   for (const field of mergedConfig.value.fields) {
-    if (data[field.name] !== undefined) {
-      formData[field.name] = data[field.name];
+    const fieldValue = getNestedValue(data, field.name);
+    if (fieldValue !== undefined) {
+      setNestedValue(formData, field.name, fieldValue);
 
       // 触发联动逻辑
       await new Promise((resolve) => {
         setTimeout(async () => {
-          await handleLinkage(field.name, data[field.name]);
+          await handleLinkage(field.name, fieldValue);
           resolve();
         }, 50); // 小延迟确保联动按顺序执行
       });
     }
   }
+};
+
+// 检查是否为纯对象（非数组、非null）
+const isPlainObject = (value) => {
+  return Object.prototype.toString.call(value) === '[object Object]';
+};
+// 递归合并对象（深度合并，用于 setFieldsValue）
+const deepMerge = (target, source) => {
+  Object.keys(source).forEach((key) => {
+    const sourceValue = source[key];
+    const targetValue = target[key];
+
+    // 如果源值是对象且目标值也是对象，则递归合并
+    if (isPlainObject(sourceValue) && isPlainObject(targetValue)) {
+      deepMerge(targetValue, sourceValue);
+    } else {
+      // 否则直接赋值
+      target[key] = sourceValue;
+    }
+  });
 };
 
 // 表单实例方法
@@ -683,13 +727,17 @@ const formInstance = {
   validate: () => formRef.value?.validate(),
   resetFields: handleReset,
   getFieldsValue: () => ({ ...formData }), // 批量获取
-  setFieldsValue: (values) => Object.assign(formData, values), // 批量设置
-  getFieldValue: (key) => formData[key],
+  setFieldsValue: (values) => {
+    // 使用嵌套对象结构批量设置：{ user: { name: '张三', age: 20 } }
+    deepMerge(formData, values);
+  },
+  getFieldValue: (key) => getNestedValue(formData, key),
   setFieldValue: (key, value) => {
-    formData[key] = value;
+    // 使用点号路径设置单个值：setFieldValue('user.name', '张三')
+    setNestedValue(formData, key, value);
   },
   restoreData,
-  // 与 createFormContext 对齐的统一 API（共享实现）
+  // 与 createFormContext 对齐的统一 API
   ...contextMethods,
 };
 // 暴露表单实例

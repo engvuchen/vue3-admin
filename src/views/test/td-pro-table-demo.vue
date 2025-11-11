@@ -90,7 +90,46 @@
             </t-tag>
           </t-space>
         </div>
-        <div v-else style="color: #999">请先选择用户、角色后点击“查询资源”</div>
+        <div v-else style="color: #999">请先选择用户、角色后点击"查询资源"</div>
+      </div>
+    </t-card>
+
+    <!-- 嵌套字段演示 -->
+    <t-card :bordered="false" class="card">
+      <h3>嵌套字段演示（name 支持点号分隔的路径）</h3>
+      <div class="nested-form-description">
+        <t-alert theme="info">
+          <template #message>
+            <div>功能说明</div>
+            <div>
+              <p><strong>嵌套字段功能：</strong>支持使用点号分隔的路径来定义嵌套的表单数据结构</p>
+              <ul style="margin: 8px 0; padding-left: 20px">
+                <li><code>user.name</code> → formData.user.name</li>
+                <li><code>config.notification.email.enabled</code> → formData.config.notification.email.enabled</li>
+                <li>支持任意层级嵌套，自动创建中间对象</li>
+                <li>完全支持表单验证、字段联动等所有功能</li>
+              </ul>
+              <p style="margin-top: 8px">
+                <strong>操作提示：</strong>点击"填充测试数据"按钮查看效果，提交后可查看嵌套的数据结构
+              </p>
+            </div>
+          </template>
+        </t-alert>
+      </div>
+      <td-pro-form ref="nestedFormRef" :config="nestedFormConfig" @submit="onNestedFormSubmit">
+        <template #submitBtnGroup>
+          <t-form-item class="btn-group">
+            <t-space>
+              <t-button theme="default" @click="handleNestedFormReset">重置</t-button>
+              <t-button theme="primary" @click="handleNestedFormSubmit">提交</t-button>
+              <t-button theme="default" @click="handleNestedFormFill">填充测试数据</t-button>
+            </t-space>
+          </t-form-item>
+        </template>
+      </td-pro-form>
+      <div v-if="nestedFormData" class="nested-form-result">
+        <h4>提交的数据结构：</h4>
+        <pre>{{ JSON.stringify(nestedFormData, null, 2) }}</pre>
       </div>
     </t-card>
   </div>
@@ -753,6 +792,261 @@ async function initResourceItems({ name = '', page = 0, limit = 20 } = {}) {
   if (res.code !== 0) return;
   resourceItems.value = res.data.list.map((curr) => ({ label: curr.name, value: curr._id }));
 }
+
+// ==================== 嵌套字段演示 ====================
+const nestedFormRef = ref(null);
+const nestedFormData = ref(null);
+
+// 嵌套字段表单配置
+const nestedFormConfig = {
+  attributes: {
+    layout: 'vertical',
+    labelWidth: '140px',
+    showSubmit: false,
+    showReset: false,
+  },
+  items: [
+    // 用户信息组
+    {
+      label: '用户名',
+      name: 'user.name',
+      component: 'input',
+      value: '',
+      componentProps: {
+        placeholder: '请输入用户名',
+      },
+      rules: [{ required: true, message: '请输入用户名' }],
+    },
+    {
+      label: '用户邮箱',
+      name: 'user.email',
+      component: 'input',
+      value: '',
+      componentProps: {
+        placeholder: '请输入邮箱',
+      },
+      rules: [
+        { required: true, message: '请输入邮箱' },
+        { type: 'email', message: '请输入正确的邮箱格式' },
+      ],
+    },
+    {
+      label: '用户年龄',
+      name: 'user.age',
+      component: 'number',
+      value: undefined,
+      componentProps: {
+        min: 1,
+        max: 150,
+        placeholder: '请输入年龄',
+      },
+    },
+
+    // 联系方式组
+    {
+      label: '手机号',
+      name: 'user.contact.phone',
+      component: 'input',
+      value: '',
+      componentProps: {
+        placeholder: '请输入手机号',
+      },
+    },
+    {
+      label: '紧急联系人',
+      name: 'user.contact.emergency',
+      component: 'input',
+      value: '',
+      componentProps: {
+        placeholder: '请输入紧急联系人',
+      },
+    },
+
+    // 公司信息组
+    {
+      label: '公司名称',
+      name: 'company.name',
+      component: 'input',
+      value: '',
+      componentProps: {
+        placeholder: '请输入公司名称',
+      },
+    },
+    {
+      label: '公司地址',
+      name: 'company.address',
+      component: 'input',
+      value: '',
+      componentProps: {
+        placeholder: '请输入公司地址',
+      },
+    },
+    {
+      label: '所属部门',
+      name: 'company.department',
+      component: 'input',
+      value: '',
+      componentProps: {
+        placeholder: '请输入所属部门',
+      },
+    },
+
+    // 配置信息组（带联动）
+    {
+      label: '主题',
+      name: 'config.appearance.theme',
+      component: 'select',
+      value: 'light',
+      items: [
+        { label: '浅色', value: 'light' },
+        { label: '深色', value: 'dark' },
+        { label: '自动', value: 'auto' },
+      ],
+    },
+    {
+      label: '语言',
+      name: 'config.appearance.language',
+      component: 'select',
+      value: 'zh-CN',
+      items: [
+        { label: '简体中文', value: 'zh-CN' },
+        { label: 'English', value: 'en-US' },
+        { label: '日本語', value: 'ja-JP' },
+      ],
+    },
+    {
+      label: '启用邮件通知',
+      name: 'config.notification.email.enabled',
+      component: 'switch',
+      value: false,
+    },
+    {
+      label: '邮件通知地址',
+      name: 'config.notification.email.address',
+      component: 'input',
+      value: '',
+      hide: true,
+      componentProps: {
+        placeholder: '请输入邮件通知地址',
+      },
+      linkage: [
+        {
+          watchField: 'config.notification.email.enabled',
+          action: (value, { show, hide, setValue }) => {
+            if (value) {
+              show('config.notification.email.address');
+            } else {
+              hide('config.notification.email.address');
+              setValue('config.notification.email.address', '');
+            }
+          },
+        },
+      ],
+    },
+    {
+      label: '启用短信通知',
+      name: 'config.notification.sms.enabled',
+      component: 'switch',
+      value: false,
+    },
+    {
+      label: '短信通知手机号',
+      name: 'config.notification.sms.phone',
+      component: 'input',
+      value: '',
+      hide: true,
+      componentProps: {
+        placeholder: '请输入短信通知手机号',
+      },
+      linkage: [
+        {
+          watchField: 'config.notification.sms.enabled',
+          action: (value, { show, hide, setValue }) => {
+            if (value) {
+              show('config.notification.sms.phone');
+            } else {
+              hide('config.notification.sms.phone');
+              setValue('config.notification.sms.phone', '');
+            }
+          },
+        },
+      ],
+    },
+    {
+      label: '通知频率',
+      name: 'config.notification.frequency',
+      component: 'select',
+      value: 'daily',
+      items: [
+        { label: '实时', value: 'realtime' },
+        { label: '每小时', value: 'hourly' },
+        { label: '每天', value: 'daily' },
+        { label: '每周', value: 'weekly' },
+      ],
+    },
+  ],
+};
+
+// 提交嵌套表单
+const onNestedFormSubmit = (data) => {
+  console.log('嵌套表单提交的数据:', data);
+  nestedFormData.value = data;
+  tips.success('提交成功！请查看下方的数据结构');
+};
+// 重置嵌套表单
+const handleNestedFormReset = () => {
+  nestedFormRef.value?.resetFields();
+  nestedFormData.value = null;
+  tips.info('表单已重置');
+};
+// 提交嵌套表单
+const handleNestedFormSubmit = async () => {
+  const valid = await nestedFormRef.value?.validate();
+  if (valid === true) {
+    const data = nestedFormRef.value?.getFieldsValue();
+    onNestedFormSubmit(data);
+  }
+};
+
+// 填充测试数据
+const handleNestedFormFill = () => {
+  // 使用嵌套对象结构批量设置
+  nestedFormRef.value?.setFieldsValue({
+    user: {
+      name: '张三',
+      email: 'zhangsan@example.com',
+      age: 28,
+      contact: {
+        phone: '13800138000',
+        emergency: '李四',
+      },
+    },
+    company: {
+      name: '某某科技有限公司',
+      address: '北京市朝阳区',
+      department: '技术部',
+    },
+    config: {
+      appearance: {
+        theme: 'dark',
+        language: 'zh-CN',
+      },
+      notification: {
+        email: {
+          enabled: true,
+          address: 'notify@example.com',
+        },
+        sms: {
+          enabled: true,
+          phone: '13900139000',
+        },
+        frequency: 'hourly',
+      },
+    },
+  });
+
+  tips.success('测试数据已填充');
+};
 </script>
 
 <style lang="scss" scoped>
@@ -792,5 +1086,65 @@ async function initResourceItems({ name = '', page = 0, limit = 20 } = {}) {
   color: #1f2937;
   font-size: 16px;
   font-weight: 500;
+}
+
+.nested-form-description {
+  margin-bottom: 20px;
+
+  :deep(.t-alert) {
+    border-radius: 4px;
+  }
+
+  p {
+    margin: 0 0 8px 0;
+    line-height: 1.6;
+  }
+
+  ul {
+    margin: 8px 0;
+    padding-left: 20px;
+
+    li {
+      margin: 4px 0;
+      line-height: 1.8;
+
+      code {
+        padding: 2px 6px;
+        background: #f3f4f6;
+        border-radius: 3px;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 13px;
+        color: #d14;
+      }
+    }
+  }
+}
+
+.nested-form-result {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+
+  h4 {
+    margin: 0 0 12px 0;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  pre {
+    margin: 0;
+    padding: 12px;
+    background: #fff;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+  }
 }
 </style>
