@@ -37,13 +37,23 @@ router.beforeEach((to, from) => {
   return true;
 });
 
-// 生成请求的唯一标识符
+/**
+ * 判断是否为 GET 请求
+ * @param {string} method - HTTP 方法
+ * @returns {boolean} 是否为 GET 请求
+ */
+function isGet(method) {
+  return (method || 'get').toLowerCase() === 'get';
+}
+
+// 生成请求的唯一标识符（仅用于 GET 请求的缓存）
 const getRequestKey = (config) => {
-  let { method, url, params } = config;
+  let { method, url, params, data } = config;
+  // 在 normalizeParams 之后，GET 请求的 data 已转换为 params
+  // 优先使用 params，如果没有则使用 data（兼容 normalizeParams 之前的状态）
+  const keyParams = params || data;
 
-  // return HexMD5.MD5([method, url, JSON.stringify(params)].join('&')).toString(HexMD5.enc.Hex);
-
-  return [method, url, JSON.stringify(params)].join('&');
+  return [method, url, JSON.stringify(keyParams)].join('&');
 };
 /** 去掉数据的 undefined、null, '' */
 function walkData(data) {
@@ -53,15 +63,63 @@ function walkData(data) {
 
   Object.keys(data).forEach((key, index) => {
     let val = data[key];
-
-    if ([undefined, null, ''].includes(val)) {
-      delete data[key];
-    }
+    if ([undefined, null, ''].includes(val)) delete data[key];
 
     if (typeof val === 'object') walkData(val);
   });
 
   return data;
+}
+
+/**
+ * 将 params 对象拼接到 URL
+ * @param {string} url - 原始 URL
+ * @param {object} params - 参数对象
+ * @returns {string} 拼接后的 URL
+ */
+function appendParamsToUrl(url, params) {
+  if (!params || Object.keys(params).length === 0) return url;
+
+  const searchParams = new URLSearchParams();
+  Object.keys(params).forEach((key) => {
+    const value = params[key];
+    if (value !== undefined && value !== null && value !== '') {
+      if (Array.isArray(value)) {
+        value.forEach((item) => searchParams.append(key, item));
+      } else {
+        searchParams.append(key, value);
+      }
+    }
+  });
+
+  const queryString = searchParams.toString();
+  if (!queryString) return url;
+
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}${queryString}`;
+}
+
+/**
+ * 规范化参数处理
+ * 1. GET 请求：将 data 转换为 params
+ * 2. 非 GET 请求：将 params 拼接到 URL
+ */
+function normalizeParams(config) {
+  const { method, data, params, url } = config;
+
+  if (isGet(method)) {
+    // GET 请求：将 data 转换为 params（params 优先级更高）
+    if (data) {
+      config.params = { ...data, ...params };
+      delete config.data;
+    }
+    return;
+  }
+
+  // 非 GET 请求（POST、PUT、DELETE、PATCH等）：将 params 拼接到 URL
+  if (!params) return;
+  config.url = appendParamsToUrl(url, params);
+  delete config.params;
 }
 
 const service = axios.create();
@@ -78,9 +136,12 @@ const service = axios.create();
 service.interceptors.response.use(
   // 正常响应，包括业务"错误"。status=200
   (response) => {
-    const requestKey = getRequestKey(response.config);
-    const cache = cacheMap[requestKey];
-    if (cache) cache.fulfilled = true;
+    // 只有 GET 请求才需要处理缓存
+    if (isGet(response.config?.method)) {
+      const requestKey = getRequestKey(response.config);
+      const cache = cacheMap[requestKey];
+      if (cache) cache.fulfilled = true;
+    }
 
     let isSilent = response?.config?.silent;
     let code = response?.data?.code;
@@ -99,10 +160,12 @@ service.interceptors.response.use(
   (error) => {
     console.log('network error', error);
 
-    // 网路错误 或 请求被取消，删除缓存
-    let requestKey = getRequestKey(error?.config);
-    let cache = cacheMap[requestKey];
-    if (cache) delete cacheMap[requestKey];
+    // 网路错误 或 请求被取消，删除缓存（只有 GET 请求才有缓存）
+    if (isGet(error?.config?.method)) {
+      let requestKey = getRequestKey(error.config);
+      let cache = cacheMap[requestKey];
+      if (cache) delete cacheMap[requestKey];
+    }
 
     if (error?.config?.silent) {
       return Promise.resolve({
@@ -167,21 +230,27 @@ function validity(config) {
 function request(config) {
   Object.assign(config, base);
 
+  // 规范化参数处理（在 validity 之前处理，因为需要先转换参数）
+  normalizeParams(config);
+
   let errmsg = validity(config);
   if (errmsg) return stop(config, errmsg);
 
-  // 处理缓存
-  const requestKey = getRequestKey(config);
+  // 处理缓存（仅 GET 请求）
+  if (isGet(config.method)) {
+    const requestKey = getRequestKey(config);
 
-  const { data, expired } = cacheMap[requestKey] || {};
-  if (data) {
-    // 缓存未过期，直接返回
-    if (expired > Date.now()) {
-      return data; // data 总是 Promise，直接返回即可
+    const { data, expired } = cacheMap[requestKey] || {};
+    if (data) {
+      /**
+       * 缓存未过期，直接返回
+       * data 总是 Promise，直接返回即可
+       */
+      if (expired > Date.now()) return data;
+
+      // 缓存过期，移除
+      delete cacheMap[requestKey];
     }
-
-    // 缓存过期，移除
-    delete cacheMap[requestKey];
   }
 
   // 发起请求
@@ -204,7 +273,8 @@ function request(config) {
    */
 
   // 创建缓存（仅存在 cacheTime、get 请求 ）
-  if (config.cacheTime && config.method === 'get') {
+  if (config.cacheTime && isGet(config.method)) {
+    const requestKey = getRequestKey(config);
     cacheMap[requestKey] = {
       controller, // 切换页面，用来取消的
       ...(config.cacheTime
